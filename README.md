@@ -1,2 +1,2 @@
 # grcMalaria
-Tools for processing and analyzing SpotMalaria Genetic Report Cards
+R Package for processing and analyzing SpotMalaria Genetic Report Cards
