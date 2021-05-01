@@ -14,17 +14,26 @@ getSubFolder <- function (parent, subnames, recursive=TRUE, create=TRUE) {
     dir
 }
 #
-getDataFolder <- function (subnames, create=TRUE) {
-    sub <- getSubFolder (folder.data, subnames, recursive=TRUE, create)
-    sub
-}
-#
-getOutFolder <- function (analysisName, subnames=NULL, create=TRUE) {
-    sub <- getSubFolder (folder.results, analysisName, recursive=TRUE, create)
+getOutFolder <- function (ctx, analysisName, subnames=NULL, create=TRUE) {
+    cfg <- ctx$config
+    sub <- getSubFolder (cfg$folder.out, analysisName, recursive=TRUE, create)
     if (!is.null(subnames)) {
         sub <- getSubFolder (sub, subnames, recursive=TRUE, create)
     }
     sub
+}
+#
+getDataFolder <- function (ctx, subnames, create=TRUE) {
+    cfg <- ctx$config
+    sub <- getSubFolder (cfg$folder.data, subnames, recursive=TRUE, create)
+    sub
+}
+#
+# Datafile Naming - prefix with context name so that datafiles are not overwritten
+#
+getDataFile <- function (ctx, subnames, filename) {
+    dataFolder <- getDataFolder (ctx, subnames)
+    return(paste(dataFolder, "/", ctx$name, ".", filename, sep=""))
 }
 #
 # #####################################################################################
@@ -46,28 +55,6 @@ adjustVectorLength <- function(vec, len) {
 strReverse <- function(x) {
     sapply(lapply(strsplit(x, NULL), rev), paste, collapse="")
 }
-#
-# #####################################################################################
-# Palette for pie charts.
-# #####################################################################################
-#
-# This one was submitted by Kevin Wright on https://stackoverflow.com/questions/9563711/r-color-palettes-for-many-data-classes
-# Other similar palettes are shown in the same article
-c25Palette <- c(
-  "dodgerblue2", "#E31A1C", # red
-  "green4",
-  "#6A3D9A", # purple
-  "#FF7F00", # orange
-  "black", "gold1",
-  "skyblue2", "#FB9A99", # lt pink
-  "palegreen2",
-  "#CAB2D6", # lt purple
-  "#FDBF6F", # lt orange
-  "gray70", "khaki2",
-  "maroon", "orchid1", "deeppink1", "blue1", "steelblue4",
-  "darkturquoise", "green1", "yellow4", "yellow3",
-  "darkorange4", "brown"
-)
 #
 # #####################################################################################
 #  Data I/O Utilities - read/write/filter samples tables data

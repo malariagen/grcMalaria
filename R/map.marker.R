@@ -10,14 +10,14 @@ allDiversityMeasures <- c("maxHaploFreq","haploHet1","haploHet2","haploHet3","me
 # Map Aggregated Measure Analysis
 ################################################################################
 #
-markerMap.execute <- function(analysisContext, analysisName, mapType, visType, aggregation, measures, params) {
+markerMap.execute <- function(ctx, analysisName, mapType, visType, aggregation, measures, params) {
     # Get the output folders
     dataFolder <- getOutFolder(analysisName, c(paste("map", mapType, sep="-"), "data"))
     # Get the sample metadata
-    sampleMeta <- analysisContext$meta
+    sampleMeta <- ctx$meta
     # Build the map necessary to display these samples
     # Construct a base plot for completing subsequent maps
-    baseMapInfo <- map.buildBaseMap (analysisName, sampleMeta, dataFolder, params)
+    baseMapInfo <- map.buildBaseMap (ctx, analysisName, sampleMeta, dataFolder, params)
 
     # Now compute the aggregation units, the values to be plotted, and make the map
     for (aggIdx in 1:length(aggregation)) {
@@ -25,8 +25,8 @@ markerMap.execute <- function(analysisContext, analysisName, mapType, visType, a
         aggLevelIdx <- aggLevel + 1
 
         # Get the aggregated data for the aggregation units
-        aggUnitData <- map.getAggregationUnitData (aggLevel, analysisContext, analysisName, mapType, params, dataFolder)	#; print(aggUnitData)
-        aggUnitData <- markerMap.estimateMeasures (aggLevel, aggUnitData, analysisContext, analysisName, mapType, measures, params, dataFolder)	#; print(aggUnitData)
+        aggUnitData <- map.getAggregationUnitData (aggLevel, ctx, analysisName, mapType, params, dataFolder)	#; print(aggUnitData)
+        aggUnitData <- markerMap.estimateMeasures (aggLevel, aggUnitData, ctx, analysisName, mapType, measures, params, dataFolder)	#; print(aggUnitData)
 
         for (mIdx in 1:length(measures)) {
             measure <- measures[mIdx]		           		#; print(measure)
@@ -47,15 +47,20 @@ markerMap.execute <- function(analysisContext, analysisName, mapType, visType, a
             if (showMarkerNames) {
                 aggColName <- c("Country","AdmDiv1","AdmDiv2")[aggLevelIdx]
                 lp <- map.computeLabelParams (selAggUnitData, aggColName, baseMapInfo)
-                mapPlot <- mapPlot + geom_label_repel(data=lp, aes(x=lon, y=lat, label=label), size=4.5, fontface="bold", color="darkgray",
-                                         hjust=lp$just, vjust=0.5, nudge_x=lp$x, nudge_y=lp$y, label.padding=unit(0.2, "lines"))
+                mapPlot <- mapPlot + 
+                    ggplot2::geom_label_repel(data=lp, ggplot2::aes(x=lon, y=lat, label=label), 
+                                              size=4.5, fontface="bold", color="darkgray",
+                                              hjust=lp$just, vjust=0.5, nudge_x=lp$x, nudge_y=lp$y, label.padding=grid::unit(0.2, "lines"))
             }
             
-	    # This function replaces aes_strng() allowing the use of column names with dashes
-	    aes_string2 <- function(...){
-	        args <- lapply(list(...), function(x) sprintf("`%s`", x))
-	        do.call(aes_string, args)
-	    }
+            # This function replaces aes_strng() allowing the use of column names with dashes
+            fn_aesString <- get("aes_string", asNamespace("ggplot2"))
+            aes_string2 <- function(...){
+                args <- lapply(list(...), function(x) sprintf("`%s`", x))
+                #do.call(aes_string, args)
+                do.call(fn_aesString, args)
+            }
+
             # Now add the markers, coloured according to the appropriate scale, depending on the type of map
             mValues <- selAggUnitData[,measure]
             if (mapType=="diversity") {
@@ -63,36 +68,36 @@ markerMap.execute <- function(analysisContext, analysisName, mapType, visType, a
                 mMax <- max(mValues); scaleMax <- round(mMax,digits=1); scaleMax <- ifelse(scaleMax<mMax, scaleMax+0.1, scaleMax)
                 mMin <- min(mValues); scaleMin <- round(mMin,digits=1); scaleMin <- ifelse(scaleMin>mMin, scaleMin-0.1, scaleMin)  #; print(paste(scaleMin, scaleMax))
                 mapPlot <- mapPlot +
-	            geom_point(data=selAggUnitData, aes_string2(x="Longitude", y="Latitude", fill=measure), size=pointSizes, shape=21, stroke=2) +
-	            scale_fill_gradientn(limits=c(scaleMin,scaleMax), colours=markerColours, values=c(0,1))
+	            ggplot2::geom_point(data=selAggUnitData, aes_string2(x="Longitude", y="Latitude", fill=measure), size=pointSizes, shape=21, stroke=2) +
+	            ggplot2::scale_fill_gradientn(limits=c(scaleMin,scaleMax), colours=markerColours, values=c(0,1))
 	    } else if (mapType=="drug") {
                 mapPlot <- mapPlot +
-	            geom_point(data=selAggUnitData, aes_string2(x="Longitude", y="Latitude", fill=measure), size=pointSizes, shape=21, stroke=2) +
-	            scale_fill_gradientn(limits=c(0,1), colours=c("green3","orange2","red3","red3"), values=c(0, 0.2, 0.75, 1))
+	            ggplot2::geom_point(data=selAggUnitData, aes_string2(x="Longitude", y="Latitude", fill=measure), size=pointSizes, shape=21, stroke=2) +
+	            ggplot2::scale_fill_gradientn(limits=c(0,1), colours=c("green3","orange2","red3","red3"), values=c(0, 0.2, 0.75, 1))
 	    } else if (mapType=="mutation") {
                 markerColours <- analysis.getParam ("map.prevalence.markerColours", params, default.map.prevalence.markerColours)
                 scaleMin <- 0; scaleMax <- 1
                 mapPlot <- mapPlot +
-	            geom_point(data=selAggUnitData, aes_string2(x="Longitude", y="Latitude", fill=measure), size=pointSizes, shape=21, stroke=2) +
-	            scale_fill_gradientn(limits=c(scaleMin,scaleMax), colours=markerColours, values=c(0,1))
+	            ggplot2::geom_point(data=selAggUnitData, aes_string2(x="Longitude", y="Latitude", fill=measure), size=pointSizes, shape=21, stroke=2) +
+	            ggplot2::scale_fill_gradientn(limits=c(scaleMin,scaleMax), colours=markerColours, values=c(0,1))
 	    } 
 	    
             # Now add the decorative elements
             valueLabels <- round(mValues, digits=2)
             mapPlot <- mapPlot +
-	        geom_text(data=selAggUnitData, aes_string(x="Longitude", y="Latitude"), label=valueLabels, hjust=0.5, vjust=0.5, size=4.5, fontface="bold") +
-                theme(plot.title = element_text(face = "bold",size = rel(1.2), hjust = 0.5),
-                          panel.background = element_rect(colour = NA),
-                          plot.background = element_rect(colour = NA),
-                          axis.title = element_text(face = "bold",size = rel(1)),
-                          axis.title.y = element_text(angle=90,vjust =2),
-                          axis.title.x = element_text(vjust = -0.2))
+	        ggplot2::geom_text(data=selAggUnitData, aes_string(x="Longitude", y="Latitude"), label=valueLabels, hjust=0.5, vjust=0.5, size=4.5, fontface="bold") +
+                ggplot2::theme(plot.title = ggplot2::element_text(face = "bold",size = ggplot2::rel(1.2), hjust = 0.5),
+                          panel.background = ggplot2::element_rect(colour = NA),
+                          plot.background = ggplot2::element_rect(colour = NA),
+                          axis.title = ggplot2::element_text(face = "bold",size = ggplot2::rel(1)),
+                          axis.title.y = ggplot2::element_text(angle=90,vjust =2),
+                          axis.title.x = ggplot2::element_text(vjust = -0.2))
 	    
 	    # Save to file. the size in inches is given in the config.
 	    mapSize  <- analysis.getParam ("map.size", params, default.map.size)
     	    plotFolder <- getOutFolder(analysisName, c(paste("map", mapType, sep="-"), "plots"))
             graphicFilenameRoot  <- paste(plotFolder, paste("map", analysisName, aggLevel, measure, sep="-"), sep="/")
-            ggsave(plot=mapPlot, filename=paste(graphicFilenameRoot,"png",sep="."), device="png", width=mapSize[1], height=mapSize[2], units="in", dpi=300)
+            ggplot2::ggsave(plot=mapPlot, filename=paste(graphicFilenameRoot,"png",sep="."), device="png", width=mapSize[1], height=mapSize[2], units="in", dpi=300)
         }
     }
 }
@@ -126,11 +131,11 @@ markerMap.getAggUnitMarkerSizes <- function(aggUnitData, params) {
 # Estimation of marker measures (drug resistance and diversity)
 ################################################################################
 #
-markerMap.estimateMeasures <- function(aggLevel, aggUnitData, analysisContext, analysisName, mapType, measures, params, dataFolder) {
+markerMap.estimateMeasures <- function(aggLevel, aggUnitData, ctx, analysisName, mapType, measures, params, dataFolder) {
 
-    sampleMeta   <- analysisContext$meta
-    barcodeData  <- analysisContext$barcodes
-    distData     <- analysisContext$distance
+    sampleMeta   <- ctx$meta
+    barcodeData  <- ctx$barcodes
+    distData     <- ctx$distance
 
     # Create aggregation index for each sample (the id of the aggregation unit where the sample originates)
     aggIndex <- map.getAggregationUnitIds (aggLevel, sampleMeta, params)

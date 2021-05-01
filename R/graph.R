@@ -49,8 +49,8 @@ graph.execute <- function (analysisContext, analysisName, params) {
 
 
         # Create graph from connectivity data
-        gr <- graph_from_data_frame(edgeData, directed=FALSE, vertices=nodeData[nodeNames,])
-        grNodeNames <- names(V(gr))
+        gr <- igraph::graph_from_data_frame(edgeData, directed=FALSE, vertices=nodeData[nodeNames,])
+        grNodeNames <- names(igraph::V(gr))
 
         # Make sure we preserve all clusters, by adding any missing ones
         clusterNames <- nodeData$Node[which(nodeData$NodeType=="cluster")]
@@ -58,12 +58,12 @@ graph.execute <- function (analysisContext, analysisName, params) {
         if (length(addClusterNames) > 0) {
             addData <- nodeData[addClusterNames,]
             gr <- gr + vertices(addClusterNames, Count=addData$Count, NodeType=addData$NodeType)
-            grNodeNames <- names(V(gr))
+            grNodeNames <- names(igraph::V(gr))
         }						        #; print(length(grNodeNames)); print(grNodeNames)
         
         # Write the graph to a file
         grFile <- paste(dataFolder, "/graph-", analysisName, "-", thresholdLabel, ".graphml", sep="")
-        write_graph(gr, grFile, format="graphml")
+        igraph::write_graph(gr, grFile, format="graphml")
         # Write cluster membership to file
         if (nrow(clusterMembers) > 0) {
             clusterMembersFile <- paste(dataFolder, "/clusterMembers-", analysisName, "-", thresholdLabel, ".tab", sep="")
@@ -169,7 +169,7 @@ graph.executePlots <- function (analysisContext, analysisName, plotList, params)
 
         # Read the graph from file
         grFile <- paste(dataFolder, "/graph-", analysisName, "-", thresholdLabel, ".graphml", sep="")
-	gr <- read_graph(grFile, format="graphml")
+	gr <- igraph::read_graph(grFile, format="graphml")
 	layout <- graph.getLayout(gr, params)
         
 	# Perform plots for this onnectivity threshold
@@ -192,17 +192,17 @@ graph.executePlots <- function (analysisContext, analysisName, plotList, params)
 graph.getLayout <- function (gr, params) {
     layoutAlgo <- analysis.getParam ("graph.layoutAlgorithm", params, default.graph.layoutAlgorithm)
     if (layoutAlgo == "fr") {
-        layout <- layout_with_fr(gr)
+        layout <- igraph::layout_with_fr(gr)
     } else if (layoutAlgo == "kk") {
-        layout <- layout_with_kk(gr)
+        layout <- igraph::layout_with_kk(gr)
     } else if (layoutAlgo == "lgl") {
-        layout <- layout_with_lgl(gr)
+        layout <- igraph::layout_with_lgl(gr)
     } else if (layoutAlgo == "drl") {
-        layout <- layout_with_drl(gr)
+        layout <- igraph::layout_with_drl(gr)
     } else if (layoutAlgo == "mds") {
-        layout <- layout_with_mds(gr)
+        layout <- igraph::layout_with_mds(gr)
     } else if (layoutAlgo == "graphopt") {
-        layout <- layout_with_graphopt(gr)
+        layout <- igraph::layout_with_graphopt(gr)
     }
     layout
 }
@@ -303,7 +303,7 @@ graph.makeSinglePlot <- function (gr, nodeData, clusterMembers, analysisName, th
     }
     
     # We now need to order all of the parameters according to the node ordering in the graph
-    grNodeNames <- V(gr)$name
+    grNodeNames <- igraph::V(gr)$name
     #print(grNodeNames)
     grShapes  <- nodeShapes[grNodeNames]
     grColours <- nodeColours[grNodeNames]
@@ -318,7 +318,7 @@ graph.makeSinglePlot <- function (gr, nodeData, clusterMembers, analysisName, th
     markSizes <- sqrt(grSampleCounts)
     #markSizes <- normalizeMarkerSizes(markSizes)
     
-    edgeWeights <- as.numeric(E(gr)$weight)
+    edgeWeights <- as.numeric(igraph::E(gr)$weight)
     grEdgeColours <- graph.getEdgeWeightColours(edgeWeights)
     #grEdgeWidths <- graph.getEdgeWidth(edgeWeights)
     grEdgeWidths <- 1
@@ -359,10 +359,10 @@ graph.makeClusterPlot <- function (gr, nodeData, analysisName, thresholdValue, g
     nodeData[clusterNames,"label"] <- clusterNames
     
     # We now need to order all of the parameters according to the node ordering in the graph
-    grNodeNames <- V(gr)$name							#; print(grNodeNames)
+    grNodeNames <- igraph::V(gr)$name							#; print(grNodeNames)
     nodeData <- nodeData[grNodeNames,]
     
-    edgeWeights <- as.numeric(E(gr)$weight)
+    edgeWeights <- as.numeric(igraph::E(gr)$weight)
     grEdgeColours <- graph.getEdgeWeightColours(edgeWeights)
     #grEdgeWidths <- graph.getEdgeWidth(edgeWeights)
     grEdgeWidths <- 1
@@ -401,7 +401,7 @@ graph.makeClusterPlot.TO_BE_REMOVED <- function (gr, nodeData, distData, analysi
     edgeData$weight <- graph.normalizeWeights (edgeData$weight)
 
     # Create graph from connectivity data
-    gr <- graph_from_data_frame(edgeData, directed=FALSE, vertices=nodeData)
+    gr <- igraph::graph_from_data_frame(edgeData, directed=FALSE, vertices=nodeData)
     layout <- graph.getLayout(gr, params)
     
     # Write the graph to a file
@@ -455,7 +455,7 @@ graph.pchVertex <- function(coords, v = NULL, params) {
     v.size   <- params("vertex", "size")
     points(x = coords[, 1], y = coords[, 2], pch=v.pch, bg=v.color, col=v.lcolor, lwd=v.lwd, cex=v.size)
 }
-add_shape("pch", plot=graph.pchVertex)
+igraph::add_shape("pch", plot=graph.pchVertex)
 #
 #add_shape("pch", clip=shapes("circle")$clip, plot=graph.pchVertex)
 #

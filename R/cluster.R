@@ -23,11 +23,11 @@ cluster.findbyIdentity <- function (analysisContext, analysisName, thresholdValu
     nodeNames <- unique(c(as.character(edgeData$Sample1),as.character(edgeData$Sample2)))
     nodeCount <- length(nodeNames)			#; print (paste(length(nodeNames),length(unique(edgeData$Sample1)),length(unique(edgeData$Sample2))))
     nodeData <- data.frame(NodeName=nodeNames, Count=rep(1,nodeCount), NodeType=rep("sample",nodeCount))
-    gr <- graph_from_data_frame(edgeData, directed=FALSE, vertices=nodeData)	#; print(paste("processClusters",thresholdValue))
+    gr <- igraph::graph_from_data_frame(edgeData, directed=FALSE, vertices=nodeData)	#; print(paste("processClusters",thresholdValue))
 
     # Make a working copy of the graph and count the nodes
-    wg <- induced_subgraph(gr, V(gr))			#; plot(wg)
-    nodeCnt <- length(V(wg))    			#; print(paste("nodeCnt",nodeCnt))
+    wg <- igraph::induced_subgraph(gr, igraph::V(gr))	#; plot(wg)
+    nodeCnt <- length(igraph::V(wg))    		#; print(paste("nodeCnt",nodeCnt))
 
     # Identify all clusters with >= minCount samples
     clustersData <- NULL
@@ -35,14 +35,14 @@ cluster.findbyIdentity <- function (analysisContext, analysisName, thresholdValu
         clNodeIdxs <- cluster.findSampleNodes(wg)	#; print(paste("new cluster - nodes:",paste(clNodeIdxs,collapse=",")))
         clSampleCount <- length(clNodeIdxs)		#; print(clSampleCount)
         if (clSampleCount >= minCount) {
-            clSampleNames <- names(V(wg))[clNodeIdxs]
+            clSampleNames <- names(igraph::V(wg))[clNodeIdxs]
             clSampleNameList <- paste(clSampleNames, collapse=",")
             clustersData <- rbind(clustersData, c(clSampleCount, clSampleNameList))
         }
         # Remove the samples from the cluster we found
         keepSamples <- seq(1, nodeCnt)[-clNodeIdxs]
-        wg <- induced_subgraph(wg, keepSamples, impl="copy_and_delete")
-        nodeCnt <- length(V(wg))
+        wg <- igraph::induced_subgraph(wg, keepSamples, impl="copy_and_delete")
+        nodeCnt <- length(igraph::V(wg))
     }									#; print(head(clustersData))
     if (is.null(clustersData)) {
         print(paste("No clusters of desired minimum side were found at identity threshold", thresholdValue))
@@ -163,7 +163,7 @@ cluster.getClustersDataFile <- function(filePrefix, analysisName, thresholdValue
 }
 
 cluster.findSampleNodes <- function (gr) {
-    first <- V(gr)[1]
+    first <- igraph::V(gr)[1]
     nodes <- c(as.integer(first))
     #print(nodes)
     nodes <- cluster.findNodes (gr, first, nodes)
@@ -171,7 +171,7 @@ cluster.findSampleNodes <- function (gr) {
 }
 
 cluster.findNodes <- function (gr, curr, nodes) {
-    ns <- neighbors(gr, curr)
+    ns <- igraph::neighbors(gr, curr)
     if (length(ns) > 0) {
         foundNew <- FALSE
         for (nsIdx in 1 : length(ns)) {
@@ -192,8 +192,7 @@ cluster.findNodes <- function (gr, curr, nodes) {
 #
 cluster.getIdentityLevels <- function (params) {
     identityLevels <- analysis.getParam ("cluster.identity.thresholds", params, default.cluster.identity.thresholds)
-    identityLevels <- identityLevels[order(identityLevels, decreasing=TRUE)]
-    #print(identityLevels)
+    identityLevels <- identityLevels[order(identityLevels, decreasing=TRUE)]	#; print(identityLevels)
     identityLevels
 }
 

@@ -31,7 +31,7 @@ map.execute <- function(analysisContext, analysisName, mapType, aggregation, mea
 # Creation of the physical/political background map
 ################################################################################
 #
-map.buildBaseMap <- function(analysisName, sampleMeta, dataFolder, params) {
+map.buildBaseMap <- function(ctx, analysisName, sampleMeta, dataFolder, params) {
 
     # Get relevant column names
     adminLevelCols  <- analysis.getParam ("map.adminLevelColumns", params, default.map.adminLevelColumns)
@@ -54,10 +54,10 @@ map.buildBaseMap <- function(analysisName, sampleMeta, dataFolder, params) {
     }
     
     # Read the country borders for the countries involved
-    gadmFolder <- getSubFolder (getDataFolder("map"), "gadm")
+    gadmFolder <- getDataFolder(ctx, c("map", "gadm"))
     gadmFolder <- paste(gadmFolder, "/", sep="")
     cIso3 <- iso2ToIso3 (countries)
-    gadm0 <- gadm_sp_loadCountries(cIso3, level=0, basefile=gadmFolder)
+    gadm0 <- GADMTools::gadm_sp_loadCountries(cIso3, level=0, basefile=gadmFolder)
     
     # Read the province borders for the countries involved
     gadm1Spdf <- NULL
@@ -66,9 +66,9 @@ map.buildBaseMap <- function(analysisName, sampleMeta, dataFolder, params) {
     for (cIdx in 1:length(countries)) {
         country <- countries[cIdx]
         cl <- unitList[[country]]							#; print(country)
-        cGadm1 <- gadm_sp_loadCountries(cl$iso3, level=1, basefile=gadmFolder)	#; print(1)
+        cGadm1 <- GADMTools::gadm_sp_loadCountries(cl$iso3, level=1, basefile=gadmFolder)	#; print(1)
         # Select the provinces we need
-        cGadm1 <- gadm_subset(cGadm1, level=1, regions=cl$gadmAdm1Names)		#; print(cGadm1)
+        cGadm1 <- GADMTools::gadm_subset(cGadm1, level=1, regions=cl$gadmAdm1Names)		#; print(cGadm1)
         # Append the data to that of other countries
 	    cl$gadmAdm1Data <- cGadm1							#; print(3)
 	    if (is.null(gadm1Spdf)) {
@@ -77,9 +77,9 @@ map.buildBaseMap <- function(analysisName, sampleMeta, dataFolder, params) {
 	    gadm1Spdf <- rbind(gadm1Spdf, cGadm1$spdf)
 	    }										#; print(4)
         # Get the bounding box and merge with the other countries
-        bb <- gadm_getBbox (cGadm1)							#; print(5)
+        bb <- GADMTools::gadm_getBbox (cGadm1)							#; print(5)
         gadmBB <- list(xMin=min(gadmBB$xMin,bb[1]), xMax=max(gadmBB$xMax,bb[3]), 
-                yMin=min(gadmBB$yMin,bb[2]), yMax=max(gadmBB$yMax,bb[4]))	#; print(gadmBB)
+                       yMin=min(gadmBB$yMin,bb[2]), yMax=max(gadmBB$yMax,bb[4]))	#; print(gadmBB)
     }
     
     # Adjust the bounding box to give some margin
@@ -90,24 +90,24 @@ map.buildBaseMap <- function(analysisName, sampleMeta, dataFolder, params) {
     gadmBB$bl <- c(gadmBB$yMin,gadmBB$xMin);    gadmBB$tr <- c(gadmBB$yMax,gadmBB$xMax)
     
     # Crop the country boundaries
-    gadm0 <- gadm_crop(gadm0, xmin=gadmBB$xMin, ymin=gadmBB$yMin, xmax=gadmBB$xMax, ymax=gadmBB$yMax)
+    gadm0 <- GADMTools::gadm_crop(gadm0, xmin=gadmBB$xMin, ymin=gadmBB$yMin, xmax=gadmBB$xMax, ymax=gadmBB$yMax)
 
     # Prepare the GADM polygons for plotting
-    gadm0_df <- fortify(gadm0$spdf)
-    gadm1_df <- fortify(gadm1Spdf)
+    gadm0_df <- ggplot2::fortify(gadm0$spdf)
+    gadm1_df <- ggplot2::fortify(gadm1Spdf)
         
     # Get the background map, and adjust coordinates
-    bgMap <- openmap(gadmBB$tl, gadmBB$br, zoom=NULL, type=c("nps"), mergeTiles=TRUE)
+    bgMap <- OpenStreetMap::openmap(gadmBB$tl, gadmBB$br, zoom=NULL, type=c("nps"), mergeTiles=TRUE)
     ## OSM CRS :: "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs"
-    bgMap <- openproj(bgMap, projection="+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs")
+    bgMap <- OpenStreetMap::openproj(bgMap, projection="+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs")
 
     # Construct a base plot for completing subsequent maps
-    baseMapPlot <- autoplot.OpenStreetMap(bgMap)  +
-            annotate("rect", xmin=gadmBB$xMin, ymin=gadmBB$yMin, xmax=gadmBB$xMax, ymax=gadmBB$yMa, fill="white", alpha=0.3) +
-    	    #labs(title=analysisName, subtitle="", x="Longitude", y="Latitude")+
-    	    labs(x="Longitude", y="Latitude")+
-    	    geom_polygon(data=gadm1_df, aes(x=long, y=lat, group=group), bg=NA, col="black", size=1) +
-    	    geom_polygon(data=gadm0_df, aes(x=long, y=lat, group=group), bg=NA, col="black", size=1.5)
+    baseMapPlot <- OpenStreetMap::autoplot.OpenStreetMap(bgMap)  +
+            ggplot2::annotate("rect", xmin=gadmBB$xMin, ymin=gadmBB$yMin, xmax=gadmBB$xMax, ymax=gadmBB$yMa, fill="white", alpha=0.3) +
+    	    #ggplot2::labs(title=analysisName, subtitle="", x="Longitude", y="Latitude")+
+    	    ggplot2::labs(x="Longitude", y="Latitude")+
+    	    ggplot2::geom_polygon(data=gadm1_df, ggplot2::aes(x=long, y=lat, group=group), bg=NA, col="black", size=1) +
+    	    ggplot2::geom_polygon(data=gadm0_df, ggplot2::aes(x=long, y=lat, group=group), bg=NA, col="black", size=1.5)
 
     # Return all the elements
     list(baseMap=baseMapPlot, bgMap=bgMap, gadmBB=gadmBB, gadm0_df=gadm0_df, gadm1_df=gadm1_df)
@@ -163,8 +163,7 @@ map.getAggregationUnitData <- function(aggLevel, analysisContext, analysisName, 
     numericColIdx <- c((aggLevelIdx+2):ncol(aggUnitData))
     aggUnitData[, numericColIdx] <- sapply(aggUnitData[, numericColIdx], as.numeric)
     rownames(aggUnitData) <- aggUnits
-    colnames(aggUnitData) <- c("UnitId",    
-                               c("Country","AdmDiv1","AdmDiv2")[1:aggLevelIdx],
+    colnames(aggUnitData) <- c("UnitId", c("Country","AdmDiv1","AdmDiv2")[1:aggLevelIdx],
                                "Latitude","Longitude","SampleCount")		#; print(aggUnitCnames)
 
     # Write out the aggregation unit data to file

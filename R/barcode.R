@@ -1,18 +1,27 @@
 ###############################################################################
-# Declarations: sample data and metadata
+# Caching data files
 ################################################################################
-folder.data.barcode <- getDataFolder ("barcodes")
-
-barcodeFname     <- "barcodeAlleles.tab"
-barcodeMetaFname <- "barcodeMeta.tab"
-barcodeSeqFname  <- "barcodeSeqs.fasta"
+barcode.getBarcodeDataFile <- function (ctx) {
+    dataFile <- getDataFile(ctx, "barcode", "barcodeAlleles.tab")
+    dataFile
+}
+barcode.getBarcodeMetaFile <- function (ctx) {
+    metaFile <- getDataFile(ctx, "barcode", "barcodeMeta.tab")
+    metaFile
+}
+barcode.getBarcodeSeqFile <- function (ctx) {
+    seqFile  <- getDataFile(ctx, "barcode", "barcodeSeqs.tab")
+    seqFile
+}
 
 ###############################################################################
 # Barcode retrieval, validating and filtering
 ################################################################################
-initializeBarcodes <- function (context, loadFromCache=TRUE, outFolder=folder.data.barcode) {
-    barcodeDataFile <- analysis.getDataFile(context, folder.data.barcode, barcodeFname)
-    barcodeMetaFile <- analysis.getDataFile(context, folder.data.barcode, barcodeMetaFname)
+initializeBarcodes <- function (context, loadFromCache=TRUE) {
+    GRC_BARCODE_COL <- "GenBarcode"			# TODO  This may need to be configured globally
+
+    barcodeDataFile <- barcode.getBarcodeDataFile (context)
+    barcodeMetaFile <- barcode.getBarcodeMetaFile (context)
     
     if (loadFromCache & file.exists(barcodeDataFile)) {
         barcodeMeta <- read.table(barcodeMetaFile, as.is=TRUE, header=TRUE, sep="\t")
@@ -29,14 +38,14 @@ initializeBarcodes <- function (context, loadFromCache=TRUE, outFolder=folder.da
         rownames(barcodeMeta) <- barcodeMeta$SnpName
     
         # Get barcode alleles, and discard samples that have too much missingness
-        barcodeData <- getAllelesFromBarcodes (context$meta, meta.colName.barcode, barcodeMeta)
+        barcodeData <- getAllelesFromBarcodes (context$meta, GRC_BARCODE_COL, barcodeMeta)
         
         print(paste("Barcode alleles - Samples:", nrow(barcodeData), "x SNPs:", ncol(barcodeData)))
         print("Validating barcodes")
         validateBarcodeAlleles (barcodeData, barcodeMeta)
         
         # Filter the barcodes by typability, trying to throw away as little as possible
-        writeBarcodeStats (barcodeData, outFolder=folder.data.barcode, prefix=context$name, suffix="noFiltering")
+        writeBarcodeStats (context, barcodeData, prefix=context$name, suffix="noFiltering")
         print(paste("Filtering barcodes by typability (samples:", barcode.minTypability.sample, ", SNPs:", barcode.minTypability.snp, ")",sep=""))
         #
         # 1) remove all samples with <0.5 typability, so they affect less the removal of SNPs
@@ -46,12 +55,12 @@ initializeBarcodes <- function (context, loadFromCache=TRUE, outFolder=folder.da
 	filteredData <- filterByTypability (filteredData, bySnp=TRUE,  minTypability=barcode.minTypability.snp)
 	filteredData <- filterByTypability (filteredData, bySnp=FALSE, minTypability=barcode.minTypability.sample)
 	barcodeData <- filteredData
-        writeBarcodeStats (barcodeData, outFolder=folder.data.barcode, prefix=context$name, 
+        writeBarcodeStats (context, barcodeData, prefix=context$name, 
                            suffix=paste("filtered-snps_", barcode.minTypability.snp, "-samples_", barcode.minTypability.sample, sep=""))
         print(paste("Barcode alleles after filtering - Samples:", nrow(barcodeData), "x SNPs:", ncol(barcodeData)))
         #
         barcodeMeta <- trimBarcodeMeta (barcodeMeta, barcodeData)
-        context <- setContextBarcodes (context, barcodeData, barcodeMeta, store=TRUE, outFolder=outFolder)
+        context <- setContextBarcodes (context, barcodeData, barcodeMeta, store=TRUE)
     }
 
     # Report missingness 
@@ -65,13 +74,13 @@ initializeBarcodes <- function (context, loadFromCache=TRUE, outFolder=folder.da
     context
 }
 
-setContextBarcodes <- function (context, newBarcodes, newBarcodeMeta, store=TRUE, outFolder=folder.data.barcode) {
+setContextBarcodes <- function (context, newBarcodes, newBarcodeMeta, store=TRUE) {
     context$barcodes    <- newBarcodes
     context$barcodeMeta <- newBarcodeMeta
     if (store) {
-        barcodeDataFile <- analysis.getDataFile(context, outFolder, barcodeFname)
-        barcodeMetaFile <- analysis.getDataFile(context, outFolder, barcodeMetaFname)
-        barcodeSeqFile  <- analysis.getDataFile(context, outFolder, barcodeSeqFname)
+        barcodeDataFile <- barcode.getBarcodeDataFile (context)
+        barcodeMetaFile <- barcode.getBarcodeMetaFile (context)
+        barcodeMetaFile <- barcode.getBarcodeSeqFile (context)
         writeSampleData(newBarcodes, barcodeDataFile)
         write.table(newBarcodeMeta, file=barcodeMetaFile, sep="\t", quote=FALSE, row.names=FALSE)
         writeFasta (newBarcodes, barcodeSeqFile)
@@ -114,7 +123,7 @@ getAllelesFromBarcodes <- function(sampleMetadata, barcodeColumnName, barcodeMet
     rownames(alleleData) = names(barcodes);
     alleleData
 }
-cppFunction('
+Rcpp::cppFunction('
     StringMatrix extractBarcodeAlleles (StringVector barcodes, StringVector snpNames) {
         unsigned int nsnps = snpNames.length();
         unsigned int nsamples = barcodes.length();
@@ -194,19 +203,22 @@ computeBarcodeStats <- function (bcodes, bySnp) {
     stats
 }
 
-writeBarcodeStats <- function(barcodeData, outFolder=folder.data.barcode, prefix="", suffix="") {
+writeBarcodeStats <- function(ctx, barcodeData, prefix="", suffix="") {
     if (nchar(prefix) > 0) {
         prefix <- paste(prefix, ".", sep="")
     }
     if (nchar(suffix) > 0) {
         suffix <- paste(".", suffix, sep="")
     }
+    
     stats <- computeBarcodeStats (barcodeData, bySnp=TRUE)    
-    statsFile  <- paste(outFolder, "/", prefix, "stats-snps", suffix, ".tab",  sep="")
+    statsFilename <- paste(prefix, "stats-snps", suffix, ".tab",  sep="")
+    statsFile  <- getDataFile(ctx, "barcode", statsFilename)
     writeLabelledData (stats, "Snp", statsFile)
 
     stats <- computeBarcodeStats (barcodeData, bySnp=FALSE)
-    statsFile  <- paste(outFolder, "/", prefix, "stats-samples", suffix, ".tab",  sep="")
+    statsFilename  <- paste(prefix, "stats-samples", suffix, ".tab",  sep="")
+    statsFile  <- getDataFile(ctx, "barcode", statsFilename)
     writeLabelledData (stats, "Sample", statsFile)
 }
 

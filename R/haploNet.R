@@ -15,7 +15,7 @@ haploNet.execute <- function(analysisContext, analysisName, plotList, params) {
     barcodeData <- analysisContext$barcodes[sampleNames,]
     
     #barcodeData <- barcodeData[,1:20]
-    barcodeSeqs <- as.DNAbin(as.matrix(barcodeData))
+    barcodeSeqs <- ape::as.DNAbin(as.matrix(barcodeData))
     h <- pegas::haplotype(barcodeSeqs)
     
     # Keep only haplotypes that are common (i.e. in a number of parasites)

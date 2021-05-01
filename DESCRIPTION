@@ -1,11 +1,20 @@
 Package: grcMalaria
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Package for processing and analyzing SpotMalaria Genetic Report Cards
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Author: Olivo Miotto <olivo@tropmedres.ac>
+Maintainer: Olivo Miotto <olivo@tropmedres.ac>
+Description: Various functions for producing analysis results such as maps an reports from the Genetic Report Cards datasets delivered by SpotMalaria rpojects, such as GenRe-Mekong.
+    Typical outputs include drug resistance prevalence maps, population genetic analyses such as PCA and NJ trees, and analyses of genetic barcodes such as barcode sharing networks, etc.
+License: MIT license
 Encoding: UTF-8
 LazyData: true
+RoxygenNote: 7.1.1
+Imports:
+    Rcpp, 
+    readxl, openxlsx, 
+    ape, pegas, pcaMethods,
+    igraph,
+    GADMTools, OpenStreetMap, 
+    RColorBrewer, 
+    ggmap, ggplot2, ggrepel, ggforce

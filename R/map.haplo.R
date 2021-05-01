@@ -4,7 +4,7 @@ default.map.haplo.markerSampleCount <- "mean"  # Can be "mean", a number or "non
 # Map Haplotype Frequency Analysis
 ################################################################################
 #
-haploMap.execute <- function(analysisContext, analysisName, mapType, visType, aggregation, measures, params) {
+haploMap.execute <- function(ctx, analysisName, mapType, visType, aggregation, measures, params) {
     # Create the information object, used to create the plot
     # Start by getting the output folders
     dataFolder <- getOutFolder(analysisName, c(paste("map", mapType, sep="-"), "data"))
@@ -15,7 +15,7 @@ haploMap.execute <- function(analysisContext, analysisName, mapType, visType, ag
 
     # Build the map necessary to display these samples
     # Construct a base plot for completing subsequent maps
-    baseMapInfo <- info$baseMapInfo <- map.buildBaseMap (analysisName, analysisContext$meta, dataFolder, params)
+    baseMapInfo <- info$baseMapInfo <- map.buildBaseMap (ctx, analysisName, ctx$meta, dataFolder, params)
 
     # Now compute the aggregation units, the values to be plotted, and make the map
     for (aggIdx in 1:length(aggregation)) {
@@ -23,7 +23,7 @@ haploMap.execute <- function(analysisContext, analysisName, mapType, visType, ag
         aggLevelIdx <- aggLevel + 1
 
         # Get the aggregated data for the aggregation units
-        aggUnitData <- info$aggUnitData <- map.getAggregationUnitData (aggLevel, analysisContext, analysisName, mapType, params, dataFolder)	#; print(aggUnitData)
+        aggUnitData <- info$aggUnitData <- map.getAggregationUnitData (aggLevel, ctx, analysisName, mapType, params, dataFolder)	#; print(aggUnitData)
 
         # Work out a "standard" haplotype marker size (1/25 of the shortest side) and apply a scaling factor
         scalingFactor <- analysis.getParam ("map.haplo.markerScale", params, 1.0)		#; print(scalingFactor)
@@ -49,7 +49,7 @@ haploMap.execute <- function(analysisContext, analysisName, mapType, visType, ag
         # The haplotype sharing task produces multiple maps, for different thresholds of haplotype identity 
         if (mapType=="haploFreq") {
             # Get the haplotype counts data
-	    info$haploCountData <- haploMap.buildCountData (aggLevel, aggUnitData, analysisContext, params)	#; print(head(countData)
+	    info$haploCountData <- haploMap.buildCountData (aggLevel, aggUnitData, ctx, params)	#; print(head(countData)
             haploMap.plotMap (info, params)
 
         } else if (mapType=="haploShare") {
@@ -63,8 +63,8 @@ haploMap.execute <- function(analysisContext, analysisName, mapType, visType, ag
 	        maxGroups <- length(haploGroupPalette)
 	    
 	        # Get the haplotype sharing data
-	        groupData <- cluster.findbyIdentity (analysisContext, analysisName, identityLevel, params)
-	        haploShareData <- haploMap.buildSharedCountData (aggLevel, aggUnitData, groupData, analysisContext$meta, maxGroups, params)	#; print(head(haploShareData)
+	        groupData <- cluster.findbyIdentity (ctx, analysisName, identityLevel, params)
+	        haploShareData <- haploMap.buildSharedCountData (aggLevel, aggUnitData, groupData, ctx$meta, maxGroups, params)	#; print(head(haploShareData)
 	        info$groupData <- groupData
 	        info$haploShareData <- haploShareData
 	    
@@ -115,9 +115,9 @@ haploMap.plotMap <- function (info, params) {
         aggColName <- c("Country","AdmDiv1","AdmDiv2")[aggLevelIdx]		#; print(aggColName)
         lp <- map.computeLabelParams (aggUnitData, aggColName, baseMapInfo)		#; print(lp)
         mapPlot <- mapPlot + 
-                   geom_label_repel(aes(x=lon, y=lat, label=label, fill=1.0), 
+                   ggrepel::geom_label_repel(ggplot2::aes(x=lon, y=lat, label=label, fill=1.0), 
                                     data=lp, size=4.5, fontface="bold", color="darkgray", 
-                                    hjust=lp$just, vjust=0.5, nudge_x=lp$x, nudge_y=lp$y, label.padding=unit(0.2, "lines"))
+                                    hjust=lp$just, vjust=0.5, nudge_x=lp$x, nudge_y=lp$y, label.padding=grid::unit(0.2, "lines"))
     }
 
     # Now add the markers
@@ -142,16 +142,16 @@ haploMap.plotMap <- function (info, params) {
             groupInfoText <- cluster.getClusterStatsText (haploGroup, groupData)	#; print(groupInfoText)
             bb <- baseMapInfo$gadmBB
             #mapPlot <- mapPlot +
-            #           annotate("label", x=bb$xMin, y=bb$yMax, hjust="left", vjust="top", label=groupInfoText)
+            #           ggplot2::annotate("label", x=bb$xMin, y=bb$yMax, hjust="left", vjust="top", label=groupInfoText)
             #
             # Dirty trick so we can show an annotation with group info above the legends.
             # We "plot" a couple of points, and create a ficticious alpha legend containing the group info text.
             dummydf <- data.frame(x=c(bb$xMin,bb$xMin), y=c(bb$yMax,bb$yMax), alpha=c(0.1, 0.11))
             mapPlot <- mapPlot +
-                       geom_point(aes(x=x, y=y, alpha=as.numeric(alpha), size=0.01), data=dummydf) +
-                       scale_alpha_continuous(haploGroup, breaks=c(0.1, 0.11), labels=c(groupInfoText,""), 
-                                              guide=guide_legend(order=1,keywidth=0, keyheight=0.01, nrow=1,
-                                                                 override.aes=list(shape=NA,fill=NA,size=0.01)))
+                       ggplot2::geom_point(ggplot2::aes(x=x, y=y, alpha=as.numeric(alpha), size=0.01), data=dummydf) +
+                       ggplot2::scale_alpha_continuous(haploGroup, breaks=c(0.1, 0.11), labels=c(groupInfoText,""), 
+                            guide=ggplot2::guide_legend(order=1,keywidth=0, keyheight=0.01, nrow=1,
+                                                        override.aes=list(shape=NA,fill=NA,size=0.01)))
         } else {
             mapPlot <- haploMap.addShareMarkers (mapPlot, visType, haploShareData, palette, aggUnitData, stdMarkerCount, stdMarkerSize)
         }
@@ -159,13 +159,13 @@ haploMap.plotMap <- function (info, params) {
 
     # Now add the decorative elements
     mapPlot <- mapPlot +
-    	       labs(title=info$plotTitle, subtitle="")+
-               theme(plot.title=element_text(face="bold", size=rel(1.2), hjust=0.5),
-                     panel.background=element_rect(colour=NA),
-                     plot.background=element_rect(colour=NA),
-                     axis.title=element_text(face="bold",size=rel(1)),
-                     axis.title.y=element_text(angle=90,vjust=2),
-                     axis.title.x=element_text(vjust=-0.2))
+    	       ggplot2::labs(title=info$plotTitle, subtitle="")+
+               ggplot2::theme(plot.title=ggplot2::element_text(face="bold", size=ggplot2::rel(1.2), hjust=0.5),
+                     panel.background=ggplot2::element_rect(colour=NA),
+                     plot.background=ggplot2::element_rect(colour=NA),
+                     axis.title=ggplot2::element_text(face="bold",size=ggplot2::rel(1)),
+                     axis.title.y=ggplot2::element_text(angle=90,vjust=2),
+                     axis.title.x=ggplot2::element_text(vjust=-0.2))
      
     # Save to file. the size in inches is given in the config.
     mapSize  <- analysis.getParam ("map.size", params, default.map.size)
@@ -201,14 +201,14 @@ haploMap.addFreqPies <- function (mapPlot, countData, aggUnitData, stdMarkerCoun
     # Now add the pie chart markers
     if (stdMarkerCount==0) {
         mapPlot <- mapPlot +
-                geom_arc_bar(aes(x0=Longitude, y0=Latitude, r0=0, r=stdMarkerSize, 
-                                 fill=Haplo, amount=HaploCount),
+                   ggplot2::geom_arc_bar(ggplot2::aes(x0=Longitude, y0=Latitude, r0=0, r=stdMarkerSize, 
+                                         fill=Haplo, amount=HaploCount),
                              data=countData, stat="pie", inherit.aes=FALSE,
                              colour="gray25", stroke=0.5, fill="white", show.legend=FALSE)
     } else {
         mapPlot <- mapPlot +
-                geom_arc_bar(aes(x0=Longitude, y0=Latitude, r0=0, r=stdMarkerSize*sqrt(SampleCount/stdMarkerCount), 
-                                 fill=Haplo, amount=HaploCount),
+                   ggplot2::geom_arc_bar(ggplot2::aes(x0=Longitude, y0=Latitude, r0=0, r=stdMarkerSize*sqrt(SampleCount/stdMarkerCount), 
+                                         fill=Haplo, amount=HaploCount),
                              data=countData, stat="pie", inherit.aes=FALSE,
                              colour="gray25", stroke=0.5, fill="white", show.legend=FALSE)
     }
@@ -261,17 +261,17 @@ haploMap.addFreqBars <- function (mapPlot, countData, aggUnitData, stdMarkerCoun
     }				
     #print(freqBarData)
     mapPlot <- mapPlot +
-               geom_rect(aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2), data=freqBarData, inherit.aes=FALSE,
-                         colour="gray25", stroke=0.5, fill="white", show.legend=FALSE)
+               ggplot2::geom_rect(ggplot2::aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2), data=freqBarData, inherit.aes=FALSE,
+                                  colour="gray25", stroke=0.5, fill="white", show.legend=FALSE)
     mapPlot
 }
 
 #
 # For each aggregation unit, we get a count of each unique haplotype, ordered in descending count
 #
-haploMap.buildCountData <- function(aggLevel, aggUnitData, analysisContext, params) {
-    sampleMeta   <- analysisContext$meta
-    barcodeData  <- analysisContext$barcodes
+haploMap.buildCountData <- function(aggLevel, aggUnitData, ctx, params) {
+    sampleMeta   <- ctx$meta
+    barcodeData  <- ctx$barcodes
 
     # Get all aggregation unit ids
     aggUnits <- rownames(aggUnitData)	#; print(aggUnits)
@@ -323,18 +323,18 @@ haploMap.addSharePies <- function (mapPlot, haploShareData, haploGroupPalette, a
     # Now add the pie chart markers
     if (stdMarkerCount==0) {
         mapPlot <- mapPlot +
-                   geom_arc_bar(aes(x0=Longitude, y0=Latitude, r0=0, r=stdMarkerSize, 
-                                    fill=HaploGroup, amount=HaploCount),
+                   ggplot2::geom_arc_bar(ggplot2::aes(x0=Longitude, y0=Latitude, r0=0, r=stdMarkerSize, 
+                                         fill=HaploGroup, amount=HaploCount),
                                 data=haploShareData, stat="pie", inherit.aes=FALSE,
                                 colour="gray25", stroke=0.5, show.legend=FALSE) +
-                   scale_fill_manual(values=haploGroupPalette)
+                   ggplot2::scale_fill_manual(values=haploGroupPalette)
     } else {
         mapPlot <- mapPlot +
-                   geom_arc_bar(aes(x0=Longitude, y0=Latitude, r0=0, r=stdMarkerSize*sqrt(SampleCount/stdMarkerCount), 
-                                    fill=HaploGroup, amount=HaploCount),
+                   ggplot2::geom_arc_bar(ggplot2::aes(x0=Longitude, y0=Latitude, r0=0, r=stdMarkerSize*sqrt(SampleCount/stdMarkerCount), 
+                                         fill=HaploGroup, amount=HaploCount),
                                 data=haploShareData, stat="pie", inherit.aes=FALSE,
                                 colour="gray25", stroke=0.5, show.legend=FALSE) +
-                   scale_fill_manual(values=haploGroupPalette)
+                   ggplot2::scale_fill_manual(values=haploGroupPalette)
     }
     mapPlot
 }
@@ -389,9 +389,9 @@ haploMap.addShareBars <- function (mapPlot, haploShareData, haploGroupPalette, a
     
     # Got the dataframe for drawing all the rectangles, now do the drawing and colouring
     mapPlot <- mapPlot +
-               geom_rect(aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2, fill=HaploGroup), data=freqBarData, inherit.aes=FALSE,
-                         colour="gray25", stroke=0.5, show.legend=FALSE) +
-               scale_fill_manual(values=haploGroupPalette)
+               ggplot2::geom_rect(ggplot2::aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2, fill=HaploGroup), data=freqBarData, inherit.aes=FALSE,
+                                  colour="gray25", stroke=0.5, show.legend=FALSE) +
+               ggplot2::scale_fill_manual(values=haploGroupPalette)
     mapPlot
 }
 
@@ -498,19 +498,19 @@ haploMap.addConnections <- function (mapPlot, visType, haploGroup, haploShareDat
 	
         # Now plot the connections
         mapPlot <- mapPlot +
-                   geom_curve(aes(x=Lon1, y=Lat1, xend=Lon2, yend=Lat2, size=Weight, colour=Weight),	# draw edges as arcs
+                   ggplot2::geom_curve(ggplot2::aes(x=Lon1, y=Lat1, xend=Lon2, yend=Lat2, size=Weight, colour=Weight),	# draw edges as arcs
                                data=aggUnitPairData, curvature=0.2, alpha=0.75) +
-                   scale_size_continuous(guide=FALSE, range=c(0.25, 4)) +          			# scale for edge widths
-                   scale_colour_gradientn(name="Sharing", colours=c(weakHaploColour,haploColour))
+                   ggplot2::scale_size_continuous(guide=FALSE, range=c(0.25, 4)) +          			# scale for edge widths
+                   ggplot2::scale_colour_gradientn(name="Sharing", colours=c(weakHaploColour,haploColour))
     }
      
     # Plot the Aggregation Unit markers
     mapPlot <- mapPlot +
-	       geom_point(aes(x=Longitude, y=Latitude, fill=HaploProp), 
-	                  data=haploShareData, size=pointSizes, shape=21, stroke=2) +
-	       scale_fill_gradientn(name="Prevalence", limits=c(scaleMin,scaleMax), colours=c("white",haploColour), values=c(0,1)) +
-               geom_text(aes(x=Longitude, y=Latitude), 
-                         data=haploShareData, label=valueLabels, hjust=0.5, vjust=0.5, size=4.5, fontface="bold")
+	       ggplot2::geom_point(ggplot2::aes(x=Longitude, y=Latitude, fill=HaploProp), 
+	                           data=haploShareData, size=pointSizes, shape=21, stroke=2) +
+	       ggplot2::scale_fill_gradientn(name="Prevalence", limits=c(scaleMin,scaleMax), colours=c("white",haploColour), values=c(0,1)) +
+               ggplot2::geom_text(aes(x=Longitude, y=Latitude), 
+                                  data=haploShareData, label=valueLabels, hjust=0.5, vjust=0.5, size=4.5, fontface="bold")
     mapPlot
 }
 

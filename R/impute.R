@@ -11,8 +11,7 @@ impute.createContext <- function (filteredContext, loadFromCache=TRUE) {
     print("Initializing Imputed Dataset")
     imputedContext <- list(name="imputed")
     imputedContext <- meta.setContextSampleMeta (imputedContext, filteredContext$meta)
-
-    impBarcodeDataFile <- analysis.getDataFile(imputedContext, folder.data.barcode, barcodeFname)
+    impBarcodeDataFile <- barcode.getBarcodeDataFile (imputedContext)
     impBarcodeMeta <- filteredContext$barcodeMeta
     if (loadFromCache & file.exists(impBarcodeDataFile)) {
         impBarcodeData <- readSampleData (impBarcodeDataFile)
@@ -40,7 +39,7 @@ impute.imputeBarcodes <- function (barcodeData, barcodeMeta, distData) {
     impBarcodeData
 }
 
-cppFunction('
+Rcpp::cppFunction('
     StringMatrix imputeBarcodesCpp (DataFrame barcodeData, DataFrame barcodeMeta, DataFrame distData) {
         int nsamples = barcodeData.nrow();
         int nsnps    = barcodeData.ncol();
@@ -110,65 +109,4 @@ cppFunction('
         return (imp);
     }
 ')
-
-#impBarcodes <- initializeImputation(loadFromCache=FALSE)
-
-
-##########################################################
-exampleRearrange <- function() {
-    d <- data.frame(c("Napoli","Milano","Roma"),c(3,1,2))
-    colnames(d) <- c("City","Num")
-    exampleRearrangeCpp(d)
-}
-cppFunction('
-    StringVector exampleRearrangeCpp (DataFrame df) {
-        int nrec = df.nrows();
-        IntegerVector num = df["Num"];     // Second column
-        StringVector cities = df["City"];  // First column
-        Function srt("order");   
-        IntegerVector perm = srt(num);
-        StringVector result(nrec);
-        for (int i = 0; i < nrec; i++) {
-             int idx = (perm[i]-1);
-             String s = cities[idx];
-             result[i] = s;
-        }
-        return (result);
-    }
-')
-
-cppFunction('
-    String test1 (String s1, String s2) {
-        if(s1 == s2) {
-            return ("Yes");
-        }
-        return ("No");
-    }
-')
-#test1 ("Hello", "there")
-#test1 ("there", "there")
-
-exampleRowNames <- function() {
-    d <- data.frame(c("Napoli","Milano","Roma"),c(3,1,2))
-    colnames(d) <- c("City","Num")
-    rownames(d) <- c("A","B","C")
-    exampleRowNamesCpp(d)
-}
-cppFunction('
-    StringVector exampleRowNamesCpp (DataFrame df) {
-        int nrec = df.nrows();
-        CharacterVector sNames = df.attr("row.names");
-        StringVector snpNames = colnames(df);
-        for (int sIdx = 0; sIdx < nrec; sIdx++) {
-            String sName = sNames[sIdx];
-            Rcout << sName.get_cstring() << "\\n";
-        }
-        return (sNames);
-    }
-')
-#exampleRowNames()
-
-
-##########################################################
-
 

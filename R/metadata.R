@@ -1,60 +1,18 @@
-#
-meta.colName.sample  <- "SampleId"
-meta.colName.barcode <- "GenBarcode"
-#
-#
-###############################################################################
-# Declarations: sample data and metadata
+##############################################################################
+# Sample metadata management
 ################################################################################
-folder.data.meta <- getDataFolder ("meta")
-
-sampleMetaFname <- "sampleMeta.tab"
-
-meta.initializeMetadata <- function (ctx, store=TRUE) {
-    if (exists("sampleMeta.xls.file") && !is.null(sampleMeta.xls.file)) {
-        sampleMeta <- meta.readExcelSampleMeta ()
-    } else if (exists("sampleMeta.tab.file") && !is.null(sampleMeta.tab.file)) {
-        sampleMeta <- meta.readTabSampleMeta ()
-    } else {
-        stop("No metadata file specified in configuration")
-    }
-    ctx <- meta.setContextSampleMeta(ctx, sampleMeta, store=store)
-    ctx
-}
-
 meta.setContextSampleMeta <- function (ctx, newMeta, store=TRUE) {
     ctx$meta <- newMeta
     if (store) {
-        writeSampleData(newMeta, 
-                        analysis.getDataFile(ctx, folder.data.meta, sampleMetaFname))
+        metaFile <- meta.getMetaDataFile(ctx)
+        writeSampleData(newMeta, metaFile)
     }
     ctx
 }
 
-###############################################################################
-# Data input routines
-################################################################################
-#
-# Read sample metadata file
-#
-meta.readExcelSampleMeta <- function () {
-    sampleMetaFile <- paste(sampleMeta.folder, sampleMeta.xls.file, sep="/")
-    sampleMeta <- data.frame(read_excel(sampleMetaFile, sheet=sampleMeta.xls.sheet, col_names=FALSE, col_types="text"))
-    colnames(sampleMeta) <- sampleMeta[1,]			#; print(str(sampleMeta))
-    sampleMeta <- sampleMeta[-1,]
-    sampleNames <- sampleMeta[,meta.colName.sample]	#; print (sampleNames)
-    rownames(sampleMeta) <- sampleNames				#; print(str(sampleMeta))
-    return (sampleMeta)
-}
-
-meta.readTabSampleMeta <- function () {
-    sampleMetaFile <- paste(sampleMeta.folder, sampleMeta.tab.file, sep="/")
-    sampleMeta <- read.table(sampleMetaFile, as.is=TRUE, stringsAsFactors=TRUE, quote="", header=FALSE, sep="\t")
-    colnames(sampleMeta) <- sampleMeta[1,]			#; print(str(sampleMeta))
-    sampleMeta <- sampleMeta[-1,]
-    sampleNames <- sampleMeta[,meta.colName.sample]	#; print (sampleNames)
-    rownames(sampleMeta) <- sampleNames				#; print(str(sampleMeta))
-    return (sampleMeta)
+meta.getMetaDataFile <- function (ctx) {
+    metaFile <- getDataFile(ctx, "meta", "sampleMeta.tab")
+    metaFile
 }
 
 ###############################################################################
@@ -113,7 +71,7 @@ meta.getAllelePrevalence <- function (sampleMeta, positionNames, alleles, params
         genos <- sampleMeta[,columnName]		#; print(genos)
         genos <- genos[which(!(genos %in% c("*","-")))]	#; print(genos)
         genos <- genos[which(nchar(genos)==1)]		#; print(genos)
-        
+
         totalCount <- length(genos)
         preval <- NA
         if (totalCount >= aggregateCountMin) {
@@ -158,10 +116,10 @@ meta.getValueCounts <- function (sampleMeta, colNames, params=NULL) {
 meta.addMergedFields <- function(sampleMeta, mergeFieldsDefs) {
     for (mIdx in 1:length(mergeFieldsDefs)) {
         fieldList <- mergeFieldsDefs[[mIdx]]
-    
+
         outFieldName <- fieldList[[1]]
         outValues <- sampleMeta[,outFieldName]
-    
+
         for (fIdx in 2:length(fieldList)) {
             srcFieldName <- fieldList[[fIdx]]
             outFieldName <- paste(outFieldName, srcFieldName, sep="__")
@@ -188,7 +146,7 @@ meta.select <- function(sampleMeta, selectDefs) {
         #print (paste("Select values: ",selValues))
         metaValues <- sampleMeta[,selField]
         sampleMeta <- sampleMeta[which (metaValues %in% selValues),]
-        #print (paste("Selected samples: ",nrow(sampleMeta)))        
+        #print (paste("Selected samples: ",nrow(sampleMeta)))
     }
     sampleMeta
 }

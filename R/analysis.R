@@ -1,40 +1,25 @@
-source("graphics.R",     local=FALSE)
-source("pca.R",          local=FALSE)
-source("njt.R",          local=FALSE)
-source("cluster.R",      local=FALSE)
-source("graph.R",        local=FALSE)
-source("haploNet.R",     local=FALSE)
-source("map.common.R",   local=FALSE)
-source("map.marker.R",   local=FALSE)
-source("map.connect.R",  local=FALSE)
-source("map.haplo.R",    local=FALSE)
-#
 ###################################################################
 # Root Context - Contains all data needed from analysis
 ###################################################################
 #
-analysis.createContext <- function () {
+analysis.createContext <- function (grcData, config) {
     ctx <- list()
-    ctx$unfiltered <- analysis.createUnfilteredContext()
+    ctx$unfiltered <- analysis.createUnfilteredContext(grcData, config)
     ctx$filtered   <- analysis.createFilteredContext(ctx$unfiltered)
     ctx$imputed    <- impute.createContext(ctx$filtered)
+    ctx$config     <- config
+    ctx$sampleSets <- list()
     ctx
-}
-#
-# Datafile Naming utility- so that datafiles are not overwritten 
-#
-analysis.getDataFile <- function (context, dataFolder, filename) {
-    return(paste(dataFolder, "/", context$name, ".", filename, sep=""))
 }
 #
 ###################################################################
 # Basic (Unfiltered) Data - complete but raw data - built upon initialization
 ###################################################################
 #
-analysis.createUnfilteredContext <- function () {
+analysis.createUnfilteredContext <- function (grcData, config) {
     print("Initializing Basic Dataset")
     unfilteredCtx <- list(name="unfiltered")
-    unfilteredCtx <- meta.initializeMetadata (unfilteredCtx)
+    unfilteredCtx <- meta.setContextSampleMeta(ctx, grcData, store=TRUE)
     print(paste("Loaded metadata - Samples:", nrow(unfilteredCtx$meta)))
     unfilteredCtx
 }
@@ -43,40 +28,40 @@ analysis.createUnfilteredContext <- function () {
 # Filtered Data, with high-missingness barcodes removed
 ###################################################################
 #
-analysis.createFilteredContext <- function (unfilteredContext, loadFromCache=TRUE) {
+analysis.createFilteredContext <- function (unfilteredCtx, loadFromCache=TRUE) {
     print("Initializing Filtered Dataset")
-    filteredContext <- list(name="filtered")
-    
-    filteredMetaFile <- analysis.getDataFile(filteredContext, folder.data.meta, sampleMetaFname)
-    filteredBarcodeMetaFile <- analysis.getDataFile(filteredContext, folder.data.barcode, barcodeMetaFname)
-    filteredBarcodeFile <- analysis.getDataFile(filteredContext, folder.data.barcode, barcodeFname)
-    
+    filteredCtx <- list(name="filtered")
+
+    filteredMetaFile        <- meta.getMetaDataFile(filteredCtx)
+    filteredBarcodeMetaFile <- barcode.getBarcodeMetaFile(filteredCtx)
+    filteredBarcodeFile     <- barcode.getBarcodeDataFile(filteredCtx)
+
     if (loadFromCache & file.exists(filteredMetaFile) & file.exists(filteredBarcodeMetaFile) & file.exists(filteredBarcodeFile)) {
         sampleMeta <- readSampleData (filteredMetaFile)		#; print(colnames(sampleMeta))
-        filteredContext <- meta.setContextSampleMeta (filteredContext, sampleMeta, store=FALSE)
-        
+        filteredCtx <- meta.setContextSampleMeta (filteredCtx, sampleMeta, store=FALSE)
+
         barcodeMeta <- read.table(filteredBarcodeMetaFile, as.is=TRUE, header=TRUE, sep="\t")
         barcodeData <- readSampleData (filteredBarcodeFile)
-        filteredContext <- setContextBarcodes (filteredContext, barcodeData, barcodeMeta, store=FALSE)
-        print(paste("Loaded", filteredContext$name, "barcodes - Samples:", nrow(barcodeData), "x SNPs:", ncol(barcodeData)))
+        filteredCtx <- setContextBarcodes (filteredCtx, barcodeData, barcodeMeta, store=FALSE)
+        print(paste("Loaded", filteredCtx$name, "barcodes - Samples:", nrow(barcodeData), "x SNPs:", ncol(barcodeData)))
     } else {
-        filteredContext <- meta.setContextSampleMeta (filteredContext, unfilteredContext$meta)
-        filteredContext <- initializeBarcodes (filteredContext)
-    
+        filteredCtx <- meta.setContextSampleMeta (filteredCtx, unfilteredCtx$meta)
+        filteredCtx <- initializeBarcodes (filteredCtx)
+
         # Trim the metadata to cover the barcodes selected
-        sampleNames   <- rownames(filteredContext$barcodes)
-        filteredMeta  <- filterSampleData (filteredContext$meta, sampleNames)
-        filteredContext <- meta.setContextSampleMeta (filteredContext, filteredMeta)
+        sampleNames   <- rownames(filteredCtx$barcodes)
+        filteredMeta  <- filterSampleData (filteredCtx$meta, sampleNames)
+        filteredCtx <- meta.setContextSampleMeta (filteredCtx, filteredMeta)
     }
 
     # Get the genotypes, distance matrix and execute the pop structure analysis
-    filteredContext <- geno.initialize(filteredContext)
-    filteredContext <- distance.initialize(filteredContext)
-    filteredContext
+    filteredCtx <- geno.initialize(filteredCtx)
+    filteredCtx <- distance.initialize(filteredCtx)
+    filteredCtx
 }
 #
 ###################################################################
-# Create a new context, consisting of the same data as the source context, but filtered to a given sample list 
+# Create a new context, consisting of the same data as the source context, but filtered to a given sample list
 ###################################################################
 #
 analysis.selectSamplesInContext <- function (ctx, sampleNames) {
@@ -111,45 +96,54 @@ analysis.trimContext <- function (ctx, sampleNames) {
 }
 #
 ###################################################################
-# Execute
+# 
 ###################################################################
 #
-analysis.execute <- function (ctx, datasetList, tasks, plotList=NULL, aggregation=NULL, measures=NULL, params=NULL) {
-    for (aIdx in 1:length(datasetList)) {
-        dataset <- datasetList[[aIdx]]
-        analysis.executeSingle (ctx, dataset=dataset, tasks=tasks, plotList=plotList, aggregation=aggregation, measures=measures, params=params) 
-    }
-    print("All datasets analyzed")
-}
-#
-###################################################################
-# Run Individual Analysis
-###################################################################
-#
-analysis.executeSingle <- function(ctx, dataset, tasks, plotList, aggregation, measures, params) {
-    analysisName <- dataset$name
-    print(paste("Analysis:", analysisName))
-  
+analysis.selectDataset <- function (ctx, name, select) {
     # Create merged metadata fields if needed
     sampleMeta <- ctx$unfiltered$meta
     if (!is.null(dataset$mergeFields)) {
          sampleMeta <- meta.addMergedFields(sampleMeta, dataset$mergeFields)
     }
-  
-    # Select the samples to be plotted
-    if (!is.null(dataset$select)) {
-        sampleMeta <- meta.select(sampleMeta, dataset$select)
-    }
-    
-    # Resolve all the automatic rendering in the plots
-    if (!is.null(plotList)) {
-        plotList <- resolveAutomaticRenderingInPlots (sampleMeta, plotList)
-    }
-    
+
+    # Select the samples to be analyzed
+    sampleMeta <- meta.select(sampleMeta, select)
+
     # Create a trimmed analysis context containing only data pertaining to the selected samples
     sampleNames <- rownames(sampleMeta)
     trimCtx <- analysis.selectSamplesInContext (ctx, sampleNames)
-  
+    
+    sampleSet <- list(
+        name=name,
+        select=select,
+        samples=sampleNames,
+        ctx=trimCtx
+    )
+    ctx$sampleSets[[name]] <- sampleSet
+    ctx
+}
+#
+###################################################################
+# Execute
+###################################################################
+#
+analysis.executeOnSampleSet <- function(ctx, sampleSetName, tasks, plotList, aggregation, measures, params) {
+    if (sampleSetName %in% names(ctx$sampleSets)) {
+        stop(paste("Sample set not initiaized:", sampleSetName))
+    }
+    sampleSet <- ctx$sampleSets[[sampleSetName]]
+    analysisName <- sampleSet$name
+    print(paste("Analysis:", analysisName))
+    
+    # Get the trimmed analysis context containing only data pertaining to the selected samples
+    sampleNames <- sampleSet$samples
+    trimCtx <- sampleSet$ctx
+
+    # Resolve all the automatic rendering in the plots
+    if (!is.null(plotList)) {
+        plotList <- resolveAutomaticRenderingInPlots (trimCtx$meta, plotList)
+    }
+
     # Write out the meta
     metaFilename  <- paste(getOutFolder(analysisName), "/meta-", analysisName, "-unfiltered.tab", sep="")
     write.table(trimCtx$unfiltered$meta, file=metaFilename, sep="\t", quote=FALSE, row.names=FALSE)
@@ -171,24 +165,24 @@ analysis.executeSingle <- function(ctx, dataset, tasks, plotList, aggregation, m
         if (task == "njt") {
             njt.execute (analysisCtx, analysisName)
             njt.executePlots (analysisCtx, analysisName, plotList)
-            
+
         } else if (task == "pca") {
             pca.execute (analysisCtx, analysisName, method)
             pca.executePlots (analysisCtx, analysisName, method, plotList)
-            
+
         } else if (task == "graph") {
             graph.execute (analysisCtx, analysisName, params)
             graph.executePlots (analysisCtx, analysisName, plotList, params)
-            
+
         } else if (task == "haploNet") {
             haploNet.execute (analysisCtx, analysisName, plotList, params)
-            
+
         } else if (task == "map") {
             if (method == "drug") {
                 analysisCtx <- trimCtx$unfiltered
             }
             map.execute(analysisCtx, analysisName, method, aggregation, measures, params)
-            
+
         } else {
             stop(paste("Invalid analysis task:", task))
         }
@@ -200,7 +194,7 @@ analysis.executeSingle <- function(ctx, dataset, tasks, plotList, aggregation, m
 # Task Parameters retrieval
 ###################################################################
 #
-# 
+#
 #
 analysis.getParam <- function (paramName, paramList, defaultValue) {
     value <- defaultValue
