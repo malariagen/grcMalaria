@@ -19,14 +19,14 @@ barcode.getMetadata <- function (ctx, barcodeData) {
 ###############################################################################
 # Barcode setting and caching
 ################################################################################
-setDatasetBarcodes <- function (ctx, datasetName, barcodes, store=TRUE) {
+barcode.setDatasetBarcodes <- function (ctx, datasetName, barcodes, store=TRUE) {
     dataset <- ctx[[datasetName]]
     dataset$barcodes <- barcodes
     if (store) {
         barcodeDataFile <- barcode.getBarcodeDataFile (ctx, datasetName)
         writeSampleData(barcodes, barcodeDataFile)
         barcodeSeqFile <- barcode.getBarcodeSeqFile (ctx, datasetName)
-        writeFasta (barcodes, barcodeSeqFile)
+        barcode.writeFasta (barcodes, barcodeSeqFile)
     }
     ctx[[datasetName]] <- dataset
     ctx
@@ -35,7 +35,7 @@ setDatasetBarcodes <- function (ctx, datasetName, barcodes, store=TRUE) {
 ###############################################################################
 # Barcode retrieval, validating and filtering
 ################################################################################
-initializeBarcodes <- function (ctx, datasetName, loadFromCache=TRUE) {
+barcode.initializeBarcodes <- function (ctx, datasetName, loadFromCache=TRUE) {
     GRC_BARCODE_COL <- "GenBarcode"			# TODO  This may need to be configured globally
 
     config <- ctx$config
@@ -45,35 +45,35 @@ initializeBarcodes <- function (ctx, datasetName, loadFromCache=TRUE) {
 
     if (loadFromCache & file.exists(barcodeDataFile)) {
         barcodeData <- readSampleData (barcodeDataFile)
-        ctx <- setDatasetBarcodes (ctx, datasetName, barcodeData, store=FALSE)
+        ctx <- barcode.setDatasetBarcodes (ctx, datasetName, barcodeData, store=FALSE)
     } else {
         # Get barcode alleles, and discard samples that have too much missingness
         barcodeMeta <- config$barcodeMeta
         #print (barcodeMeta)
-        barcodeData <- getAllelesFromBarcodes (dataset$meta, GRC_BARCODE_COL, barcodeMeta)
+        barcodeData <- barcode.getAllelesFromBarcodes (dataset$meta, GRC_BARCODE_COL, barcodeMeta)
         print(paste("Barcode alleles - Samples:", nrow(barcodeData), "x SNPs:", ncol(barcodeData)))
         print("Validating barcodes")
-        validateBarcodeAlleles (barcodeData, barcodeMeta)
+        barcode.validateBarcodeAlleles (barcodeData, barcodeMeta)
 
         # Filter the barcodes by typability, trying to throw away as little as possible
-        writeBarcodeStats (dataset, datasetName, barcodeData, "noFiltering")
+        barcode.writeBarcodeStats (dataset, datasetName, barcodeData, "noFiltering")
         minSampleTypability <- config$minSampleTypability
         minSnpTypability    <- config$minSnpTypability
         print(paste("Filtering barcodes by typability (samples:", minSampleTypability, ", SNPs:", minSnpTypability, ")",sep=""))
         #
         # 1) remove all samples with <0.5 typability, so they affect less the removal of SNPs
-        filteredData <- filterByTypability (barcodeData, bySnp=FALSE, minTypability=0.5)
+        filteredData <- barcode.filterByTypability (barcodeData, bySnp=FALSE, minTypability=0.5)
         #
         # 2) Refine further, using the thresholds specified
-        filteredData <- filterByTypability (filteredData, bySnp=TRUE,  minTypability=minSnpTypability)
-        filteredData <- filterByTypability (filteredData, bySnp=FALSE, minTypability=minSampleTypability)
+        filteredData <- barcode.filterByTypability (filteredData, bySnp=TRUE,  minTypability=minSnpTypability)
+        filteredData <- barcode.filterByTypability (filteredData, bySnp=FALSE, minTypability=minSampleTypability)
         barcodeData <- filteredData
         #
-        writeBarcodeStats (dataset, datasetName, barcodeData,
+        barcode.writeBarcodeStats (dataset, datasetName, barcodeData,
                            paste("filtered-snps_", minSnpTypability, "-samples_", minSampleTypability, sep=""))
         print(paste("Barcode alleles after filtering - Samples:", nrow(barcodeData), "x SNPs:", ncol(barcodeData)))
         #
-        ctx <- setDatasetBarcodes (ctx, datasetName, barcodeData, store=TRUE)
+        ctx <- barcode.setDatasetBarcodes (ctx, datasetName, barcodeData, store=TRUE)
     }
 
     # Report missingness
@@ -89,7 +89,7 @@ initializeBarcodes <- function (ctx, datasetName, loadFromCache=TRUE) {
 #
 # Verify all alleles extracted are valid
 #
-validateBarcodeAlleles <- function (barcodeData, barcodeMeta) {
+barcode.validateBarcodeAlleles <- function (barcodeData, barcodeMeta) {
     snpCount <- nrow(barcodeMeta)				#; print(snpCount)
     if (ncol(barcodeData) != snpCount) {
         stop (paste("Number of barcode SNPs in the metadata (",snpCount,") does not match the length of the barcodes (",ncol(barcodeData),")",sep=""))
@@ -108,7 +108,7 @@ validateBarcodeAlleles <- function (barcodeData, barcodeMeta) {
 #
 # Convert barcodes into a dataframe of alleles, filtering both samples and barcode SNPs by typability
 #
-getAllelesFromBarcodes <- function(sampleMetadata, barcodeColumnName, barcodeMeta) {
+barcode.getAllelesFromBarcodes <- function(sampleMetadata, barcodeColumnName, barcodeMeta) {
     barcodes <- as.character(sampleMetadata[,barcodeColumnName])
     names(barcodes) <- rownames(sampleMetadata)
 
@@ -128,38 +128,38 @@ getAllelesFromBarcodes <- function(sampleMetadata, barcodeColumnName, barcodeMet
 ###############################################################################
 # Barcode Sample/SNP filtering
 ################################################################################
-filterByTypability <- function(barcodeData, bySnp=FALSE, minTypability=0.75) {
-    stats <- computeBarcodeStats (barcodeData, bySnp)
-    result <- filterByTypabilityStats (barcodeData, stats, bySnp, minTypability)
+barcode.filterByTypability <- function(barcodeData, bySnp=FALSE, minTypability=0.75) {
+    stats <- barcode.computeBarcodeStats (barcodeData, bySnp)
+    result <- barcode.filterByTypabilityStats (barcodeData, stats, bySnp, minTypability)
     result
 }
 
-filterByHeterozygosity <- function(barcodeData, bySnp=FALSE, maxHeterozygosity=0.0) {
-    stats <- computeBarcodeStats (barcodeData, bySnp)
-    result <- filterByHeterozygosityStats (barcodeData, stats, bySnp, maxHeterozygosity)
+barcode.filterByHeterozygosity <- function(barcodeData, bySnp=FALSE, maxHeterozygosity=0.0) {
+    stats <- barcode.computeBarcodeStats (barcodeData, bySnp)
+    result <- barcode.filterByHeterozygosityStats (barcodeData, stats, bySnp, maxHeterozygosity)
     result
 }
 
-filterByStats <- function(barcodeData, bySnp=FALSE, minTypability=0.0, maxHeterozygosity=1.0) {
-    stats <- computeBarcodeStats (barcodeData, bySnp)
-    result <- filterByTypabilityStats (barcodeData, stats, bySnp, minTypability)
-    result <- filterByHeterozygosityStats (result, stats, bySnp, maxHeterozygosity)
+barcode.filterByStats <- function(barcodeData, bySnp=FALSE, minTypability=0.0, maxHeterozygosity=1.0) {
+    stats <- barcode.computeBarcodeStats (barcodeData, bySnp)
+    result <- barcode.filterByTypabilityStats (barcodeData, stats, bySnp, minTypability)
+    result <- barcode.filterByHeterozygosityStats (result, stats, bySnp, maxHeterozygosity)
     result
 }
 
-filterByTypabilityStats <- function(barcodeData, stats, bySnp, minTypability) {
+barcode.filterByTypabilityStats <- function(barcodeData, stats, bySnp, minTypability) {
     selectIdx <- which(stats$typable >= minTypability)
     result <- if (bySnp) barcodeData[,selectIdx] else barcodeData[selectIdx,]
     result
 }
 
-filterByHeterozygosityStats <- function(barcodeData, stats, bySnp, maxHeterozygosity) {
+barcode.filterByHeterozygosityStats <- function(barcodeData, stats, bySnp, maxHeterozygosity) {
     selectIdx <- which(stats$het <= maxHeterozygosity)
     result <- if (bySnp) barcodeData[,selectIdx] else barcodeData[selectIdx,]
     result
 }
 
-computeBarcodeStats <- function (bcodes, bySnp) {
+barcode.computeBarcodeStats <- function (bcodes, bySnp) {
     margin <- if (bySnp) 2 else 1
     occurrences <- if (bySnp) nrow(bcodes) else ncol(bcodes)
     rnames <- if (bySnp) colnames(bcodes) else rownames(bcodes)
@@ -178,16 +178,16 @@ computeBarcodeStats <- function (bcodes, bySnp) {
     stats
 }
 
-writeBarcodeStats <- function(ctx, datasetName, barcodeData, suffix="") {
+barcode.writeBarcodeStats <- function(ctx, datasetName, barcodeData, suffix="") {
     if (nchar(suffix) > 0) {
         suffix <- paste(".", suffix, sep="")
     }
-    stats <- computeBarcodeStats (barcodeData, bySnp=TRUE)
+    stats <- barcode.computeBarcodeStats (barcodeData, bySnp=TRUE)
     statsFilename <- paste("stats-snps", suffix, ".tab",  sep="")
     statsFile  <- getDataFile(ctx, datasetName, "barcode", statsFilename)
     writeLabelledData (stats, "Snp", statsFile)
 
-    stats <- computeBarcodeStats (barcodeData, bySnp=FALSE)
+    stats <- barcode.computeBarcodeStats (barcodeData, bySnp=FALSE)
     statsFilename  <- paste("stats-samples", suffix, ".tab",  sep="")
     statsFile  <- getDataFile(ctx, datasetName, "barcode", statsFilename)
     writeLabelledData (stats, "Sample", statsFile)
@@ -196,7 +196,7 @@ writeBarcodeStats <- function(ctx, datasetName, barcodeData, suffix="") {
 ###############################################################################
 # Sequence Output
 ################################################################################
-writeFasta <- function(allelesData, genosFilename) {
+barcode.writeFasta <- function(allelesData, genosFilename) {
   strData <- data.frame(lapply(allelesData, as.character), stringsAsFactors=FALSE)
   txt <- c()
   sampleNames <- rownames(allelesData)

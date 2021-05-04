@@ -23,7 +23,7 @@ impute.createImputedDataset <- function (ctx, loadFromCache=TRUE) {
         barcodeMeta <- barcode.getMetadata(ctx, barcodeData)
         impBarcodeData <- impute.imputeBarcodes (barcodeData, barcodeMeta, filteredDs$distance)
     }
-    ctx <- setDatasetBarcodes (ctx, "imputed", impBarcodeData)
+    ctx <- barcode.setDatasetBarcodes (ctx, "imputed", impBarcodeData)
 
     # Get the genotypes and distance matrix from imputed data
     ctx <- geno.initialize(ctx, "imputed")

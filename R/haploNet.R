@@ -5,14 +5,15 @@
 #
 ################################################################################
 #
-haploNet.execute <- function(analysisContext, analysisName, plotList, params) {
+haploNet.execute <- function(ctx, datasetName, analysisName, plotList, params) {
+    dataset <- ctx[[datasetName]]
     # Set up output folders
-    dataFolder <- getOutFolder(analysisName, c("haploNet", "data"))
-    plotsFolder <- getOutFolder(analysisName, c("haploNet", "plots"))
+    dataFolder <- getOutFolder(ctx, analysisName, c("haploNet", "data"))
+    plotsFolder <- getOutFolder(ctx, analysisName, c("haploNet", "plots"))
     
-    sampleMeta <- analysisContext$meta
+    sampleMeta <- dataset$meta
     sampleNames <- rownames(sampleMeta)
-    barcodeData <- analysisContext$barcodes[sampleNames,]
+    barcodeData <- dataset$barcodes[sampleNames,]
     
     #barcodeData <- barcodeData[,1:20]
     barcodeSeqs <- ape::as.DNAbin(as.matrix(barcodeData))

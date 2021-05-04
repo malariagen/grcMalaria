@@ -39,11 +39,11 @@ analysis.createFilteredDataset <- function (ctx, loadFromCache=TRUE) {
         meta <- readSampleData (filteredMetaFile)		#; print(colnames(meta))
         ctx <- meta.setDatasetMeta (ctx, "filtered", meta, store=FALSE)
         barcodeData <- readSampleData (filteredBarcodeFile)
-        ctx <- setDatasetBarcodes (ctx, "filtered", barcodeData, store=FALSE)
+        ctx <- barcode.setDatasetBarcodes (ctx, "filtered", barcodeData, store=FALSE)
         print(paste("Loaded filtered barcodes - Samples:", nrow(barcodeData), "x SNPs:", ncol(barcodeData)))
     } else {
         ctx <- meta.setDatasetMeta (ctx, "filtered", ctx$unfiltered$meta, store=FALSE)
-        ctx <- initializeBarcodes (ctx, "filtered")
+        ctx <- barcode.initializeBarcodes (ctx, "filtered")
         # Trim the metadata to cover the barcodes selected
         sampleNames   <- rownames(ctx$filtered$barcodes)
         filteredMeta  <- filterSampleData (ctx$unfiltered$meta, sampleNames)
@@ -97,12 +97,12 @@ analysis.addTrimmedDataset <- function (ctx, datasetName, sampleNames, trimCtx) 
 # 
 ###################################################################
 #
-analysis.selectDataset <- function (ctx, name, select) {
-    # Create merged metadata fields if needed
+analysis.selectSampleSet <- function (ctx, sampleSetName, select) {
     sampleMeta <- ctx$unfiltered$meta
-    if (!is.null(dataset$mergeFields)) {
-         sampleMeta <- meta.addMergedFields(sampleMeta, dataset$mergeFields)
-    }
+    # Create merged metadata fields if needed - TODO
+    #if (!is.null(dataset$mergeFields)) {
+    #     sampleMeta <- meta.addMergedFields(sampleMeta, dataset$mergeFields)
+    #}
 
     # Select the samples to be analyzed
     sampleMeta <- meta.select(sampleMeta, select)
@@ -112,12 +112,12 @@ analysis.selectDataset <- function (ctx, name, select) {
     trimCtx <- analysis.selectSamplesInContext (ctx, sampleNames)
     
     sampleSet <- list(
-        name=name,
+        name=sampleSetName,
         select=select,
         samples=sampleNames,
         ctx=trimCtx
     )
-    ctx$sampleSets[[name]] <- sampleSet
+    ctx$sampleSets[[sampleSetName]] <- sampleSet
     ctx
 }
 #
@@ -126,8 +126,8 @@ analysis.selectDataset <- function (ctx, name, select) {
 ###################################################################
 #
 analysis.executeOnSampleSet <- function(ctx, sampleSetName, tasks, plotList, aggregation, measures, params) {
-    if (sampleSetName %in% names(ctx$sampleSets)) {
-        stop(paste("Sample set not initiaized:", sampleSetName))
+    if (!sampleSetName %in% names(ctx$sampleSets)) {
+        stop(paste("Sample set not initialized:", sampleSetName))
     }
     sampleSet <- ctx$sampleSets[[sampleSetName]]
     analysisName <- sampleSet$name
@@ -142,10 +142,9 @@ analysis.executeOnSampleSet <- function(ctx, sampleSetName, tasks, plotList, agg
         plotList <- resolveAutomaticRenderingInPlots (trimCtx$meta, plotList)
     }
 
-    # Write out the meta
-    metaFilename  <- paste(getOutFolder(analysisName), "/meta-", analysisName, "-unfiltered.tab", sep="")
+    metaFilename  <- paste(getOutFolder(ctx, analysisName), "/meta-", analysisName, "-unfiltered.tab", sep="")
     utils::write.table(trimCtx$unfiltered$meta, file=metaFilename, sep="\t", quote=FALSE, row.names=FALSE)
-    metaFilename  <- paste(getOutFolder(analysisName), "/meta-", analysisName, "-filtered.tab", sep="")
+    metaFilename  <- paste(getOutFolder(ctx, analysisName), "/meta-", analysisName, "-filtered.tab", sep="")
     utils::write.table(trimCtx$filtered$meta, file=metaFilename, sep="\t", quote=FALSE, row.names=FALSE)
 
     # Execute computations and plots with different tasks
@@ -159,27 +158,28 @@ analysis.executeOnSampleSet <- function(ctx, sampleSetName, tasks, plotList, agg
         print(paste(analysisName, "-", task, ifelse(is.null(method), "", method)))
 
         # Execute the task
-        analysisCtx <- trimCtx$imputed
+        datasetName <- "imputed"
         if (task == "njt") {
-            njt.execute (analysisCtx, analysisName)
+            njt.execute (trimCtx, "imputed", analysisName)
             njt.executePlots (analysisCtx, analysisName, plotList)
 
         } else if (task == "pca") {
-            pca.execute (analysisCtx, analysisName, method)
+            pca.execute (trimCtx, "imputed", analysisName, method)
             pca.executePlots (analysisCtx, analysisName, method, plotList)
 
         } else if (task == "graph") {
-            graph.execute (analysisCtx, analysisName, params)
-            graph.executePlots (analysisCtx, analysisName, plotList, params)
+            graph.execute (trimCtx, "imputed", analysisName, params)
+            graph.executePlots (analysisCtx, "imputed", analysisName, plotList, params)
 
         } else if (task == "haploNet") {
-            haploNet.execute (analysisCtx, analysisName, plotList, params)
+            haploNet.execute (trimCtx, "imputed", analysisName, plotList, params)
 
         } else if (task == "map") {
             if (method == "drug") {
-                analysisCtx <- trimCtx$unfiltered
+                map.execute(trimCtx, "unfiltered", analysisName, method, aggregation, measures, params)
+            } else {
+                map.execute(trimCtx, "imputed", analysisName, method, aggregation, measures, params)
             }
-            map.execute(analysisCtx, analysisName, method, aggregation, measures, params)
 
         } else {
             stop(paste("Invalid analysis task:", task))

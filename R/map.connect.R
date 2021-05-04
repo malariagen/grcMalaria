@@ -1,6 +1,6 @@
 ###############################################################################
 # Measures of connectedness
-################################################################################
+###############################################################################
 #
 connectMap.getConnectednessMeasures <- function() {
     allMeasures <- c("similarity","meanDistance")
@@ -11,14 +11,15 @@ connectMap.getConnectednessMeasures <- function() {
 # Map Aggregated Measure Analysis
 ################################################################################
 #
-connectMap.execute <- function(ctx, analysisName, mapType, visType, aggregation, measures, params) {
+connectMap.execute <- function(ctx, datasetName, analysisName, mapType, visType, aggregation, measures, params) {
+    dataset <- ctx[[datasetName]]
     # Get the output folders
     dataOutFolder <- getOutFolder(ctx, analysisName, c(paste("map", mapType, sep="-"), "data"))
     # Get the sample metadata
-    sampleMeta <- ctx$meta
+    sampleMeta <- dataset$meta
     # Build the map necessary to display these samples
     # Construct a base plot for completing subsequent maps
-    baseMapInfo <- map.buildBaseMap (ctx, analysisName, sampleMeta, dataOutFolder, params)
+    baseMapInfo <- map.buildBaseMap (ctx, datasetName, analysisName, sampleMeta, dataOutFolder, params)
     
     # If "similarity" is one of the measures, remove it and add one measure for each similarity threshold (e.g. "similarity-ge0.80")
     measures <- connectMap.expandMeasures(measures, params)
@@ -29,8 +30,8 @@ connectMap.execute <- function(ctx, analysisName, mapType, visType, aggregation,
         aggLevelIdx <- aggLevel + 1
 
         # Get the aggregated data for the aggregation units
-        aggUnitData <- map.getAggregationUnitData (aggLevel, ctx, analysisName, mapType, params, dataOutFolder)	#; print(aggUnitData)
-        aggUnitPairData <- connectMap.estimateMeasures (aggLevel, aggUnitData, ctx, analysisName, mapType, measures, params, dataOutFolder)	#; print(aggUnitPairData)
+        aggUnitData <- map.getAggregationUnitData (ctx, datasetName, aggLevel, analysisName, mapType, params, dataOutFolder)	#; print(aggUnitData)
+        aggUnitPairData <- connectMap.estimateMeasures (ctx, datasetName, analysisName, aggLevel, aggUnitData, mapType, measures, params, dataOutFolder)	#; print(aggUnitPairData)
 
         for (mIdx in 1:length(measures)) {
             measure <- measures[mIdx]						#; print(measure)
@@ -95,7 +96,7 @@ connectMap.execute <- function(ctx, analysisName, mapType, visType, aggregation,
     	    
     	        # Save to file. the size in inches is given in the config.
     	        mapSize  <- analysis.getParam ("map.size", params, default.map.size)
-    	        plotFolder <- getOutFolder(analysisName, c(paste("map", mapType, sep="-"), "plots"))
+    	        plotFolder <- getOutFolder(ctx, analysisName, c(paste("map", mapType, sep="-"), "plots"))
                 graphicFilenameRoot  <- paste(plotFolder, paste("map", analysisName, aggLevel, measure, sep="-"), sep="/")
                 if (connectMap.filterThreshold (measure)) {
     	            graphicFilenameRoot  <- paste(graphicFilenameRoot, paste("ge", format(minValue, digits=2, nsmall=2), sep=""), sep="-")
@@ -136,11 +137,11 @@ connectMap.getMeasureLevel <- function(measure, prefix) {
     as.numeric(level)
 }
 
-connectMap.estimateMeasures <- function (aggLevel, aggUnitData, ctx, analysisName, mapType, measures, params, dataFolder)	{
-
-    sampleMeta   <- ctx$meta
-    barcodeData  <- ctx$barcodes
-    distData     <- ctx$distance
+connectMap.estimateMeasures <- function (ctx, datasetName, analysisName, aggLevel, aggUnitData, mapType, measures, params, dataFolder)	{
+    dataset <- ctx[[datasetName]]
+    sampleMeta   <- dataset$meta
+    barcodeData  <- dataset$barcodes
+    distData     <- dataset$distance
 
     # Create aggregation index for each sample (the id of the aggregation unit where the sample originates)
     aggUnitIds <- as.character(map.getAggregationUnitIds (aggLevel, sampleMeta, params))

@@ -10,14 +10,17 @@ allDiversityMeasures <- c("maxHaploFreq","haploHet1","haploHet2","haploHet3","me
 # Map Aggregated Measure Analysis
 ################################################################################
 #
-markerMap.execute <- function(ctx, analysisName, mapType, visType, aggregation, measures, params) {
+markerMap.execute <- function(ctx, datasetName, analysisName, mapType, visType, aggregation, measures, params) {
+    config <- ctx$config
+    dataset <- ctx[[datasetName]]
+
     # Get the output folders
-    dataFolder <- getOutFolder(analysisName, c(paste("map", mapType, sep="-"), "data"))
+    dataFolder <- getOutFolder(ctx, analysisName, c(paste("map", mapType, sep="-"), "data"))
     # Get the sample metadata
-    sampleMeta <- ctx$meta
+    sampleMeta <- dataset$meta
     # Build the map necessary to display these samples
     # Construct a base plot for completing subsequent maps
-    baseMapInfo <- map.buildBaseMap (ctx, analysisName, sampleMeta, dataFolder, params)
+    baseMapInfo <- map.buildBaseMap (ctx, datasetName, analysisName, sampleMeta, dataFolder, params)
 
     # Now compute the aggregation units, the values to be plotted, and make the map
     for (aggIdx in 1:length(aggregation)) {
@@ -25,8 +28,8 @@ markerMap.execute <- function(ctx, analysisName, mapType, visType, aggregation, 
         aggLevelIdx <- aggLevel + 1
 
         # Get the aggregated data for the aggregation units
-        aggUnitData <- map.getAggregationUnitData (aggLevel, ctx, analysisName, mapType, params, dataFolder)	#; print(aggUnitData)
-        aggUnitData <- markerMap.estimateMeasures (aggLevel, aggUnitData, ctx, analysisName, mapType, measures, params, dataFolder)	#; print(aggUnitData)
+        aggUnitData <- map.getAggregationUnitData (ctx, datasetName, aggLevel, analysisName, mapType, params, dataFolder)	#; print(aggUnitData)
+        aggUnitData <- markerMap.estimateMeasures (ctx, datasetName, aggLevel, aggUnitData, analysisName, mapType, measures, params, dataFolder)	#; print(aggUnitData)
 
         for (mIdx in 1:length(measures)) {
             measure <- measures[mIdx]		           		#; print(measure)
@@ -95,7 +98,7 @@ markerMap.execute <- function(ctx, analysisName, mapType, visType, aggregation, 
 	    
 	    # Save to file. the size in inches is given in the config.
 	    mapSize  <- analysis.getParam ("map.size", params, default.map.size)
-    	    plotFolder <- getOutFolder(analysisName, c(paste("map", mapType, sep="-"), "plots"))
+    	    plotFolder <- getOutFolder(ctx, analysisName, c(paste("map", mapType, sep="-"), "plots"))
             graphicFilenameRoot  <- paste(plotFolder, paste("map", analysisName, aggLevel, measure, sep="-"), sep="/")
             ggplot2::ggsave(plot=mapPlot, filename=paste(graphicFilenameRoot,"png",sep="."), device="png", width=mapSize[1], height=mapSize[2], units="in", dpi=300)
         }
@@ -131,11 +134,12 @@ markerMap.getAggUnitMarkerSizes <- function(aggUnitData, params) {
 # Estimation of marker measures (drug resistance and diversity)
 ################################################################################
 #
-markerMap.estimateMeasures <- function(aggLevel, aggUnitData, ctx, analysisName, mapType, measures, params, dataFolder) {
+markerMap.estimateMeasures <- function(ctx, datasetName, aggLevel, aggUnitData, analysisName, mapType, measures, params, dataFolder) {
 
-    sampleMeta   <- ctx$meta
-    barcodeData  <- ctx$barcodes
-    distData     <- ctx$distance
+    dataset <- ctx[[datasetName]]
+    sampleMeta   <- dataset$meta
+    barcodeData  <- dataset$barcodes
+    distData     <- dataset$distance
 
     # Create aggregation index for each sample (the id of the aggregation unit where the sample originates)
     aggIndex <- map.getAggregationUnitIds (aggLevel, sampleMeta, params)

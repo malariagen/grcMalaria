@@ -9,9 +9,11 @@ default.graph.layoutAlgorithm <- "fr"
 ###############################################################################
 # Network Analysis 
 ###############################################################################
-graph.execute <- function (ctx, analysisName, params) {
+graph.execute <- function (ctx, datasetName, analysisName, params) {
+    dataset <- ctx[[datasetName]]
+
     # Set up output folders
-    dataFolder <- getOutFolder(analysisName, c("graph", "data"))
+    dataFolder <- getOutFolder(ctx, analysisName, c("graph", "data"))
     
     # Get the connectivity thresholds, sorted from highest to lowest
     # Analyze connectivity at each thrshold level
@@ -24,7 +26,7 @@ graph.execute <- function (ctx, analysisName, params) {
         print(thresholdLabel)
         
         # Identify the larger clusters and get the cluster membership
-        clustersData <- cluster.findbyIdentity (ctx, analysisName, thresholdValue, params)
+        clustersData <- cluster.findbyIdentity (ctx, datasetName, analysisName, thresholdValue, params)
         clusterMembers <- cluster.getMemberData (clustersData)        		#; print(head(clusterMembers))
 
         # If all samples are in a single cluster, then there's no point continuing, exit gracefully
@@ -35,12 +37,12 @@ graph.execute <- function (ctx, analysisName, params) {
 
         # Use the cluster memberships to reduce the distance matrix by collapsing the cluster samples and replacing them with the clusters
         # The resulting table is a table of node distance rather than sample distance
-        distData <- graph.buildNodeDistances (ctx$distance, clusterMembers)
+        distData <- graph.buildNodeDistances (dataset$distance, clusterMembers)
 
 
         # Create a new node table, incorporating both newly found clusters and non-cluster samples
-        nodeData <- graph.buildNodeData (ctx, clusterMembers)
-
+        sampleNames <- rownames(dataset$meta)
+        nodeData <- graph.buildNodeData (sampleNames, clusterMembers)
         
         # Trim data to include only the nodes that are connected by edges; but make sure we preserve all clusters
         minIdentity <- analysis.getParam ("graph.connectIdentityMin", params, default.graph.connectIdentityMin)
@@ -111,10 +113,9 @@ graph.buildNodeDistances <- function (distData, clusterMembers) {
 #
 # Build a table of nodes, to distinguish clusters from individual nodes, and giving them a size
 #
-graph.buildNodeData <- function (ctx, clusterMembers) {
+graph.buildNodeData <- function (sampleNames, clusterMembers) {
     # Create a new node list, including both samples and newly found clusters
     # Start with a list of nodes that are single samples, no clusters
-    sampleNames <- rownames(ctx$meta)
     nodeData <- data.frame(Node=sampleNames, Count=rep(1,length(sampleNames)), NodeType=rep("sample",length(sampleNames)))
     rownames(nodeData) <- sampleNames
     # If the previous pass produced clusters, we need to create new nodes for them, and remove the samples therein
@@ -143,9 +144,11 @@ graph.buildNodeData <- function (ctx, clusterMembers) {
 # Network Graph Plotting
 ###############################################################################
 #
-graph.executePlots <- function (ctx, analysisName, plotList, params) {
+graph.executePlots <- function (ctx, datasetName, analysisName, plotList, params) {
+    dataset <- ctx[[datasetName]]
+
     # Set up output folders 
-    dataFolder <- getOutFolder(analysisName, c("graph", "data"))
+    dataFolder <- getOutFolder(ctx, analysisName, c("graph", "data"))
     
     # Get the connectivity thresholds, sorted from highest to lowest
     # Analyze connectivity at each thrshold level
@@ -173,13 +176,13 @@ graph.executePlots <- function (ctx, analysisName, plotList, params) {
 	layout <- graph.getLayout(gr, params)
         
 	# Perform plots for this onnectivity threshold
-        plotFolder <- getOutFolder(analysisName, c("graph", "plots"))	#; print(plotList)
+        plotFolder <- getOutFolder(ctx, analysisName, c("graph", "plots"))	#; print(plotList)
 
         for (plotIdx in 1:length(plotList)) {
             plotDef <- plotList[[plotIdx]]
             plotName <- plotDef$name
             plotFilenameRoot  <- paste(plotFolder, "/graph-", analysisName, "-", thresholdLabel, "-", plotName, sep="")
-            graph.makeSinglePlot (gr, nodeData, clusterMembers, analysisName, thresholdValue, plotDef, layout, ctx$meta, plotFilenameRoot)            
+            graph.makeSinglePlot (gr, nodeData, clusterMembers, analysisName, thresholdValue, plotDef, layout, dataset$meta, plotFilenameRoot)            
         }
         
         # Also plot the clusters-only plot
@@ -338,10 +341,12 @@ graph.makeSinglePlot <- function (gr, nodeData, clusterMembers, analysisName, th
 #
 #
 graph.makeClusterPlot <- function (ctx, gr, nodeData, analysisName, thresholdValue, grLayout, plotFilenameRoot) {
+    config <- ctx$config
+
     thresholdLabel <- cluster.getIdentityLevelLabel (thresholdValue)
     print (paste("Graph Cluster Plot: ", analysisName, thresholdLabel))
     
-    clusterPalette <- ctx$config$defaultPalette
+    clusterPalette <- config$defaultPalette
     clusterNames <- nodeData$Node[which(nodeData$NodeType=="cluster")]
     numClusters <- min(length(clusterPalette),length(clusterNames))		#; print(numClusters)
     clusterPalette <- clusterPalette[1:numClusters]

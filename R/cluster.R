@@ -8,7 +8,10 @@ default.cluster.identity.minCount <- 5
 # Cluster Analysis 
 ###############################################################################
 #
-cluster.findbyIdentity <- function (analysisContext, analysisName, thresholdValue, params) {
+cluster.findbyIdentity <- function (ctx, datasetName, analysisName, thresholdValue, params) {
+
+    dataset <- ctx[[datasetName]]
+
     clustersData <- cluster.getClustersData (analysisName, thresholdValue)
     if (!is.null(clustersData)) {
         return (clustersData)
@@ -18,7 +21,7 @@ cluster.findbyIdentity <- function (analysisContext, analysisName, thresholdValu
     minCount <- analysis.getParam ("cluster.identity.minCount", params, default.cluster.identity.minCount)
 
     # Create graph from connectivity data
-    distData <- analysisContext$distance		#; print(nrow(distData))
+    distData <- dataset$distance		#; print(nrow(distData))
     edgeData <- cluster.getPairwiseIdentityData (distData, thresholdValue, params)	#; print(nrow(edgeData))
     nodeNames <- unique(c(as.character(edgeData$Sample1),as.character(edgeData$Sample2)))
     nodeCount <- length(nodeNames)			#; print (paste(length(nodeNames),length(unique(edgeData$Sample1)),length(unique(edgeData$Sample2))))
@@ -62,12 +65,12 @@ cluster.findbyIdentity <- function (analysisContext, analysisName, thresholdValu
 
     # Write out sample/cluster association
     clusterMembers <- cluster.getMemberData (clustersData)
-    clMembersFile <- cluster.getClustersDataFile("clusterMembers", analysisName, thresholdValue)
+    clMembersFile <- cluster.getClustersDataFile(ctx, analysisName, "clusterMembers", thresholdValue)
     writeSampleData(clusterMembers, clMembersFile)
 
     # Write out cluster definitions
-    clustersData <- cluster.estimateClusterStats (clustersData, clusterMembers, analysisContext$meta) 
-    clustersDataFile <- cluster.getClustersDataFile("clusters", analysisName, thresholdValue)
+    clustersData <- cluster.estimateClusterStats (clustersData, clusterMembers, dataset$meta) 
+    clustersDataFile <- cluster.getClustersDataFile(ctx, analysisName, "clusters", thresholdValue)
     utils::write.table(clustersData, file=clustersDataFile, quote=FALSE, sep="\t", row.names=FALSE, col.names=TRUE)
 
     clustersData
@@ -128,8 +131,8 @@ cluster.getClusterStatsText <- function(clusterName, clustersData) {
     statText
 }
 
-cluster.getClustersData <- function(analysisName, thresholdValue) {
-    clustersDataFile <- cluster.getClustersDataFile("clusters", analysisName, thresholdValue, createFolder=FALSE)
+cluster.getClustersData <- function(ctx, analysisName, thresholdValue) {
+    clustersDataFile <- cluster.getClustersDataFile(ctx, analysisName, "clusters", thresholdValue, createFolder=FALSE)
     if (!file.exists(clustersDataFile)) {
         return(NULL)
     }
@@ -155,9 +158,9 @@ cluster.getMemberData <- function(clustersData) {
     clusterMembers
 }
 
-cluster.getClustersDataFile <- function(filePrefix, analysisName, thresholdValue, createFolder=TRUE) {
+cluster.getClustersDataFile <- function(ctx, analysisName, filePrefix, thresholdValue, createFolder=TRUE) {
     thresholdLabel <- cluster.getIdentityLevelLabel (thresholdValue)
-    dataFolder  <- getOutFolder(analysisName, c("cluster", "data", thresholdLabel), createFolder)
+    dataFolder  <- getOutFolder(ctx, analysisName, c("cluster", "data", thresholdLabel), createFolder)
     clustersDataFile <- paste(dataFolder, "/", filePrefix, "-", analysisName, "-", thresholdLabel, ".tab", sep="")
     clustersDataFile
 }

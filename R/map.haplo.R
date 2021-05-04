@@ -4,10 +4,12 @@ default.map.haplo.markerSampleCount <- "mean"  # Can be "mean", a number or "non
 # Map Haplotype Frequency Analysis
 ################################################################################
 #
-haploMap.execute <- function(ctx, analysisName, mapType, visType, aggregation, measures, params) {
+haploMap.execute <- function(ctx, datasetName, analysisName, mapType, visType, aggregation, measures, params) {
+    dataset <- ctx[[datasetName]]
+    
     # Create the information object, used to create the plot
     # Start by getting the output folders
-    dataFolder <- getOutFolder(analysisName, c(paste("map", mapType, sep="-"), "data"))
+    dataFolder <- getOutFolder(ctx, analysisName, c(paste("map", mapType, sep="-"), "data"))
     info <- list(dataFolder=dataFolder)
 
     info$analysisName <- analysisName;    info$mapType <- mapType;    info$visType <- visType
@@ -15,7 +17,7 @@ haploMap.execute <- function(ctx, analysisName, mapType, visType, aggregation, m
 
     # Build the map necessary to display these samples
     # Construct a base plot for completing subsequent maps
-    baseMapInfo <- info$baseMapInfo <- map.buildBaseMap (ctx, analysisName, ctx$meta, dataFolder, params)
+    baseMapInfo <- info$baseMapInfo <- map.buildBaseMap (ctx, datasetName, analysisName, dataset$meta, dataFolder, params)
 
     # Now compute the aggregation units, the values to be plotted, and make the map
     for (aggIdx in 1:length(aggregation)) {
@@ -23,7 +25,7 @@ haploMap.execute <- function(ctx, analysisName, mapType, visType, aggregation, m
         aggLevelIdx <- aggLevel + 1
 
         # Get the aggregated data for the aggregation units
-        aggUnitData <- info$aggUnitData <- map.getAggregationUnitData (aggLevel, ctx, analysisName, mapType, params, dataFolder)	#; print(aggUnitData)
+        aggUnitData <- info$aggUnitData <- map.getAggregationUnitData (ctx, datasetName, aggLevel, analysisName, mapType, params, dataFolder)	#; print(aggUnitData)
 
         # Work out a "standard" haplotype marker size (1/25 of the shortest side) and apply a scaling factor
         scalingFactor <- analysis.getParam ("map.haplo.markerScale", params, 1.0)		#; print(scalingFactor)
@@ -49,7 +51,7 @@ haploMap.execute <- function(ctx, analysisName, mapType, visType, aggregation, m
         # The haplotype sharing task produces multiple maps, for different thresholds of haplotype identity 
         if (mapType=="haploFreq") {
             # Get the haplotype counts data
-	    info$haploCountData <- haploMap.buildCountData (aggLevel, aggUnitData, ctx, params)	#; print(head(countData)
+	    info$haploCountData <- haploMap.buildCountData (aggLevel, aggUnitData, dataset, params)	#; print(head(countData)
             haploMap.plotMap (info, params)
 
         } else if (mapType=="haploShare") {
@@ -59,12 +61,12 @@ haploMap.execute <- function(ctx, analysisName, mapType, visType, aggregation, m
                 identityLevel <- info$identityLevel <- identityLevels[mIdx]			#; print (identityLevel)
                 
                 # Palette for pie charts- determines the number of distinguishable colurs for the chart
-	        haploGroupPalette <- ctx$config$defaultPalette
+	        haploGroupPalette <- config$defaultPalette
 	        maxGroups <- length(haploGroupPalette)
 	    
 	        # Get the haplotype sharing data
-	        groupData <- cluster.findbyIdentity (ctx, analysisName, identityLevel, params)
-	        haploShareData <- haploMap.buildSharedCountData (aggLevel, aggUnitData, groupData, ctx$meta, maxGroups, params)	#; print(head(haploShareData)
+	        groupData <- cluster.findbyIdentity (ctx, datasetName, analysisName, identityLevel, params)
+	        haploShareData <- haploMap.buildSharedCountData (aggLevel, aggUnitData, groupData, dataset$meta, maxGroups, params)	#; print(head(haploShareData)
 	        info$groupData <- groupData
 	        info$haploShareData <- haploShareData
 	    
@@ -170,13 +172,13 @@ haploMap.plotMap <- function (info, params) {
     # Save to file. the size in inches is given in the config.
     mapSize  <- analysis.getParam ("map.size", params, default.map.size)
 
-    plotFolder <- getOutFolder(info$analysisName, c(paste("map", mapType, sep="-"), "plots"))
+    plotFolder <- getOutFolder(ctx, info$analysisName, c(paste("map", mapType, sep="-"), "plots"))
     graphicFilename  <- paste("map", info$analysisName, aggLevel, mapType, visType, sep="-")
     if (info$mapType == "haploShare") {
         levelLabel <- cluster.getIdentityLevelLabel(info$identityLevel)
         graphicFilename  <- paste(graphicFilename, levelLabel, sep="-")
         if (info$visType == "group") {
-            plotFolder <- getOutFolder(info$analysisName, c("map-haploGroups", "plots", levelLabel))
+            plotFolder <- getOutFolder(ctx, info$analysisName, c("map-haploGroups", "plots", levelLabel))
             graphicFilename  <- paste(graphicFilename, haploGroup, sep="-")
         }
     }
@@ -269,9 +271,9 @@ haploMap.addFreqBars <- function (mapPlot, countData, aggUnitData, stdMarkerCoun
 #
 # For each aggregation unit, we get a count of each unique haplotype, ordered in descending count
 #
-haploMap.buildCountData <- function(aggLevel, aggUnitData, ctx, params) {
-    sampleMeta   <- ctx$meta
-    barcodeData  <- ctx$barcodes
+haploMap.buildCountData <- function(aggLevel, aggUnitData, dataset, params) {
+    sampleMeta   <- dataset$meta
+    barcodeData  <- dataset$barcodes
 
     # Get all aggregation unit ids
     aggUnits <- rownames(aggUnitData)	#; print(aggUnits)

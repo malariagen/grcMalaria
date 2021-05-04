@@ -72,8 +72,8 @@ initializeContext <- function (grcData, dir=".",
 #' @examples
 #' #TBD
 #
-selectSampleSet <- function (ctx, sampleSet, select) {
-    ctx <- analysis.selectDataset (ctx, name, select)
+selectSampleSet <- function (ctx, sampleSetName, select) {
+    ctx <- analysis.selectSampleSet (ctx, sampleSetName, select)
     ctx
 }
 
@@ -108,14 +108,14 @@ mapDrugResistancePrevalence <- function (ctx, sampleSet,
                    showNames=TRUE, markerSize=16,
                    width=15, height=15) {
 
-    mapParams <- list(
+    params <- list(
         map.aggregateCountMin=minAggregateCount,
         map.markerSize=markerSize,			# Use this for constant marker size
         #map.markerSize=c(4,40),			# Use this for count-proportional marker size
         map.markerNames=showNames,
         map.size=c(width=width,height=height)
     )
-    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/drug",
+    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/drug", plotList=NULL,
                                  aggregation=aggregate, measures=drugs, params=params)
 }
 #
@@ -246,11 +246,47 @@ mapGroupFrequencies <- function (ctx, sampleSet,
 
 #############################################################
 #
-#' Plot Population structure (PCA and NJT)
+#' Plot a tree (e.g. neighbour joining tree, NJT)
 #'
 #' @param ctx TBD
 #' @param sampleSet TBD TBD
 #' @param type TBD
+#' @param attributes TBD
+#' @param width TBD
+#' @param height TBD
+#' @param colouredBranches TBD
+#' @param showLeaves TBD
+#' @param nonLeafColour TBD
+#' @param branchThickness TBD
+#' @param popLabels TBD
+#' @param sampleLabels TBD
+#'
+#' @return TBD
+#' @export
+#'
+#' @examples
+#'  #TBD
+plotTree <- function (ctx, sampleSet,
+                   method="njt",
+                   attributes=NULL,
+                   width=15,
+                   height=15,
+                   colouredBranches=TRUE,
+                   showLeaves=TRUE,
+                   nonLeafColour="darkgrey",
+                   branchThickness=3,
+                   popLabels=FALSE,
+                   sampleLabels=FALSE) {}
+
+# Q: DEFINE A DEFAULT SET OF ATTRIBUTES
+
+#############################################################
+#
+#' Plot Population structure (PCA)
+#'
+#' @param ctx TBD
+#' @param sampleSet TBD TBD
+#' @param method TBD
 #' @param attributes TBD
 #' @param width TBD
 #' @param height TBD
@@ -260,8 +296,8 @@ mapGroupFrequencies <- function (ctx, sampleSet,
 #'
 #' @examples
 #'  #TBD
-plotPopulationStructure <- function (ctx, sampleSet,
-                   type=c("njt","PCoA"),
+plotPCA <- function (ctx, sampleSet,
+                   method="PCoA",
                    attributes=NULL,
                    width=15,
                    height=15) {}

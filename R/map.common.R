@@ -7,19 +7,20 @@ default.map.size <- c(12,12)
 # Common Routines for Map Generation.
 ################################################################################
 #
-map.execute <- function(analysisContext, analysisName, mapType, aggregation, measures, params) {
+map.execute <- function(ctx, datasetName, analysisName, mapType, aggregation, measures, params) {
+
     parts <- unlist(strsplit(mapType,"\\."))	#; print(mapType)
     mapType <- parts[1]				#; print(mapType)
     visType <- parts[2]				#; print(visType)
 
     if (mapType %in% c("diversity", "drug", "mutation")) {
-        markerMap.execute (analysisContext, analysisName, mapType, visType, aggregation, measures, params)
+        markerMap.execute (ctx, datasetName, analysisName, mapType, visType, aggregation, measures, params)
         
     } else if (mapType == "connect") {
-        connectMap.execute (analysisContext, analysisName, mapType, visType, aggregation, measures, params)
+        connectMap.execute (ctx, datasetName, analysisName, mapType, visType, aggregation, measures, params)
         
     } else if (mapType %in% c("haploFreq","haploShare")) {
-        haploMap.execute (analysisContext, analysisName, mapType, visType, aggregation, measures, params)
+        haploMap.execute (ctx, datasetName, analysisName, mapType, visType, aggregation, measures, params)
 
     } else {
         stop(paste("Invalid map type:", mapType))
@@ -31,7 +32,7 @@ map.execute <- function(analysisContext, analysisName, mapType, aggregation, mea
 # Creation of the physical/political background map
 ################################################################################
 #
-map.buildBaseMap <- function(ctx, analysisName, sampleMeta, dataFolder, params) {
+map.buildBaseMap <- function(ctx, datasetName, analysisName, sampleMeta, dataFolder, params) {
 
     # Get relevant column names
     adminLevelCols  <- analysis.getParam ("map.adminLevelColumns", params, default.map.adminLevelColumns)
@@ -65,21 +66,21 @@ map.buildBaseMap <- function(ctx, analysisName, sampleMeta, dataFolder, params) 
 
     for (cIdx in 1:length(countries)) {
         country <- countries[cIdx]
-        cl <- unitList[[country]]							#; print(country)
+        cl <- unitList[[country]]								#; print(country)
         cGadm1 <- GADMTools::gadm_sp_loadCountries(cl$iso3, level=1, basefile=gadmFolder)	#; print(1)
         # Select the provinces we need
         cGadm1 <- GADMTools::gadm_subset(cGadm1, level=1, regions=cl$gadmAdm1Names)		#; print(cGadm1)
         # Append the data to that of other countries
-	    cl$gadmAdm1Data <- cGadm1							#; print(3)
+	    cl$gadmAdm1Data <- cGadm1								#; print(3)
 	    if (is.null(gadm1Spdf)) {
 	    gadm1Spdf <- cGadm1$spdf
 	    } else {
 	    gadm1Spdf <- rbind(gadm1Spdf, cGadm1$spdf)
-	    }										#; print(4)
+	    }											#; print(4)
         # Get the bounding box and merge with the other countries
         bb <- GADMTools::gadm_getBbox (cGadm1)							#; print(5)
         gadmBB <- list(xMin=min(gadmBB$xMin,bb[1]), xMax=max(gadmBB$xMax,bb[3]), 
-                       yMin=min(gadmBB$yMin,bb[2]), yMax=max(gadmBB$yMax,bb[4]))	#; print(gadmBB)
+                       yMin=min(gadmBB$yMin,bb[2]), yMax=max(gadmBB$yMax,bb[4]))		#; print(gadmBB)
     }
     
     # Adjust the bounding box to give some margin
@@ -117,11 +118,12 @@ map.buildBaseMap <- function(ctx, analysisName, sampleMeta, dataFolder, params) 
 # Aggregation of site data
 ################################################################################
 #
-map.getAggregationUnitData <- function(aggLevel, analysisContext, analysisName, mapType, params, dataFolder) {
+map.getAggregationUnitData <- function(ctx, datasetName, aggLevel, analysisName, mapType, params, dataFolder) {
 
-    sampleMeta   <- analysisContext$meta
-    barcodeData  <- analysisContext$barcodes
-    distData     <- analysisContext$distance
+    dataset <- ctx[[datasetName]]
+    sampleMeta   <- dataset$meta
+    barcodeData  <- dataset$barcodes
+    distData     <- dataset$distance
 
     adminLevelCols  <- analysis.getParam ("map.adminLevelColumns", params, default.map.adminLevelColumns)
     aggLevelIdx <- aggLevel + 1

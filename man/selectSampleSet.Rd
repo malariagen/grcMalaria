@@ -4,14 +4,14 @@
 \alias{selectSampleSet}
 \title{Select a set of samples using metadata}
 \usage{
-selectSampleSet(ctx, sampleSet, select)
+selectSampleSet(ctx, sampleSetName, select)
 }
 \arguments{
 \item{ctx}{The analysis context, created by intializeContext().}
 
-\item{sampleSet}{The name of the sample set, to be used to identifty it when calling analysis tasks.}
-
 \item{select}{The criteria for selecting the samples. The value must be a list.}
+
+\item{sampleSet}{The name of the sample set, to be used to identifty it when calling analysis tasks.}
 }
 \value{
 The analysis context, augmented with the new sample set

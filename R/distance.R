@@ -12,7 +12,7 @@ distance.initialize <- function (ctx, datasetName, loadFromCache=TRUE, store=TRU
     if (loadFromCache & file.exists(distDataFile)) {
         distData <- readMatrix(distDataFile)
         ctx <- distance.setDatasetDistance(ctx, datasetName, distData, store=FALSE)
-        print(paste("Loaded", context$name, "distance matrix - Samples:", nrow(distData)))
+        print(paste("Loaded", dataset$name, "distance matrix - Samples:", nrow(distData)))
     } else {
         genoData <- dataset$genos
         print(paste("Computing pairwise distances for",nrow(genoData),"samples using",ncol(genoData),"SNPs"))
