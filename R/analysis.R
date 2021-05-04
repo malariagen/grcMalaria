@@ -51,6 +51,7 @@ analysis.createFilteredDataset <- function (ctx, loadFromCache=TRUE) {
     }
 
     # Get the genotypes, distance matrix and execute the pop structure analysis
+    ctx <- geno.initialize(ctx, "filtered")
     ctx <- distance.initialize(ctx, "filtered")
     ctx
 }

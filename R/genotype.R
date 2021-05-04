@@ -16,7 +16,7 @@ geno.initialize <- function (ctx, datasetName, loadFromCache=TRUE, store=TRUE) {
         genoData <- readSampleData (genoDataFile)
         ctx <- geno.setDatasetGenotypes (ctx, datasetName, genoData, store=FALSE)
     } else {
-        genoData <- geno.convertAllelesToGenos (dataset$barcodes, config$barcodeMeta)
+        genoData <- geno.convertAllelesToGenos (ctx, dataset$barcodes)
         ctx <- geno.setDatasetGenotypes (ctx, datasetName, genoData, store=store)
     }
     ctx
@@ -38,7 +38,9 @@ geno.setDatasetGenotypes <- function (ctx, datasetName, genos, store=TRUE) {
 # Convert a dataframe of alleles, to a dataframe of genotypes (values between 0 and 1)
 # Missing values are NA and het calls are 0.5
 #
-geno.convertAllelesToGenos <- function(alleleData, alleleMeta) {
+geno.convertAllelesToGenos <- function(ctx, alleleData) {
+    alleleMeta <- barcode.getMetadata (ctx, alleleData)
+
     # Change to 0-1 genotypes
     sampleCount <- nrow(alleleData)
     snpCount    <- ncol(alleleData)

@@ -12,8 +12,7 @@ barcode.getBarcodeSeqFile <- function (ctx, datasetName) {
 
 barcode.getMetadata <- function (ctx, barcodeData) {
     barcodeSnps <- colnames(barcodeData)
-    barcodeSnps <- barcodeSnps[2:ncol(barcodeData)]
-    barcodeMeta <- ctx$config$barcodeMeta[barcodeSnps]
+    barcodeMeta <- ctx$config$barcodeMeta[barcodeSnps,]
     barcodeMeta
 }
 
