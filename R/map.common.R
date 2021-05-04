@@ -71,12 +71,12 @@ map.buildBaseMap <- function(ctx, datasetName, analysisName, sampleMeta, dataFol
         # Select the provinces we need
         cGadm1 <- GADMTools::gadm_subset(cGadm1, level=1, regions=cl$gadmAdm1Names)		#; print(cGadm1)
         # Append the data to that of other countries
-	    cl$gadmAdm1Data <- cGadm1								#; print(3)
-	    if (is.null(gadm1Spdf)) {
-	    gadm1Spdf <- cGadm1$spdf
-	    } else {
-	    gadm1Spdf <- rbind(gadm1Spdf, cGadm1$spdf)
-	    }											#; print(4)
+	      cl$gadmAdm1Data <- cGadm1								#; print(3)
+	      if (is.null(gadm1Spdf)) {
+	          gadm1Spdf <- cGadm1$spdf
+	      } else {
+	          gadm1Spdf <- rbind(gadm1Spdf, cGadm1$spdf)
+	      }																				#; print(4)
         # Get the bounding box and merge with the other countries
         bb <- GADMTools::gadm_getBbox (cGadm1)							#; print(5)
         gadmBB <- list(xMin=min(gadmBB$xMin,bb[1]), xMax=max(gadmBB$xMax,bb[3]), 
@@ -201,7 +201,7 @@ map.getGADMNames <- function (country, provinces) {
     gadmProvTable <- geo$gadmProv
     countryTable <- gadmProvTable[which(gadmProvTable$Iso2==country),]
     rownames(countryTable) <- as.character(countryTable$AdmDiv1)
-    gadmNames <- countryTable[provinces,"GADMname"]			; print(provinces); print(gadmNames)
+    gadmNames <- countryTable[provinces,"GADMname"]			#; print(provinces); print(gadmNames)
     gadmNames
 }
 map.iso2ToIso3 <- function (iso2Countries) {
