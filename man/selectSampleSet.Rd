@@ -2,27 +2,21 @@
 % Please edit documentation in R/public.R
 \name{selectSampleSet}
 \alias{selectSampleSet}
-\title{Select a set of samples using metadata
-Selects a set of samples for analysis, based on their metadata values.
-A given analysis context can contain multiple sampe sets, with different names.
-The selection criteria are specified as a list containing a sequence of lists wth two elements each:
-"field" which is the column name to be checked, and "values" which is an array of possible values that can be matched for a sample to be selected.
-A selected sample must match all the criteria.}
+\title{Select a set of samples using metadata}
 \usage{
 selectSampleSet(ctx, sampleSet, select)
 }
 \arguments{
 \item{ctx}{The analysis context, created by intializeContext().}
 
-\item{select}{The criteria for selecting the samples. The value must be a list.}
+\item{sampleSet}{The name of the sample set, to be used to identifty it when calling analysis tasks.}
 
-\item{name}{The name of the sample set, to be used to identifty it when calling analysis tasks.}
+\item{select}{The criteria for selecting the samples. The value must be a list.}
 }
 \value{
 The analysis context, augmented with the new sample set
 }
 \description{
-Select a set of samples using metadata
 Selects a set of samples for analysis, based on their metadata values.
 A given analysis context can contain multiple sampe sets, with different names.
 The selection criteria are specified as a list containing a sequence of lists wth two elements each:
@@ -30,10 +24,5 @@ The selection criteria are specified as a list containing a sequence of lists wt
 A selected sample must match all the criteria.
 }
 \examples{
-# Select all samples from Vietnam and Laos which were collected upon hospital admission (day 0, hour 0)
-ctx <- selectSampleSet (ctx, name="Day0-VN-LA",
-             select=list(
-               list(field="TimePoint", values="D00H00"),
-               list(field="Country", values=c("VN","LA"))
-           )
+#TBD
 }

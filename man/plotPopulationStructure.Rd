@@ -2,7 +2,7 @@
 % Please edit documentation in R/public.R
 \name{plotPopulationStructure}
 \alias{plotPopulationStructure}
-\title{Title}
+\title{Plot Population structure (PCA and NJT)}
 \usage{
 plotPopulationStructure(
   ctx,
@@ -14,11 +14,24 @@ plotPopulationStructure(
 )
 }
 \arguments{
-\item{height}{}
+\item{ctx}{TBD}
+
+\item{sampleSet}{TBD TBD}
+
+\item{type}{TBD}
+
+\item{attributes}{TBD}
+
+\item{width}{TBD}
+
+\item{height}{TBD}
 }
 \value{
-
+TBD
 }
 \description{
-Title
+Plot Population structure (PCA and NJT)
+}
+\examples{
+ #TBD
 }

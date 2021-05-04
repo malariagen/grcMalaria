@@ -1,10 +1,10 @@
 
 #############################################################
-# Data file loading
 #
 #' Load a Genetic Report Cards data file
+#'
 #' Load a GRC data file, ready for analysis.
-#' The data frame returned constaind a data table whose values and structure may have been manipulated after being read from the file,
+#' The data frame returned contains a data table whose values and structure may have been manipulated after being read from the file,
 #' and may have been updated to the latest version fo the format.
 #'
 #' @param file The path to the GRC data Microsoft Excel file (use forward slashes in the path)
@@ -16,7 +16,7 @@
 #' @export
 #'
 #' @examples
-#' pfData <- loadGrc ("D:/MyData/GRC/20210705-GenRe.xlsx", sheet="GenRe-Mekong", species="Pf", version="1.0")
+#' #TBD
 #
 loadGrc <- function (file, sheet="GenRe-Mekong", species="Pf", version="1.0") {
     grcData <- grcData.load (file, sheet, species, version)
@@ -24,35 +24,38 @@ loadGrc <- function (file, sheet="GenRe-Mekong", species="Pf", version="1.0") {
 }
 
 #############################################################
-# Initialization
 #
 #' Initialize a Genetics Report Cards dataset
+#'
 #' Initialize a GRC dataset (obtained from function loadGrc()) so that it is ready for analysis.
 #' It performs barcode imputation, computes genetic distances, and initializes data that will subsequently be used in analyses.
 #'
 #' @param grcData The data obtained from reading the GRC Excel data.
 #' @param dir The folder where the outputs from this and subsequent analyses will be stored.
+#' @param minSnpTypability The minimum proportion of non-missing samples for a barcode position to be retained in analysis.
+#' @param minSampleTypability The minimum proportion of non-missing positions for a sample to be retained in analysis.
 #'
 #' @return An analysis context object, which is a list that contains all the data for analysis, which will be passed to subsequent analysis tasks.
 #' @export
 #'
 #' @examples
-#' pfData <- loadGrc ("D:/MyData/GRC/20210705-GenRe.xlsx", sheet="GenRe-Mekong", species="Pf", version="1.0")
-#' ctx <- initializeContext (pfData, dir="D:/MyAnalysis/GRC")
+#' #TBD
 #
-initializeContext <- function (grcData, dir=".") {
+initializeContext <- function (grcData, dir=".", 
+                               minSnpTypability=0.8, 
+                               minSampleTypability=0.75) {
     options(scipen=10)
     options(stringsAsFactors=FALSE)
-    
-    config <- setup.getConfig (grcData, dir)
+
+    config <- setup.getConfig (grcData, dir, minSnpTypability, minSampleTypability)
     ctx <- analysis.createContext (grcData$data, config)
     ctx
 }
 
 #############################################################
-# Sample Selection
 #
 #' Select a set of samples using metadata
+#'
 #' Selects a set of samples for analysis, based on their metadata values.
 #' A given analysis context can contain multiple sampe sets, with different names.
 #' The selection criteria are specified as a list containing a sequence of lists wth two elements each:
@@ -60,19 +63,14 @@ initializeContext <- function (grcData, dir=".") {
 #' A selected sample must match all the criteria.
 #'
 #' @param ctx The analysis context, created by intializeContext().
-#' @param name The name of the sample set, to be used to identifty it when calling analysis tasks.
+#' @param sampleSet The name of the sample set, to be used to identifty it when calling analysis tasks.
 #' @param select The criteria for selecting the samples. The value must be a list.
 #'
 #' @return The analysis context, augmented with the new sample set
 #' @export
 #'
 #' @examples
-#' # Select all samples from Vietnam and Laos which were collected upon hospital admission (day 0, hour 0)
-#' ctx <- selectSampleSet (ctx, sampleSet="Day0-VN-LA",
-#'              select=list(
-#'                list(field="TimePoint", values="D00H00"),
-#'                list(field="Country", values=c("VN","LA"))
-#'            )
+#' #TBD
 #
 selectSampleSet <- function (ctx, sampleSet, select) {
     ctx <- analysis.selectDataset (ctx, name, select)
@@ -80,9 +78,9 @@ selectSampleSet <- function (ctx, sampleSet, select) {
 }
 
 #############################################################
-# Drug resistance prevalence maps
 #
 #' Map prevalence of Drug resistance
+#'
 #' Creates a map showing the levels of resistance to a particular drug for different administrative divisions.
 #' If multiple drugs are specified, then different maps will be created for different drugs.
 #' The predictions of resistance for any given drugs are aggregated at the desired administrative level: Province (level 1), or District (level2) and separate maps are created.
@@ -102,22 +100,7 @@ selectSampleSet <- function (ctx, sampleSet, select) {
 #' @export
 #'
 #' @examples
-#' # Get a context for a P. falciparum GRC dataset
-#' pfData <- loadGrc ("D:/MyData/GRC/20210705-GenRe.xlsx", sheet="GenRe-Mekong", species="Pf", version="1.0")
-#' ctx <- initializeContext (pfData, dir="D:/MyAnalysis/GRC")
-#
-#' # Select all samples from Vietnam and Laos which were collected upon hospital admission (day 0, hour 0)
-#' ctx <- selectSampleSet (ctx, sampleSet="Day0-VN-LA",
-#'              select=list(
-#'                list(field="TimePoint", values="D00H00"),
-#'                list(field="Country", values=c("VN","LA"))
-#'            )
-#'
-#' # Map prevalence of artemisinin and piperaquine resistance at provincial and district level in Veitnam and Laos
-#' mapDrugResistancePrevalence (ctx, sampleSet="Day0-VN-LA",
-#'                    mutation=c("Artemisinin", "Piperaquine"), aggregate=c(1,2),
-#'                    minAggregateCount=10)
-#'
+#' #TBD
 #
 mapDrugResistancePrevalence <- function (ctx, sampleSet,
                    drugs="ALL",
@@ -132,31 +115,31 @@ mapDrugResistancePrevalence <- function (ctx, sampleSet,
         map.markerNames=showNames,
         map.size=c(width=width,height=height)
     )
-    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/drug", 
+    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/drug",
                                  aggregation=aggregate, measures=drugs, params=params)
-)
+}
 #
 #############################################################
-# Mutation prevalence maps
 #
-#' Title
+#' Map the prevalence of genetic mutations.
 #'
-#' @param ctx
-#' @param sampleSet
-#' @param drugs
-#' @param aggregate
-#' @param minAggregateCount
-#' @param showNames
-#' @param markerSize
-#' @param width
-#' @param height
+#' @param ctx TBD
+#' @param sampleSet TBD
+#' @param mutations TBD
+#' @param aggregate TBD
+#' @param minAggregateCount TBD
+#' @param showNames TBD
+#' @param markerSize TBD
+#' @param width TBD
+#' @param height TBD
 #'
-#' @return
+#' @return TBD
 #' @export
 #'
 #' @examples
+#'  #TBD
 mapMutationPrevalence <- function (ctx, sampleSet,
-                   mutation="ALL",
+                   mutations="ALL",
                    aggregate=1,
                    minAggregateCount=10,
                    showNames=TRUE,
@@ -165,25 +148,25 @@ mapMutationPrevalence <- function (ctx, sampleSet,
                    height=15) {}
 
 #############################################################
-# Diversity maps
 #
-#' Title
+#' Map genetic Diversity
 #'
-#' @param ctx
-#' @param sampleSet
-#' @param measures
-#' @param aggregate
-#' @param minAggregateCount
-#' @param showNames
-#' @param markerColours
-#' @param markerSize
-#' @param width
-#' @param height
+#' @param ctx TBD
+#' @param sampleSet TBD
+#' @param measures TBD
+#' @param aggregate TBD
+#' @param minAggregateCount TBD
+#' @param showNames TBD
+#' @param markerColours TBD
+#' @param markerSize TBD
+#' @param width TBD
+#' @param height TBD
 #'
-#' @return
+#' @return TBD
 #' @export
 #'
 #' @examples
+#'  #TBD
 mapDiversity <- function (ctx, sampleSet,
                    measures="ALL",
                    aggregate=1,
@@ -195,26 +178,26 @@ mapDiversity <- function (ctx, sampleSet,
                    height=15) {}
 
 #############################################################
-# Connectedness maps
 #
-#' Title
+#' Map Connectedness between sites
 #'
-#' @param ctx
-#' @param sampleSet
-#' @param measures
-#' @param similarityLevels
-#' @param aggregate
-#' @param minAggregateCount
-#' @param showNames
-#' @param markerColours
-#' @param markerSize
-#' @param width
-#' @param height
+#' @param ctx TBD
+#' @param sampleSet TBD
+#' @param measures TBD
+#' @param similarityLevels TBD TBD
+#' @param aggregate TBD
+#' @param minAggregateCount TBD
+#' @param showNames TBD
+#' @param markerColours TBD
+#' @param markerSize TBD
+#' @param width TBD
+#' @param height TBD
 #'
-#' @return
+#' @return TBD
 #' @export
 #'
 #' @examples
+#'  #TBD
 mapConnections <- function (ctx, sampleSet,
                    measures="ALL",
                    similarityLevels=1.0,
@@ -230,25 +213,25 @@ mapConnections <- function (ctx, sampleSet,
 #                    measures=allConnectednessMeasures,
 
 #############################################################
-# Haplotype frequency maps
 #
-#' Title
+#' Map barcode group frequencies
 #'
-#' @param ctx
-#' @param sampleSet
-#' @param type
-#' @param similarityLevels
-#' @param aggregate
-#' @param minGroupSize
-#' @param showNames
-#' @param markerScale
-#' @param width
-#' @param height
+#' @param ctx TBD
+#' @param sampleSet TBD
+#' @param type TBD
+#' @param similarityLevels TBD
+#' @param aggregate TBD
+#' @param minGroupSize TBD
+#' @param showNames TBD
+#' @param markerScale TBD
+#' @param width TBD
+#' @param height TBD
 #'
-#' @return
+#' @return TBD
 #' @export
 #'
 #' @examples
+#'  #TBD
 mapGroupFrequencies <- function (ctx, sampleSet,
                    type=c("bar","pie"),
                    similarityLevels=1.0,
@@ -262,21 +245,21 @@ mapGroupFrequencies <- function (ctx, sampleSet,
 # Q: Check this:     map.haplo.markerSampleCount="mean"  #"none", or a count
 
 #############################################################
-# Population structure analysis - PCA and NJT
 #
-#' Title
+#' Plot Population structure (PCA and NJT)
 #'
-#' @param ctx
-#' @param sampleSet
-#' @param type
-#' @param attributes
-#' @param width
-#' @param height
+#' @param ctx TBD
+#' @param sampleSet TBD TBD
+#' @param type TBD
+#' @param attributes TBD
+#' @param width TBD
+#' @param height TBD
 #'
-#' @return
+#' @return TBD
 #' @export
 #'
 #' @examples
+#'  #TBD
 plotPopulationStructure <- function (ctx, sampleSet,
                    type=c("njt","PCoA"),
                    attributes=NULL,
@@ -286,21 +269,21 @@ plotPopulationStructure <- function (ctx, sampleSet,
 # Q: DEFINE A DEFAULT SET OF ATTRIBUTES
 
 #############################################################
-# Population structure analysis - haplotype networks
 #
-#' Title
+#' Plot Population structure (barcode networks)
 #'
-#' @param ctx
-#' @param sampleSet
-#' @param attributes
-#' @param aggregateCountMin
-#' @param width
-#' @param height
+#' @param ctx TBD
+#' @param sampleSet TBD
+#' @param attributes TBD
+#' @param aggregateCountMin TBD
+#' @param width TBD
+#' @param height TBD
 #'
-#' @return
+#' @return TBD
 #' @export
 #'
 #' @examples
+#'  #TBD
 plotBarcodeNetwork <- function (ctx, sampleSet,
                    attributes=NULL,
                    aggregateCountMin=10,
@@ -308,25 +291,25 @@ plotBarcodeNetwork <- function (ctx, sampleSet,
                    height=15) {}
 
 #############################################################
-# Population structure analysis - haplotype similarity graphs
 #
-#' Title
+#' Plot barcode similarity graphs
 #'
-#' @param ctx
-#' @param sampleSet
-#' @param attributes
-#' @param similarityLevels
-#' @param minGroupSize
-#' @param minConnectionSimilarity
-#' @param graphLayout
-#' @param weighting
-#' @param width
-#' @param height
+#' @param ctx TBD
+#' @param sampleSet TBD
+#' @param attributes TBD
+#' @param similarityLevels TBD
+#' @param minGroupSize TBD
+#' @param minConnectionSimilarity TBD
+#' @param graphLayout TBD
+#' @param weighting TBD
+#' @param width TBD
+#' @param height TBD
 #'
-#' @return
+#' @return TBD
 #' @export
 #'
 #' @examples
+#'  #TBD
 mapGroupGraph <- function (ctx, sampleSet,
                    attributes=NULL,
                    similarityLevels=1.0,
@@ -340,26 +323,26 @@ mapGroupGraph <- function (ctx, sampleSet,
 # Q: No min aggregation count?
 
 #############################################################
-# Haplotype sharing maps
 #
-#' Title
+#' Map barcode sharing
 #'
-#' @param ctx
-#' @param sampleSet
-#' @param type
-#' @param similarityLevels
-#' @param aggregate
-#' @param minAggregateCount
-#' @param showNames
-#' @param markerScale
-#' @param minGroupSize
-#' @param width
-#' @param height
+#' @param ctx TBD
+#' @param sampleSet TBD
+#' @param type TBD
+#' @param similarityLevels TBD
+#' @param aggregate TBD
+#' @param minAggregateCount TBD
+#' @param showNames TBD TBD
+#' @param markerScale TBD
+#' @param minGroupSize TBD
+#' @param width TBD
+#' @param height TBD
 #'
-#' @return
+#' @return TBD
 #' @export
 #'
 #' @examples
+#'  #TBD
 mapGroupSharing <- function (ctx, sampleSet,
                    type=c("bar","pie"),
                    similarityLevels=1.0,
@@ -374,25 +357,25 @@ mapGroupSharing <- function (ctx, sampleSet,
 # Q: Check this:     map.haplo.markerSampleCount="mean"  #"none", or a count
 
 #############################################################
-# Haplotype sharing maps - subgroup mapping
 #
-#' Title
+#' Map Barcode Group prevalence
 #'
-#' @param ctx
-#' @param sampleSet
-#' @param similarityLevels
-#' @param aggregate
-#' @param minAggregateCount
-#' @param showNames
-#' @param minGroupSize
-#' @param markerScale
-#' @param width
-#' @param height
+#' @param ctx TBD
+#' @param sampleSet TBD
+#' @param similarityLevels TBD
+#' @param aggregate TBD
+#' @param minAggregateCount TBD
+#' @param showNames TBD
+#' @param minGroupSize TBD
+#' @param markerScale TBD
+#' @param width TBD
+#' @param height TBD
 #'
-#' @return
+#' @return TBD
 #' @export
 #'
 #' @examples
+#'  #TBD
 mapGroupPrevalence <- function (ctx, sampleSet,
                    similarityLevels=1.0,
                    aggregate=1,
@@ -404,6 +387,3 @@ mapGroupPrevalence <- function (ctx, sampleSet,
                    height=15) {}
 
 # Q: Check this:     map.haplo.markerSampleCount="mean"  #"none", or a count
-
-
-

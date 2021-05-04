@@ -1,17 +1,19 @@
 ##############################################################################
 # Sample metadata management
 ################################################################################
-meta.setContextSampleMeta <- function (ctx, newMeta, store=TRUE) {
-    ctx$meta <- newMeta
+meta.setDatasetMeta <- function (ctx, datasetName, meta, store=TRUE) {
+    dataset <- ctx[[datasetName]]
+    dataset$meta <- meta
     if (store) {
-        metaFile <- meta.getMetaDataFile(ctx)
-        writeSampleData(newMeta, metaFile)
+        metaFile <- meta.getMetaDataFile(ctx, datasetName)
+        writeSampleData(meta, metaFile)
     }
+    ctx[[datasetName]] <- dataset
     ctx
 }
 
-meta.getMetaDataFile <- function (ctx) {
-    metaFile <- getDataFile(ctx, "meta", "sampleMeta.tab")
+meta.getMetaDataFile <- function (ctx, datasetName) {
+    metaFile <- getDataFile(ctx, datasetName, "meta", "sampleMeta.tab")
     metaFile
 }
 

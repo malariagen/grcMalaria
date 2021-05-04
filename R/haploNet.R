@@ -49,7 +49,7 @@ haploNet.plotNet <- function(net, h, analysisName, sampleMeta, plotDef, plotsFol
     
     # Create a colour table for the pie charts
     pieColTable<-with(
-        stack(setNames(attr(h, "index"), rownames(h))), 
+        utils::stack(stats::setNames(attr(h, "index"), rownames(h))), 
         table(hap=ind, pop=sampleColours[values])
     )
     pieCols <- colnames(pieColTable)
@@ -60,7 +60,7 @@ haploNet.plotNet <- function(net, h, analysisName, sampleMeta, plotDef, plotsFol
     initializeGraphics (getGraphicsFilename (plotFilenameRoot), widthInch=24, heightInch=24)
     
     plot(net, size=attr(net, "freq"), scale.ratio=2, bg=pieCols, cex=0.8, pie=pieColTable, labels=FALSE, fast=TRUE, show.mutation=2)
-    legend("bottomright", legendData$label, col="black", pt.bg=legendData$colour, pch=21)
+    graphics::legend("bottomright", legendData$label, col="black", pt.bg=legendData$colour, pch=21)
     
-    dev.off()
+    grDevices::dev.off()
 }

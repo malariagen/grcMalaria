@@ -48,7 +48,7 @@ markerMap.execute <- function(ctx, analysisName, mapType, visType, aggregation, 
                 aggColName <- c("Country","AdmDiv1","AdmDiv2")[aggLevelIdx]
                 lp <- map.computeLabelParams (selAggUnitData, aggColName, baseMapInfo)
                 mapPlot <- mapPlot + 
-                    ggplot2::geom_label_repel(data=lp, ggplot2::aes(x=lon, y=lat, label=label), 
+                    ggrepel::geom_label_repel(data=lp, ggplot2::aes(x=lon, y=lat, label=label), 
                                               size=4.5, fontface="bold", color="darkgray",
                                               hjust=lp$just, vjust=0.5, nudge_x=lp$x, nudge_y=lp$y, label.padding=grid::unit(0.2, "lines"))
             }
@@ -85,7 +85,7 @@ markerMap.execute <- function(ctx, analysisName, mapType, visType, aggregation, 
             # Now add the decorative elements
             valueLabels <- round(mValues, digits=2)
             mapPlot <- mapPlot +
-	        ggplot2::geom_text(data=selAggUnitData, aes_string(x="Longitude", y="Latitude"), label=valueLabels, hjust=0.5, vjust=0.5, size=4.5, fontface="bold") +
+	        ggplot2::geom_text(data=selAggUnitData, ggplot2::aes_string(x="Longitude", y="Latitude"), label=valueLabels, hjust=0.5, vjust=0.5, size=4.5, fontface="bold") +
                 ggplot2::theme(plot.title = ggplot2::element_text(face = "bold",size = ggplot2::rel(1.2), hjust = 0.5),
                           panel.background = ggplot2::element_rect(colour = NA),
                           plot.background = ggplot2::element_rect(colour = NA),
@@ -172,7 +172,7 @@ markerMap.estimateMeasures <- function(aggLevel, aggUnitData, ctx, analysisName,
     
     # Write out the aggregation unit data to file
     aggDataFilename  <- paste(dataFolder, "/AggregatedData-", analysisName, "-", aggLevel, ".tab", sep="")
-    write.table(aggUnitData, file=aggDataFilename, sep="\t", quote=FALSE, row.names=FALSE)
+    utils::write.table(aggUnitData, file=aggDataFilename, sep="\t", quote=FALSE, row.names=FALSE)
 
     aggUnitData
 }
@@ -186,23 +186,23 @@ markerMap.estimateDiversityMeasures <- function (barcodeData, distData, measures
             value <- max(table(haplos)) / length(haplos)
         } else if (measure == "haploHet1") {
             haplos <- apply(barcodeData,1,paste,collapse="")
-            value <- heterozygosity(haplos)
+            value <- pegas::heterozygosity(haplos)
         } else if (measure == "haploHet2") {
             haplos <- apply(barcodeData,1,paste,collapse="")
-            hets <- sapply(1:1000, function(i) heterozygosity(haplos[sample(1:length(haplos), 10)]))
+            hets <- sapply(1:1000, function(i) pegas::heterozygosity(haplos[sample(1:length(haplos), 10)]))
             value <- mean(hets)
         } else if (measure == "haploHet3") {
             sCount <- ncol(barcodeData)
-            hets <- sapply(1:100, function(i) heterozygosity(apply(barcodeData[,sample(1:sCount,10)], 1, paste, collapse="")))
+            hets <- sapply(1:100, function(i) pegas::heterozygosity(apply(barcodeData[,sample(1:sCount,10)], 1, paste, collapse="")))
             #hets <- sapply(1:100, computeHaploHet3, barcodeData)
             value <- mean(hets)
         } else if (measure == "meanSnpHet") {	# Mean SNP Het == Mean Distance
-            hets <- apply(barcodeData, 2, heterozygosity)
+            hets <- apply(barcodeData, 2, pegas::heterozygosity)
             value <- mean(hets)
         } else if (measure == "medianDistance") {
 	    mat <- as.matrix(distData)
 	    mat[lower.tri(mat,diag=TRUE)] <- NA
-	    value <- median(mat, na.rm=TRUE)
+	    value <- stats::median(mat, na.rm=TRUE)
         } else {
             stop(paste("Invalid diversity measure:", measure))
         }

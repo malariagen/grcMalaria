@@ -18,24 +18,11 @@ analysis.autoPch <- c(rep(21,8),rep(24,8),rep(23,8),rep(22,8))
 ###############################################################################
 getGraphicsFilename <- function(graphicFilenameRoot) {
     fileExt <- ".png"    # Default
-    if (graphicsFormat == "PDF") {
-        fileExt <- ".pdf"
-    }
-    if (graphicsFormat == "PS") {
-        fileExt <- ".ps"
-    }
     return (paste(graphicFilenameRoot, fileExt, sep=""))
 }
 
 initializeGraphics <- function(graphicFilename, widthInch, heightInch, resolution=150, fontSize=14, background="white") {
-    if (graphicsFormat == "PDF") {
-        pdf(file=graphicFilename, width=widthInch, height=heightInch, onefile=TRUE, pointsize=fontSize, bg=background, encoding="WinAnsi.enc")
-    } else if (graphicsFormat == "PS") {
-        postscript(file=graphicFilename, width=widthInch, height=heightInch, onefile=TRUE, pointsize=fontSize, bg=background, encoding="WinAnsi.enc")
-    } else {
-        # Default
-        png(filename=graphicFilename, width=widthInch, height=heightInch, units="in", pointsize=fontSize, bg=background, res=resolution)
-    }
+    grDevices::png(filename=graphicFilename, width=widthInch, height=heightInch, units="in", pointsize=fontSize, bg=background, res=resolution)
 }
 
 applyGraphicalAttributes <- function(sampleMetadata, renderDefs) {

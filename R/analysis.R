@@ -3,61 +3,56 @@
 ###################################################################
 #
 analysis.createContext <- function (grcData, config) {
-    ctx <- list()
-    ctx$unfiltered <- analysis.createUnfilteredContext(grcData, config)
-    ctx$filtered   <- analysis.createFilteredContext(ctx$unfiltered)
-    ctx$imputed    <- impute.createContext(ctx$filtered)
-    ctx$config     <- config
-    ctx$sampleSets <- list()
+    ctx <- list(
+        config     = config,
+        sampleSets = list()
+    )
+    #
+    # Include basic (Unfiltered) Data - complete but raw data - built upon initialization
+    #
+    print("Initializing Unfiltered Dataset")
+    ctx$unfiltered <- list(name="unfiltered")
+    ctx <- meta.setDatasetMeta(ctx, "unfiltered", grcData, store=TRUE)
+    print(paste("Loaded metadata - Samples:", nrow(ctx$unfiltered$meta)))
+    
+    ctx <- analysis.createFilteredDataset(ctx)
+    ctx <- impute.createImputedDataset(ctx)
     ctx
-}
-#
-###################################################################
-# Basic (Unfiltered) Data - complete but raw data - built upon initialization
-###################################################################
-#
-analysis.createUnfilteredContext <- function (grcData, config) {
-    print("Initializing Basic Dataset")
-    unfilteredCtx <- list(name="unfiltered")
-    unfilteredCtx <- meta.setContextSampleMeta(ctx, grcData, store=TRUE)
-    print(paste("Loaded metadata - Samples:", nrow(unfilteredCtx$meta)))
-    unfilteredCtx
 }
 #
 ###################################################################
 # Filtered Data, with high-missingness barcodes removed
 ###################################################################
 #
-analysis.createFilteredContext <- function (unfilteredCtx, loadFromCache=TRUE) {
+analysis.createFilteredDataset <- function (ctx, loadFromCache=TRUE) {
     print("Initializing Filtered Dataset")
-    filteredCtx <- list(name="filtered")
+    ctx$filtered <- list(name="filtered")
+    
+    filteredDs   <- ctx$filtered
+    unfilteredDs <- ctx$unfiltered
+    config       <- ctx$config
 
-    filteredMetaFile        <- meta.getMetaDataFile(filteredCtx)
-    filteredBarcodeMetaFile <- barcode.getBarcodeMetaFile(filteredCtx)
-    filteredBarcodeFile     <- barcode.getBarcodeDataFile(filteredCtx)
+    filteredMetaFile        <- meta.getMetaDataFile(ctx, "filtered")
+    filteredBarcodeFile     <- barcode.getBarcodeDataFile(ctx, "filtered")
 
-    if (loadFromCache & file.exists(filteredMetaFile) & file.exists(filteredBarcodeMetaFile) & file.exists(filteredBarcodeFile)) {
-        sampleMeta <- readSampleData (filteredMetaFile)		#; print(colnames(sampleMeta))
-        filteredCtx <- meta.setContextSampleMeta (filteredCtx, sampleMeta, store=FALSE)
-
-        barcodeMeta <- read.table(filteredBarcodeMetaFile, as.is=TRUE, header=TRUE, sep="\t")
+    if (loadFromCache & file.exists(filteredMetaFile) & file.exists(filteredBarcodeFile)) {
+        meta <- readSampleData (filteredMetaFile)		#; print(colnames(meta))
+        ctx <- meta.setDatasetMeta (ctx, "filtered", meta, store=FALSE)
         barcodeData <- readSampleData (filteredBarcodeFile)
-        filteredCtx <- setContextBarcodes (filteredCtx, barcodeData, barcodeMeta, store=FALSE)
-        print(paste("Loaded", filteredCtx$name, "barcodes - Samples:", nrow(barcodeData), "x SNPs:", ncol(barcodeData)))
+        ctx <- setDatasetBarcodes (ctx, "filtered", barcodeData, store=FALSE)
+        print(paste("Loaded filtered barcodes - Samples:", nrow(barcodeData), "x SNPs:", ncol(barcodeData)))
     } else {
-        filteredCtx <- meta.setContextSampleMeta (filteredCtx, unfilteredCtx$meta)
-        filteredCtx <- initializeBarcodes (filteredCtx)
-
+        ctx <- meta.setDatasetMeta (ctx, "filtered", ctx$unfiltered$meta, store=FALSE)
+        ctx <- initializeBarcodes (ctx, "filtered")
         # Trim the metadata to cover the barcodes selected
-        sampleNames   <- rownames(filteredCtx$barcodes)
-        filteredMeta  <- filterSampleData (filteredCtx$meta, sampleNames)
-        filteredCtx <- meta.setContextSampleMeta (filteredCtx, filteredMeta)
+        sampleNames   <- rownames(ctx$filtered$barcodes)
+        filteredMeta  <- filterSampleData (ctx$unfiltered$meta, sampleNames)
+        ctx <- meta.setDatasetMeta (ctx, "filtered", filteredMeta)
     }
 
     # Get the genotypes, distance matrix and execute the pop structure analysis
-    filteredCtx <- geno.initialize(filteredCtx)
-    filteredCtx <- distance.initialize(filteredCtx)
-    filteredCtx
+    ctx <- distance.initialize(ctx, "filtered")
+    ctx
 }
 #
 ###################################################################
@@ -66,31 +61,33 @@ analysis.createFilteredContext <- function (unfilteredCtx, loadFromCache=TRUE) {
 #
 analysis.selectSamplesInContext <- function (ctx, sampleNames) {
     trimCtx <- list()
-    trimCtx$unfiltered <- analysis.trimContext (ctx$unfiltered, sampleNames)
+    trimCtx <- analysis.addTrimmedDataset (ctx, "unfiltered", sampleNames, trimCtx)
     if (!is.null(ctx$filtered)) {
-        trimCtx$filtered   <- analysis.trimContext (ctx$filtered, sampleNames)
+        trimCtx <- analysis.addTrimmedDataset (ctx, "filtered", sampleNames, trimCtx)
     }
     if (!is.null(ctx$imputed)) {
-        trimCtx$imputed    <- analysis.trimContext (ctx$imputed, sampleNames)
+        trimCtx <- analysis.addTrimmedDataset (ctx, "imputed", sampleNames, trimCtx)
     }
+    trimCtx$config     <- ctx$config
     trimCtx
 }
 #
-analysis.trimContext <- function (ctx, sampleNames) {
+analysis.addTrimmedDataset <- function (ctx, datasetName, sampleNames, trimCtx) {
     # Use only samples that are shared with the original context
-    ctxSampleNames <- rownames(ctx$meta)
-    sampleNames <- sampleNames[which(sampleNames %in% ctxSampleNames)]
+    dataset <- ctx[[datasetName]]
+    dsSampleNames <- rownames(dataset$meta)
+    sampleNames <- sampleNames[which(sampleNames %in% dsSampleNames)]
     #
-    trimCtx <- list(name=ctx$name)
-    trimCtx <- meta.setContextSampleMeta (trimCtx, ctx$meta[sampleNames,],store=FALSE)
-    if (!is.null(ctx$barcodes)) {
-        trimCtx <- setContextBarcodes (trimCtx, ctx$barcodes[sampleNames,], ctx$barcodeMeta, store=FALSE)
+    trimCtx[[datasetName]] <- list(name=dataset$name)
+    #
+    trimMeta <- dataset$meta[sampleNames,]
+    trimCtx <- meta.setDatasetMeta (trimCtx, datasetName, trimMeta,store=FALSE)
+    #
+    if (!is.null(dataset$barcodes)) {
+        trimCtx <- barcode.setDatasetBarcodes (trimCtx, datasetName, dataset$barcodes[sampleNames,], store=FALSE)
     }
-    if (!is.null(ctx$genos)) {
-        trimCtx <- geno.setContextGenotypes (trimCtx, ctx$genos[sampleNames,], ctx$genoMeta, store=FALSE)
-    }
-    if (!is.null(ctx$distance)) {
-        trimCtx <- distance.setContextDistance (trimCtx, ctx$distance[sampleNames,sampleNames], store=FALSE)
+    if (!is.null(dataset$distance)) {
+        trimCtx <- distance.setDatasetDistance (trimCtx, datasetName, ctx$distance[sampleNames,sampleNames], store=FALSE)
     }
     trimCtx
 }
@@ -146,9 +143,9 @@ analysis.executeOnSampleSet <- function(ctx, sampleSetName, tasks, plotList, agg
 
     # Write out the meta
     metaFilename  <- paste(getOutFolder(analysisName), "/meta-", analysisName, "-unfiltered.tab", sep="")
-    write.table(trimCtx$unfiltered$meta, file=metaFilename, sep="\t", quote=FALSE, row.names=FALSE)
+    utils::write.table(trimCtx$unfiltered$meta, file=metaFilename, sep="\t", quote=FALSE, row.names=FALSE)
     metaFilename  <- paste(getOutFolder(analysisName), "/meta-", analysisName, "-filtered.tab", sep="")
-    write.table(trimCtx$filtered$meta, file=metaFilename, sep="\t", quote=FALSE, row.names=FALSE)
+    utils::write.table(trimCtx$filtered$meta, file=metaFilename, sep="\t", quote=FALSE, row.names=FALSE)
 
     # Execute computations and plots with different tasks
     for (tIdx in 1:length(tasks)) {

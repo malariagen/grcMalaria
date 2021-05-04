@@ -2,12 +2,7 @@
 % Please edit documentation in R/public.R
 \name{mapDrugResistancePrevalence}
 \alias{mapDrugResistancePrevalence}
-\title{Map prevalence of Drug resistance
-Creates a map showing the levels of resistance to a particular drug for different administrative divisions.
-If multiple drugs are specified, then different maps will be created for different drugs.
-The predictions of resistance for any given drugs are aggregated at the desired administrative level: Province (level 1), or District (level2) and separate maps are created.
-For each aggregation unit, we place a marker on the map, coloured according to the level of resistance to the drug, with a label indicating the prevalence.
-To avoid estimating on very small samples, one can set a minimum count of samples, below which the marker is not shown.}
+\title{Map prevalence of Drug resistance}
 \usage{
 mapDrugResistancePrevalence(
   ctx,
@@ -41,7 +36,6 @@ mapDrugResistancePrevalence(
 \item{height}{The heigt (in inches) of the map image.}
 }
 \description{
-Map prevalence of Drug resistance
 Creates a map showing the levels of resistance to a particular drug for different administrative divisions.
 If multiple drugs are specified, then different maps will be created for different drugs.
 The predictions of resistance for any given drugs are aggregated at the desired administrative level: Province (level 1), or District (level2) and separate maps are created.
@@ -49,19 +43,5 @@ For each aggregation unit, we place a marker on the map, coloured according to t
 To avoid estimating on very small samples, one can set a minimum count of samples, below which the marker is not shown.
 }
 \examples{
-# Get a context for a P. falciparum GRC dataset
-pfData <- loadGrc ("D:/MyData/GRC/20210705-GenRe.xlsx", sheet="GenRe-Mekong", species="Pf", version="1.0")
-ctx <- intializeContext (pfData, dir="D:/MyAnalysis/GRC")
-# Select all samples from Vietnam and Laos which were collected upon hospital admission (day 0, hour 0)
-ctx <- selectSampleSet (ctx, sampleSet="Day0-VN-LA",
-             select=list(
-               list(field="TimePoint", values="D00H00"),
-               list(field="Country", values=c("VN","LA"))
-           )
-
-# Map prevalence of artemisinin and piperaquine resistance at provincial and district level in Veitnam and Laos
-mapDrugResistancePrevalence (ctx, sampleSet="Day0-VN-LA",
-                   mutation=c("Artemisinin", "Piperaquine"), aggregate=c(1,2),
-                   minAggregateCount=10)
-
+#TBD
 }

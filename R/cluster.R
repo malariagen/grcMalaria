@@ -68,7 +68,7 @@ cluster.findbyIdentity <- function (analysisContext, analysisName, thresholdValu
     # Write out cluster definitions
     clustersData <- cluster.estimateClusterStats (clustersData, clusterMembers, analysisContext$meta) 
     clustersDataFile <- cluster.getClustersDataFile("clusters", analysisName, thresholdValue)
-    write.table(clustersData, file=clustersDataFile, quote=FALSE, sep="\t", row.names=FALSE, col.names=TRUE)
+    utils::write.table(clustersData, file=clustersDataFile, quote=FALSE, sep="\t", row.names=FALSE, col.names=TRUE)
 
     clustersData
 }
@@ -133,7 +133,7 @@ cluster.getClustersData <- function(analysisName, thresholdValue) {
     if (!file.exists(clustersDataFile)) {
         return(NULL)
     }
-    clustersData <- read.table(clustersDataFile, as.is=TRUE, header=TRUE, quote="", sep="\t", check.names=FALSE)
+    clustersData <- utils::read.table(clustersDataFile, as.is=TRUE, header=TRUE, quote="", sep="\t", check.names=FALSE)
     rownames(clustersData) <- clustersData$ClusterId
     clustersData
 }
@@ -201,10 +201,6 @@ cluster.getIdentityLevelLabel <- function (thresholdValue) {
     label
 }
 
-cluster.getPalette <- function (params) {
-    c25Palette
-}
-
 #
 # Get Unweighted Graph Edge Data
 # Turn the distance matrix into a table of pairwise identity with three columns: "Sample1", "Sample2", "Distance", "Identity"
@@ -213,7 +209,7 @@ cluster.getPairwiseIdentityData <- function (distData, minIdentity, params) {
     mat <- as.matrix(distData)
     mat[lower.tri(mat,diag=TRUE)] = NA
     pairData <- as.data.frame(as.table(mat))
-    pairData <- na.omit(pairData) # remove NA
+    pairData <- stats::na.omit(pairData) # remove NA
     colnames(pairData) <- c("Sample1", "Sample2", "Distance")
     
     # Convert genetic distance to barcode identity

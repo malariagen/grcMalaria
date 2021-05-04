@@ -1,0 +1,102 @@
+Order	SnpName	Chr	Pos	Ref	Nonref	GeneId	GeneDescription	MutType	MutName	Strand	CodonNum	Codon	NtPos	RefAmino	Mutation	MutCodon	MutAmino
+1	BC1	Pf3D7_02_v3	376222	A	G	PF3D7_0209000	6-cysteine protein (P230)	N	K1929E	+	1929	AAA	1	K	G	GAA	E
+2	BC2	Pf3D7_02_v3	470013	G	A	PF3D7_0211700	"protein kinase, putative (TKL1)"	N	G75E	+	75	GGA	2	G	A	GAA	E
+3	BC3	Pf3D7_03_v3	656861	T	G	PF3D7_0316200	"conserved Plasmodium protein, unknown function"	S	129V	-	129	GTA	3	V	G	GTC	V
+4	BC4	Pf3D7_04_v3	110442	C	T	PF3D7_0401900	acyl-CoA synthetase (ACS6)	N	G285E	-	285	GGG	2	G	T	GAG	E
+5	BC5	Pf3D7_04_v3	881571	A	G	PF3D7_0419900	"phosphatidylinositol 4-kinase, putative"	S	1081R	+	1081	CGA	3	R	G	CGG	R
+6	BC6	Pf3D7_05_v3	350933	G	A	PF3D7_0508500	guanidine nucleotide exchange factor (RCC1)	S	1369N	-	1369	AAC	3	N	A	AAT	N
+7	BC7	Pf3D7_05_v3	369740	T	C	PF3D7_0508900	"conserved Plasmodium protein, unknown function"	S	907L	+	907	TTG	1	L	C	CTG	L
+8	BC8	Pf3D7_06_v3	900278	G	A	PF3D7_0622100	"conserved Plasmodium protein, unknown function"	N	P696S	-	696	CCA	1	P	A	TCA	S
+9	BC9	Pf3D7_07_v3	1044052	T	C	PF3D7_0724700	"conserved Plasmodium protein, unknown function"	S	686K	-	686	AAA	3	K	C	AAG	K
+10	BC10	Pf3D7_08_v3	1314831	G	A	PF3D7_0830800	surface-associated interspersed gene 8.2 (SURFIN8.2) (SURF8.2)	S	1342K	+	1342	AAG	3	K	A	AAA	K
+11	BC11	Pf3D7_08_v3	413067	A	G	PF3D7_0808100	"conserved Plasmodium protein, unknown function"	S	1044V	+	1044	GTA	3	V	G	GTG	V
+12	BC12	Pf3D7_09_v3	900277	A	G	PF3D7_0922100	"ubiquitin-like protein, putative"	S	1534E	+	1534	GAA	3	E	G	GAG	E
+13	BC13	Pf3D7_11_v3	1018899	T	C	PF3D7_1126100	"ThiF family protein, putative"	S	1199L	-	1199	TTA	3	L	C	TTG	L
+14	BC14	Pf3D7_11_v3	1815412	C	G	PF3D7_1145800	"conserved Plasmodium protein, unknown function"	N	E765Q	-	765	GAA	1	E	G	CAA	Q
+15	BC15	Pf3D7_13_v3	1056452	T	C	PF3D7_1325400	"conserved Plasmodium protein, unknown function"	S	1234D	+	1234	GAT	3	D	C	GAC	D
+16	BC16	Pf3D7_13_v3	1466422	G	C	PF3D7_1335900	sporozoite surface protein 2+(TRAP)	N	N66K	-	66	AAC	3	N	C	AAG	K
+17	BC17	Pf3D7_14_v3	137622	T	C	PF3D7_1403800	nuclear formin-like protein (MISFIT)	S	1179V	-	1179	GTA	3	V	C	GTG	V
+18	BC18	Pf3D7_14_v3	2164225	A	G	PF3D7_1452600	"conserved Plasmodium protein, unknown function"	S	2830S	+	2830	TCA	3	S	G	TCG	S
+19	BC19	Pf3D7_01_v3	145515	T	A	PF3D7_0103300	"conserved Plasmodium protein, unknown function"	S	294I	-	294	ATA	3	I	A	ATT	I
+20	BC20	Pf3D7_03_v3	548178	C	A	PF3D7_0313400	"conserved Plasmodium protein, unknown function"	N	R2L	-	2	CGT	2	R	A	CTT	L
+21	BC21	Pf3D7_04_v3	1102392	A	T	PF3D7_0424400	"surface-associated interspersed gene 4.2, (SURFIN4.2) (SURF4.2)"	N	E808D	+	808	GAA	3	E	T	GAT	D
+22	BC22	Pf3D7_04_v3	139051	G	T	PF3D7_0402300	"normocyte binding protein 1,reticulocyte binding protein homologue 1+(RH1)"	N	K438N	+	438	AAG	3	K	T	AAT	N
+23	BC23	Pf3D7_04_v3	286542	G	T	PF3D7_0405300	sequestrin	N	H586N	-	586	CAT	1	H	T	AAT	N
+24	BC24	Pf3D7_04_v3	529500	G	A	PF3D7_0411900	DNA polymerase alpha	S	1477Y	-	1477	TAC	3	Y	A	TAT	Y
+25	BC25	Pf3D7_05_v3	796714	A	G	PF3D7_0519300	"cytochrome c+oxidase assembly protein (heme A:+farnesyltransferase), putative"	S	396K	+	396	AAA	3	K	G	AAG	K
+26	BC26	Pf3D7_07_v3	1256331	C	T	PF3D7_0729500	"mRNA (N6-adenosine)-methyltransferase, putative"	N	L321F	+	321	CTT	1	L	T	TTT	F
+27	BC27	Pf3D7_07_v3	461139	G	A	PF3D7_0710100	"conserved Plasmodium protein, unknown function"	N	M361I	+	361	ATG	3	M	A	ATA	I
+28	BC28	Pf3D7_07_v3	619957	G	C	PF3D7_0713600	"mitochondrial ribosomal protein S5 precursor, putative"	S	675R	+	675	CGG	3	R	C	CGC	R
+29	BC29	Pf3D7_08_v3	417335	C	T	PF3D7_0808200	plasmepsin X	N	R244K	-	244	AGA	2	R	T	AAA	K
+30	BC30	Pf3D7_09_v3	163977	C	T	PF3D7_0903500	"conserved Plasmodium protein, unknown function"	S	403D	+	403	GAC	3	D	T	GAT	D
+31	BC31	Pf3D7_10_v3	317581	A	T	PF3D7_1007900	"eukaryotic translation initiation factor 3+subunit 7, putative"	S	311I	+	311	ATA	3	I	T	ATT	I
+32	BC32	Pf3D7_10_v3	336274	A	G	PF3D7_1008100	"conserved Plasmodium protein, unknown function"	N	I1677V	+	1677	ATT	1	I	G	GTT	V
+33	BC33	Pf3D7_11_v3	1020397	C	T	PF3D7_1126100	"ThiF family protein, putative"	N	G700E	-	700	GGA	2	G	T	GAA	E
+34	BC34	Pf3D7_11_v3	1294107	C	T	PF3D7_1133400	apical membrane antigen 1+(AMA1)	S	84A	+	84	GCC	3	A	T	GCT	A
+35	BC35	Pf3D7_11_v3	1935227	T	A	PF3D7_1148700	"Plasmodium exported protein (PHISTc), unknown function (GEXP12)"	N	R73S	-	73	AGA	3	R	A	AGT	S
+36	BC36	Pf3D7_11_v3	477922	C	T	PF3D7_1112500	"conserved Plasmodium protein, unknown function"	N	H147Y	+	147	CAT	1	H	T	TAT	Y
+37	BC37	Pf3D7_12_v3	1663492	A	G	PF3D7_1239800	"conserved Plasmodium protein, unknown function"	S	1014E	+	1014	GAA	3	E	G	GAG	E
+38	BC38	Pf3D7_12_v3	2171901	T	A	PF3D7_1253100	"Plasmodium exported protein (PHISTa), unknown function"	N	V140D	+	140	GTT	2	V	A	GAT	D
+39	BC39	Pf3D7_13_v3	1233218	T	C	PF3D7_1329100	myosin C+(MyoC)	N	N277S	-	277	AAC	2	N	C	AGC	S
+40	BC40	Pf3D7_13_v3	1867630	G	C	PF3D7_1346400	"conserved Plasmodium protein, unknown function"	N	M4911I	+	4911	ATG	3	M	C	ATC	I
+41	BC41	Pf3D7_13_v3	2377887	C	A	PF3D7_1359600	"conserved Plasmodium protein, unknown function"	S	2002S	+	2002	TCC	3	S	A	TCA	S
+42	BC42	Pf3D7_14_v3	2355751	T	A	PF3D7_1457400	"conserved Plasmodium protein, unknown function"	N	H1589Q	+	1589	CAT	3	H	A	CAA	Q
+43	BC43	Pf3D7_14_v3	3046108	C	T	PF3D7_1474400	"conserved Plasmodium protein, unknown function"	S	417V	+	417	GTC	3	V	T	GTT	V
+44	BC44	Pf3D7_02_v3	529709	T	A	PF3D7_0212800	"multidrug efflux pump, putative"	N	F487L	+	487	TTT	3	F	A	TTA	L
+45	BC45	Pf3D7_02_v3	714480	T	C	PF3D7_0217200	"conserved Plasmodium protein, unknown function"	N	D258G	-	258	GAC	2	D	C	GGC	G
+46	BC46	Pf3D7_03_v3	155697	A	G	PF3D7_0302900	"exportin 1, putative"	S	150P	-	150	CCT	3	P	G	CCC	P
+47	BC47	Pf3D7_04_v3	1037656	A	T	PF3D7_0422500	"pre-mRNA-splicing helicase BRR2, putative (BRR2)"	S	2776I	+	2776	ATA	3	I	T	ATT	I
+48	BC48	Pf3D7_04_v3	648101	G	A	PF3D7_0414200.1	calmodulin-like protein	S	51V	-	51	GTC	3	V	A	GTT	V
+49	BC49	Pf3D7_05_v3	1204155	A	C	PF3D7_0529400.1	"conserved Plasmodium protein, unknown function"	S	1338I	+	1338	ATA	3	I	C	ATC	I
+50	BC50	Pf3D7_06_v3	1282691	G	A	PF3D7_0630600	"conserved Plasmodium protein, unknown function"	S	803K	+	803	AAG	3	K	A	AAA	K
+51	BC51	Pf3D7_06_v3	1289212	A	G	PF3D7_0630800	"conserved Plasmodium protein, unknown function"	S	125T	+	125	ACA	3	T	G	ACG	T
+52	BC52	Pf3D7_07_v3	1066698	G	A	PF3D7_0725100	"conserved Plasmodium membrane protein, unknown function"	N	G483S	+	483	GGT	1	G	A	AGT	S
+53	BC53	Pf3D7_07_v3	1213486	G	A	PF3D7_0728200	"actin-like protein, putative"	N	S543N	+	543	AGC	2	S	A	AAC	N
+54	BC54	Pf3D7_07_v3	704373	A	G	PF3D7_0716000	"RNA binding protein, putative"	S	389E	+	389	GAA	3	E	G	GAG	E
+55	BC55	Pf3D7_08_v3	1313202	T	C	PF3D7_0830800	surface-associated interspersed gene 8.2 (SURFIN8.2) (SURF8.2)	S	799F	+	799	TTT	3	F	C	TTC	F
+56	BC56	Pf3D7_08_v3	339406	A	G	PF3D7_0806300	"ferlin like protein, putative"	S	1283C	-	1283	TGT	3	C	G	TGC	C
+57	BC57	Pf3D7_08_v3	701557	T	G	PF3D7_0814500	"conserved Plasmodium protein, unknown function"	S	394G	+	394	GGT	3	G	G	GGG	G
+58	BC58	Pf3D7_09_v3	452690	A	G	PF3D7_0910000	"SET domain protein, putative (SET4)"	S	1018I	-	1018	ATT	3	I	G	ATC	I
+59	BC59	Pf3D7_09_v3	599655	G	C	PF3D7_0914000	"pseudouridylate synthase, putative"	N	E654D	+	654	GAG	3	E	C	GAC	D
+60	BC60	Pf3D7_10_v3	1383789	A	C	PF3D7_1034900	"methionine-tRNA ligase, putative"	N	N114H	+	114	AAT	1	N	C	CAT	H
+61	BC61	Pf3D7_10_v3	1385894	C	T	PF3D7_1034900	"methionine-tRNA ligase, putative"	S	815P	+	815	CCC	3	P	T	CCT	P
+62	BC62	Pf3D7_11_v3	1006911	A	T	PF3D7_1125700	"kelch protein, putative"	N	D124E	-	124	GAT	3	D	T	GAA	E
+63	BC63	Pf3D7_11_v3	1295068	G	A	PF3D7_1133400	apical membrane antigen 1+(AMA1)	N	E405K	+	405	GAA	1	E	A	AAA	K
+64	BC64	Pf3D7_11_v3	1802201	G	A	PF3D7_1145400	dynamin-like protein (DYN1)	S	450S	-	450	TCC	3	S	A	TCT	S
+65	BC65	Pf3D7_12_v3	1667593	T	C	PF3D7_1239800	"conserved Plasmodium protein, unknown function"	S	2381N	+	2381	AAT	3	N	C	AAC	N
+66	BC66	Pf3D7_12_v3	1934745	G	A	PF3D7_1246500	"conserved Plasmodium protein, unknown function"	S	241L	-	241	CTC	3	L	A	CTT	L
+67	BC67	Pf3D7_12_v3	858501	C	A	PF3D7_1221400	"membrane skeletal protein, putative (ALV3)"	N	Q469K	+	469	CAA	1	Q	A	AAA	K
+68	BC68	Pf3D7_13_v3	1419519	T	C	PF3D7_1335100	merozoite surface protein 7+(MSP7)	N	Q208R	-	208	CAA	2	Q	C	CGA	R
+69	BC69	Pf3D7_13_v3	159086	A	G	PF3D7_1303100	"methyltransferase-like protein, putative"	S	21R	+	21	AGA	3	R	G	AGG	R
+70	BC70	Pf3D7_13_v3	2161975	T	A	PF3D7_1354200	"inositol-polyphosphate 5-phosphatase, putative"	N	D252V	-	252	GAT	2	D	A	GTT	V
+71	BC71	Pf3D7_13_v3	2573828	A	C	PF3D7_1364200	"conserved Plasmodium protein, unknown function"	N	I1153M	-	1153	ATT	3	I	C	ATG	M
+72	BC72	Pf3D7_13_v3	388365	A	C	PF3D7_1308400	"conserved Plasmodium protein, unknown function"	N	S1236R	-	1236	AGT	3	S	C	AGG	R
+73	BC73	Pf3D7_14_v3	2625887	C	G	PF3D7_1464700	"ATP synthase (C/AC39) subunit, putative"	N	M238I	-	238	ATG	3	M	G	ATC	I
+74	BC74	Pf3D7_14_v3	3126219	C	T	PF3D7_1475900	"conserved Plasmodium protein, unknown function"	N	S628F	+	628	TCT	2	S	T	TTT	F
+75	BC75	Pf3D7_14_v3	438592	A	C	PF3D7_1410900	"conserved Plasmodium protein, unknown function"	N	N348T	+	348	AAT	2	N	C	ACT	T
+76	BC76	Pf3D7_01_v3	179347	A	G	PF3D7_0104100	"conserved Plasmodium membrane protein, unknown function"	S	311G	+	311	GGA	3	G	G	GGG	G
+77	BC77	Pf3D7_01_v3	180554	G	A	PF3D7_0104100	"conserved Plasmodium membrane protein, unknown function"	N	D714N	+	714	GAT	1	D	A	AAT	N
+78	BC78	Pf3D7_01_v3	283144	C	G	PF3D7_0106700	small ribosomal subunit assembling AARP2 protein (AARP2)	N	H664D	+	664	CAC	1	H	G	GAC	D
+79	BC79	Pf3D7_01_v3	535211	C	T	PF3D7_0113800	"DBL containing protein, unknown function"	S	2521F	+	2521	TTC	3	F	T	TTT	F
+80	BC80	Pf3D7_02_v3	839620	T	C	PF3D7_0220800	cytoadherence linked asexual protein 2+(CLAG2)	S	260L	+	260	TTA	1	L	C	CTA	L
+81	BC81	Pf3D7_04_v3	426436	A	C	PF3D7_0408900.1	"peptidase, M22 family, putative"	N	D560A	+	560	GAT	2	D	C	GCT	A
+82	BC82	Pf3D7_04_v3	531138	G	T	PF3D7_0411900	DNA polymerase alpha	N	A992E	-	992	GCA	2	A	T	GAA	E
+83	BC83	Pf3D7_04_v3	891732	A	C	PF3D7_0419900	"phosphatidylinositol 4-kinase, putative"	N	R4468S	+	4468	AGA	3	R	C	AGC	S
+84	BC84	Pf3D7_05_v3	172801	G	A	PF3D7_0504400	"ATP-dependent helicase, putative"	N	E218K	+	218	GAA	1	E	A	AAA	K
+85	BC85	Pf3D7_06_v3	574938	A	C	PF3D7_0613800	transcription factor with AP2 domain(s) (ApiAP2)	N	I2934L	+	2934	ATT	1	I	C	CTT	L
+86	BC86	Pf3D7_07_v3	1308383	C	T	PF3D7_0730500	"conserved Plasmodium protein, unknown function"	N	G1945R	-	1945	GGA	1	G	T	AGA	R
+87	BC87	Pf3D7_07_v3	1358910	A	G	PF3D7_0731500	erythrocyte binding antigen-175 (EBA175)	N	K286E	+	286	AAA	1	K	G	GAA	E
+88	BC88	Pf3D7_07_v3	1359218	A	T	PF3D7_0731500	erythrocyte binding antigen-175 (EBA175)	N	K388N	+	388	AAA	3	K	T	AAT	N
+89	BC89	Pf3D7_07_v3	635985	T	C	PF3D7_0713900	"conserved Plasmodium protein, unknown function"	N	T598A	-	598	ACA	1	T	C	GCA	A
+90	BC90	Pf3D7_08_v3	1056829	C	A	PF3D7_0824200	"conserved Plasmodium protein, unknown function"	N	L474I	+	474	CTA	1	L	A	ATA	I
+91	BC91	Pf3D7_08_v3	150033	T	C	PF3D7_0802000	"glutamate dehydrogenase, putative (GDHc)"	S	1315I	+	1315	ATT	3	I	C	ATC	I
+92	BC92	Pf3D7_08_v3	399774	C	T	PF3D7_0807800	"proteasome subunit alpha type 5, putative"	S	421K	-	421	AAG	3	K	T	AAA	K
+93	BC93	Pf3D7_09_v3	1379145	G	A	PF3D7_0935400	cytoadherence linked protein	N	R398Q	+	398	CGA	2	R	A	CAA	Q
+94	BC94	Pf3D7_10_v3	1386850	C	T	PF3D7_1035000	"U2 snRNA/tRNA pseudouridine synthase, putative"	S	927K	-	927	AAG	3	K	T	AAA	K
+95	BC95	Pf3D7_11_v3	1935031	T	A	PF3D7_1148700	"Plasmodium exported protein (PHISTc), unknown function (GEXP12)"	N	I139L	-	139	ATA	1	I	A	TTA	L
+96	BC96	Pf3D7_11_v3	408668	T	A	PF3D7_1110200	"pre-mRNA-processing factor 6, putative (PRPF6)"	S	1058I	+	1058	ATT	3	I	A	ATA	I
+97	BC97	Pf3D7_11_v3	828596	T	C	PF3D7_1121800	"petidase, M16 family"	N	K240E	-	240	AAA	1	K	C	GAA	E
+98	BC98	Pf3D7_12_v3	857245	A	G	PF3D7_1221400	"membrane skeletal protein, putative (ALV3)"	N	E50G	+	50	GAG	2	E	G	GGG	G
+99	BC99	Pf3D7_14_v3	107014	G	A	PF3D7_1402900	"conserved Plasmodium protein, unknown function"	S	215K	+	215	AAG	3	K	A	AAA	K
+100	BC100	Pf3D7_14_v3	1757603	A	G	PF3D7_1442900	"guanine nucleotide exchange factor, putative"	N	D1365G	+	1365	GAT	2	D	G	GGT	G
+101	BC101	Pf3D7_14_v3	2733656	C	T	PF3D7_1466800	"conserved Plasmodium protein, unknown function"	S	557C	+	557	TGC	3	C	T	TGT	C

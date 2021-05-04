@@ -59,7 +59,7 @@ haploMap.execute <- function(ctx, analysisName, mapType, visType, aggregation, m
                 identityLevel <- info$identityLevel <- identityLevels[mIdx]			#; print (identityLevel)
                 
                 # Palette for pie charts- determines the number of distinguishable colurs for the chart
-	        haploGroupPalette <- cluster.getPalette (params)
+	        haploGroupPalette <- ctx$config$defaultPalette
 	        maxGroups <- length(haploGroupPalette)
 	    
 	        # Get the haplotype sharing data
@@ -181,7 +181,7 @@ haploMap.plotMap <- function (info, params) {
         }
     }
     graphicFilename  <- paste(plotFolder, paste(graphicFilename,"png",sep="."), sep="/")
-    ggsave(plot=mapPlot, filename=graphicFilename, device="png", width=mapSize[1], height=mapSize[2], units="in", dpi=300)
+    ggplot2::ggsave(plot=mapPlot, filename=graphicFilename, device="png", width=mapSize[1], height=mapSize[2], units="in", dpi=300)
 }
 
 ###############################################################################
@@ -201,13 +201,13 @@ haploMap.addFreqPies <- function (mapPlot, countData, aggUnitData, stdMarkerCoun
     # Now add the pie chart markers
     if (stdMarkerCount==0) {
         mapPlot <- mapPlot +
-                   ggplot2::geom_arc_bar(ggplot2::aes(x0=Longitude, y0=Latitude, r0=0, r=stdMarkerSize, 
+                   ggforce::geom_arc_bar(ggplot2::aes(x0=Longitude, y0=Latitude, r0=0, r=stdMarkerSize, 
                                          fill=Haplo, amount=HaploCount),
                              data=countData, stat="pie", inherit.aes=FALSE,
                              colour="gray25", stroke=0.5, fill="white", show.legend=FALSE)
     } else {
         mapPlot <- mapPlot +
-                   ggplot2::geom_arc_bar(ggplot2::aes(x0=Longitude, y0=Latitude, r0=0, r=stdMarkerSize*sqrt(SampleCount/stdMarkerCount), 
+                   ggforce::geom_arc_bar(ggplot2::aes(x0=Longitude, y0=Latitude, r0=0, r=stdMarkerSize*sqrt(SampleCount/stdMarkerCount), 
                                          fill=Haplo, amount=HaploCount),
                              data=countData, stat="pie", inherit.aes=FALSE,
                              colour="gray25", stroke=0.5, fill="white", show.legend=FALSE)
@@ -323,14 +323,14 @@ haploMap.addSharePies <- function (mapPlot, haploShareData, haploGroupPalette, a
     # Now add the pie chart markers
     if (stdMarkerCount==0) {
         mapPlot <- mapPlot +
-                   ggplot2::geom_arc_bar(ggplot2::aes(x0=Longitude, y0=Latitude, r0=0, r=stdMarkerSize, 
+                   ggforce::geom_arc_bar(ggplot2::aes(x0=Longitude, y0=Latitude, r0=0, r=stdMarkerSize, 
                                          fill=HaploGroup, amount=HaploCount),
                                 data=haploShareData, stat="pie", inherit.aes=FALSE,
                                 colour="gray25", stroke=0.5, show.legend=FALSE) +
                    ggplot2::scale_fill_manual(values=haploGroupPalette)
     } else {
         mapPlot <- mapPlot +
-                   ggplot2::geom_arc_bar(ggplot2::aes(x0=Longitude, y0=Latitude, r0=0, r=stdMarkerSize*sqrt(SampleCount/stdMarkerCount), 
+                   ggforce::geom_arc_bar(ggplot2::aes(x0=Longitude, y0=Latitude, r0=0, r=stdMarkerSize*sqrt(SampleCount/stdMarkerCount), 
                                          fill=HaploGroup, amount=HaploCount),
                                 data=haploShareData, stat="pie", inherit.aes=FALSE,
                                 colour="gray25", stroke=0.5, show.legend=FALSE) +
@@ -493,8 +493,8 @@ haploMap.addConnections <- function (mapPlot, visType, haploGroup, haploShareDat
         aggUnitPairData[,1:nc] <- sapply(aggUnitPairData[,1:nc], as.numeric)		#; print(ncol(aggUnitPairData))
         colnames(aggUnitPairData) <- c("Lat1", "Lon1", "Lat2", "Lon2", "Weight")	#; print(aggUnitPairData)
         
-        hc <- rgb2hsv(col2rgb(haploColour))
-        weakHaploColour <- hsv(h=hc[1,1],s=hc[2,1]*0.2,v=hc[3,1])
+        hc <- grDevices::rgb2hsv(grDevices::col2rgb(haploColour))
+        weakHaploColour <- grDevices::hsv(h=hc[1,1],s=hc[2,1]*0.2,v=hc[3,1])
 	
         # Now plot the connections
         mapPlot <- mapPlot +
@@ -509,7 +509,7 @@ haploMap.addConnections <- function (mapPlot, visType, haploGroup, haploShareDat
 	       ggplot2::geom_point(ggplot2::aes(x=Longitude, y=Latitude, fill=HaploProp), 
 	                           data=haploShareData, size=pointSizes, shape=21, stroke=2) +
 	       ggplot2::scale_fill_gradientn(name="Prevalence", limits=c(scaleMin,scaleMax), colours=c("white",haploColour), values=c(0,1)) +
-               ggplot2::geom_text(aes(x=Longitude, y=Latitude), 
+               ggplot2::geom_text(ggplot2::aes(x=Longitude, y=Latitude), 
                                   data=haploShareData, label=valueLabels, hjust=0.5, vjust=0.5, size=4.5, fontface="bold")
     mapPlot
 }

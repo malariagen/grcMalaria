@@ -2,7 +2,7 @@
 % Please edit documentation in R/public.R
 \name{mapGroupSharing}
 \alias{mapGroupSharing}
-\title{Title}
+\title{Map barcode sharing}
 \usage{
 mapGroupSharing(
   ctx,
@@ -19,11 +19,34 @@ mapGroupSharing(
 )
 }
 \arguments{
-\item{height}{}
+\item{ctx}{TBD}
+
+\item{sampleSet}{TBD}
+
+\item{type}{TBD}
+
+\item{similarityLevels}{TBD}
+
+\item{aggregate}{TBD}
+
+\item{minAggregateCount}{TBD}
+
+\item{showNames}{TBD TBD}
+
+\item{markerScale}{TBD}
+
+\item{minGroupSize}{TBD}
+
+\item{width}{TBD}
+
+\item{height}{TBD}
 }
 \value{
-
+TBD
 }
 \description{
-Title
+Map barcode sharing
+}
+\examples{
+ #TBD
 }

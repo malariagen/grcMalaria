@@ -2,7 +2,7 @@
 % Please edit documentation in R/public.R
 \name{mapGroupPrevalence}
 \alias{mapGroupPrevalence}
-\title{Title}
+\title{Map Barcode Group prevalence}
 \usage{
 mapGroupPrevalence(
   ctx,
@@ -18,11 +18,32 @@ mapGroupPrevalence(
 )
 }
 \arguments{
-\item{height}{}
+\item{ctx}{TBD}
+
+\item{sampleSet}{TBD}
+
+\item{similarityLevels}{TBD}
+
+\item{aggregate}{TBD}
+
+\item{minAggregateCount}{TBD}
+
+\item{showNames}{TBD}
+
+\item{minGroupSize}{TBD}
+
+\item{markerScale}{TBD}
+
+\item{width}{TBD}
+
+\item{height}{TBD}
 }
 \value{
-
+TBD
 }
 \description{
-Title
+Map Barcode Group prevalence
+}
+\examples{
+ #TBD
 }

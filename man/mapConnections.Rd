@@ -2,7 +2,7 @@
 % Please edit documentation in R/public.R
 \name{mapConnections}
 \alias{mapConnections}
-\title{Title}
+\title{Map Connectedness between sites}
 \usage{
 mapConnections(
   ctx,
@@ -19,11 +19,34 @@ mapConnections(
 )
 }
 \arguments{
-\item{height}{}
+\item{ctx}{TBD}
+
+\item{sampleSet}{TBD}
+
+\item{measures}{TBD}
+
+\item{similarityLevels}{TBD TBD}
+
+\item{aggregate}{TBD}
+
+\item{minAggregateCount}{TBD}
+
+\item{showNames}{TBD}
+
+\item{markerColours}{TBD}
+
+\item{markerSize}{TBD}
+
+\item{width}{TBD}
+
+\item{height}{TBD}
 }
 \value{
-
+TBD
 }
 \description{
-Title
+Map Connectedness between sites
+}
+\examples{
+ #TBD
 }

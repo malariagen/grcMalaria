@@ -31,9 +31,9 @@ getDataFolder <- function (ctx, subnames, create=TRUE) {
 #
 # Datafile Naming - prefix with context name so that datafiles are not overwritten
 #
-getDataFile <- function (ctx, subnames, filename) {
+getDataFile <- function (ctx, datasetName, subnames, filename) {
     dataFolder <- getDataFolder (ctx, subnames)
-    return(paste(dataFolder, "/", ctx$name, ".", filename, sep=""))
+    return(paste(dataFolder, "/", datasetName, ".", filename, sep=""))
 }
 #
 # #####################################################################################
@@ -63,7 +63,7 @@ strReverse <- function(x) {
 # Read sample data file (first column is an id)
 #
 readSampleData <- function (dataFile) {
-    data <- read.table(dataFile, as.is=TRUE, header=TRUE, quote="", sep="\t", check.names=FALSE)
+    data <- utils::read.table(dataFile, as.is=TRUE, header=TRUE, quote="", sep="\t", check.names=FALSE)
     sampleNames <- data[,1]
     rownames(data) <- sampleNames
     data <- data[,-1]
@@ -80,7 +80,7 @@ writeSampleData <- function(sampleData, outFilename) {
 writeLabelledData <- function(data, idLabel, outFilename) {
     outData <- cbind(rownames(data), data)
     colnames(outData) <- c(idLabel,colnames(data))
-    write.table(outData, file=outFilename, sep="\t", quote=FALSE, row.names=FALSE)
+    utils::write.table(outData, file=outFilename, sep="\t", quote=FALSE, row.names=FALSE)
 }
 #
 filterSampleData <- function (data, sNames) {
@@ -95,7 +95,7 @@ filterSampleData <- function (data, sNames) {
 # Read distance matrix file
 #
 readMatrix <- function (matrixDataFile) {
-    data <- read.table(matrixDataFile, as.is=TRUE, header=TRUE, sep="\t")
+    data <- utils::read.table(matrixDataFile, as.is=TRUE, header=TRUE, sep="\t")
     sampleNames <- data[,1]
     data <- data[,-1]
     rownames(data) <- sampleNames
@@ -108,7 +108,7 @@ writeMatrix <- function (matrixData, matrixDataFile) {
   names <- colnames(matrixData)
   matrixData <- cbind(names, matrixData)
   colnames(matrixData) <- c ("__Sample", names)
-  write.table(matrixData, file=matrixDataFile, sep="\t", quote=FALSE, row.names=FALSE)
+  utils::write.table(matrixData, file=matrixDataFile, sep="\t", quote=FALSE, row.names=FALSE)
 }
 #
 filterMatrix <- function (matrixData, sampleNames) {

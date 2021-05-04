@@ -2,7 +2,7 @@
 % Please edit documentation in R/public.R
 \name{mapDiversity}
 \alias{mapDiversity}
-\title{Title}
+\title{Map genetic Diversity}
 \usage{
 mapDiversity(
   ctx,
@@ -18,11 +18,32 @@ mapDiversity(
 )
 }
 \arguments{
-\item{height}{}
+\item{ctx}{TBD}
+
+\item{sampleSet}{TBD}
+
+\item{measures}{TBD}
+
+\item{aggregate}{TBD}
+
+\item{minAggregateCount}{TBD}
+
+\item{showNames}{TBD}
+
+\item{markerColours}{TBD}
+
+\item{markerSize}{TBD}
+
+\item{width}{TBD}
+
+\item{height}{TBD}
 }
 \value{
-
+TBD
 }
 \description{
-Title
+Map genetic Diversity
+}
+\examples{
+ #TBD
 }

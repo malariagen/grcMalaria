@@ -2,12 +2,12 @@
 % Please edit documentation in R/public.R
 \name{mapMutationPrevalence}
 \alias{mapMutationPrevalence}
-\title{Title}
+\title{Map the prevalence of genetic mutations.}
 \usage{
 mapMutationPrevalence(
   ctx,
   sampleSet,
-  mutation = "ALL",
+  mutations = "ALL",
   aggregate = 1,
   minAggregateCount = 10,
   showNames = TRUE,
@@ -17,11 +17,30 @@ mapMutationPrevalence(
 )
 }
 \arguments{
-\item{height}{}
+\item{ctx}{TBD}
+
+\item{sampleSet}{TBD}
+
+\item{mutations}{TBD}
+
+\item{aggregate}{TBD}
+
+\item{minAggregateCount}{TBD}
+
+\item{showNames}{TBD}
+
+\item{markerSize}{TBD}
+
+\item{width}{TBD}
+
+\item{height}{TBD}
 }
 \value{
-
+TBD
 }
 \description{
-Title
+Map the prevalence of genetic mutations.
+}
+\examples{
+ #TBD
 }

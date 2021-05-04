@@ -2,7 +2,7 @@
 % Please edit documentation in R/public.R
 \name{mapGroupGraph}
 \alias{mapGroupGraph}
-\title{Title}
+\title{Plot barcode similarity graphs}
 \usage{
 mapGroupGraph(
   ctx,
@@ -18,11 +18,32 @@ mapGroupGraph(
 )
 }
 \arguments{
-\item{height}{}
+\item{ctx}{TBD}
+
+\item{sampleSet}{TBD}
+
+\item{attributes}{TBD}
+
+\item{similarityLevels}{TBD}
+
+\item{minGroupSize}{TBD}
+
+\item{minConnectionSimilarity}{TBD}
+
+\item{graphLayout}{TBD}
+
+\item{weighting}{TBD}
+
+\item{width}{TBD}
+
+\item{height}{TBD}
 }
 \value{
-
+TBD
 }
 \description{
-Title
+Plot barcode similarity graphs
+}
+\examples{
+ #TBD
 }

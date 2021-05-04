@@ -2,10 +2,7 @@
 % Please edit documentation in R/public.R
 \name{loadGrc}
 \alias{loadGrc}
-\title{Load a Genetic Report Cards data file
-Load a GRC data file, ready for analysis.
-The data frame returned constaind a data table whose values and structure may have been manipulated after being read from the file,
-and may have been updated to the latest version fo the format.}
+\title{Load a Genetic Report Cards data file}
 \usage{
 loadGrc(file, sheet = "GenRe-Mekong", species = "Pf", version = "1.0")
 }
@@ -19,14 +16,13 @@ loadGrc(file, sheet = "GenRe-Mekong", species = "Pf", version = "1.0")
 \item{version}{The version number of the GRC data file format. This is in the documentation when you receive or download the file.}
 }
 \value{
-a data frame containing the data ready to be analyzed
+A list containing a data frame with the data ready to be analyzed, plus some metadata
 }
 \description{
-Load a Genetic Report Cards data file
 Load a GRC data file, ready for analysis.
-The data frame returned constaind a data table whose values and structure may have been manipulated after being read from the file,
+The data frame returned contains a data table whose values and structure may have been manipulated after being read from the file,
 and may have been updated to the latest version fo the format.
 }
 \examples{
-pfData <- loadGrc ("D:/MyData/GRC/20210705-GenRe.xlsx", sheet="GenRe-Mekong", species="Pf", version="1.0")
+#TBD
 }

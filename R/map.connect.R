@@ -79,14 +79,14 @@ connectMap.execute <- function(ctx, analysisName, mapType, visType, aggregation,
                 aggColName <- c("Country","AdmDiv1","AdmDiv2")[aggLevelIdx]
                     lp <- map.computeLabelParams (aggUnitData, aggColName, baseMapInfo)
                     mapPlot <- mapPlot +
-                        ggplot2::geom_label_repel(ggplot2::aes(x=lon, y=lat, label=label), data=lp, size=4.5, fontface="bold", color="darkgray",
+                        ggrepel::geom_label_repel(ggplot2::aes(x=lon, y=lat, label=label), data=lp, size=4.5, fontface="bold", color="darkgray",
                                                   hjust=lp$just, vjust=0.5, nudge_x=lp$x, nudge_y=lp$y, label.padding=grid::unit(0.2, "lines"))
                 }
                 	    
                 # Now add the decorative elements
                 mapPlot <- mapPlot +
                            ggplot2::theme(
-                               plot.title = element_text(face = "bold",size = ggplot2::rel(1.2), hjust = 0.5),
+                               plot.title = ggplot2::element_text(face = "bold",size = ggplot2::rel(1.2), hjust = 0.5),
                                panel.background = ggplot2::element_rect(colour = NA),
                                plot.background = ggplot2::element_rect(colour = NA),
                                axis.title = ggplot2::element_text(face = "bold", size = ggplot2::rel(1)),
@@ -181,7 +181,7 @@ connectMap.estimateMeasures <- function (aggLevel, aggUnitData, ctx, analysisNam
     
     # Write out the aggregation unit data to file
     aggDataFilename  <- paste(dataFolder, "/AggregatedPairData-", analysisName, "-", aggLevel, ".tab", sep="")
-    write.table(aggUnitPairData, file=aggDataFilename, sep="\t", quote=FALSE, row.names=FALSE)
+    utils::write.table(aggUnitPairData, file=aggDataFilename, sep="\t", quote=FALSE, row.names=FALSE)
 
     aggUnitPairData
 }

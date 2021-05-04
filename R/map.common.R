@@ -45,18 +45,18 @@ map.buildBaseMap <- function(ctx, analysisName, sampleMeta, dataFolder, params) 
     countries <- unique(countryValues)
     for (cIdx in 1:length(countries)) {
         country <- countries[cIdx]					#; print(country)
-        countryData <- getCountryData (country)				#; print(countryData)
+        countryData <- map.getCountryData (country)			#; print(countryData)
         cMeta <- sampleMeta[which(countryValues == country),]
         provValues <- as.character(cMeta[,cProvince])
         prov <- unique(provValues)					#; print(prov)
-        gadmProv <- getGADMNames (country, prov)			#; print(gadmProv)
+        gadmProv <- map.getGADMNames (country, prov)			#; print(gadmProv)
         unitList[[country]] <- list(name=countryData$name, iso2=countryData$iso2, iso3=countryData$iso3, adm1Names=prov, gadmAdm1Names=gadmProv)
     }
     
     # Read the country borders for the countries involved
     gadmFolder <- getDataFolder(ctx, c("map", "gadm"))
     gadmFolder <- paste(gadmFolder, "/", sep="")
-    cIso3 <- iso2ToIso3 (countries)
+    cIso3 <- map.iso2ToIso3 (countries)
     gadm0 <- GADMTools::gadm_sp_loadCountries(cIso3, level=0, basefile=gadmFolder)
     
     # Read the province borders for the countries involved
@@ -168,7 +168,7 @@ map.getAggregationUnitData <- function(aggLevel, analysisContext, analysisName, 
 
     # Write out the aggregation unit data to file
     aggDataFilename  <- paste(dataFolder, "/AggregationUnits-", analysisName, "-", aggLevel, ".tab", sep="")
-    write.table(aggUnitData, file=aggDataFilename, sep="\t", quote=FALSE, row.names=FALSE)
+    utils::write.table(aggUnitData, file=aggDataFilename, sep="\t", quote=FALSE, row.names=FALSE)
 
     aggUnitData
 }
@@ -191,24 +191,10 @@ map.getAggregationUnitIds <- function(aggLevel, sampleMeta, params) {
     aggUnitId
 }
 
-map.geoTables <- NULL
-
 map.getGeoTables <- function () {
-    if (is.null(map.geoTables)) {
-        geoFile <- paste(folder.code, "GeoData.xlsx", sep="/")
-        
-        print("Loading GADM province names")
-        gadmProvTable <- data.frame(read_excel(geoFile, sheet="GADM-provinces", col_types="text"))
-        
-        print("Loading Country Data")
-        countryDataTable <- data.frame(read_excel(geoFile, sheet="ISO-3166", col_types="text"))
-        rownames(countryDataTable) <- countryDataTable$iso2
-
-        map.geoTables <<- list(gadmProv=gadmProvTable, countries=countryDataTable)
-    }
-    map.geoTables
+    map.geoTables	# From the .rda file
 }
-getGADMNames <- function (country, provinces) {
+map.getGADMNames <- function (country, provinces) {
     geo <- map.getGeoTables()
     gadmProvTable <- geo$gadmProv
     countryTable <- gadmProvTable[which(gadmProvTable$Iso2==country),]
@@ -216,13 +202,13 @@ getGADMNames <- function (country, provinces) {
     gadmNames <- countryTable[provinces,"GADMname"]			; print(provinces); print(gadmNames)
     gadmNames
 }
-iso2ToIso3 <- function (iso2Countries) {
+map.iso2ToIso3 <- function (iso2Countries) {
     geo <- map.getGeoTables()
     countryTable <- geo$countries
     iso3 <- countryTable[iso2Countries,"iso3"]
     iso3
 }
-getCountryData <- function (iso2Country) {
+map.getCountryData <- function (iso2Country) {
     geo <- map.getGeoTables()
     countryTable <- geo$countries
     countryData <- countryTable[iso2Country,]
@@ -246,8 +232,8 @@ map.computeLabelParams <- function (aggUnitData, aggColName, baseMapInfo) {
     
     x <- y <- vector(mode="integer", length=cnt)
     just <- rep(0.5,cnt)
-    qlon <- quantile(lon)		#; print (qlat)
-    qlat <- quantile(lat)		#; print (qlon)
+    qlon <- stats::quantile(lon)		#; print (qlat)
+    qlat <- stats::quantile(lat)		#; print (qlon)
     x[which(lon<=qlon[2])] <- -xNudge;	x[which(lon>=qlon[4])] <- xNudge
     just[which(lon<=qlon[2])] <- 1;	just[which(lon>=qlon[4])] <- 0
     

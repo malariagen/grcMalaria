@@ -2,7 +2,7 @@
 % Please edit documentation in R/public.R
 \name{plotBarcodeNetwork}
 \alias{plotBarcodeNetwork}
-\title{Title}
+\title{Plot Population structure (barcode networks)}
 \usage{
 plotBarcodeNetwork(
   ctx,
@@ -14,11 +14,24 @@ plotBarcodeNetwork(
 )
 }
 \arguments{
-\item{height}{}
+\item{ctx}{TBD}
+
+\item{sampleSet}{TBD}
+
+\item{attributes}{TBD}
+
+\item{aggregateCountMin}{TBD}
+
+\item{width}{TBD}
+
+\item{height}{TBD}
 }
 \value{
-
+TBD
 }
 \description{
-Title
+Plot Population structure (barcode networks)
+}
+\examples{
+ #TBD
 }

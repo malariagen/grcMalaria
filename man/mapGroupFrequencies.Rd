@@ -2,7 +2,7 @@
 % Please edit documentation in R/public.R
 \name{mapGroupFrequencies}
 \alias{mapGroupFrequencies}
-\title{Title}
+\title{Map barcode group frequencies}
 \usage{
 mapGroupFrequencies(
   ctx,
@@ -18,11 +18,32 @@ mapGroupFrequencies(
 )
 }
 \arguments{
-\item{height}{}
+\item{ctx}{TBD}
+
+\item{sampleSet}{TBD}
+
+\item{type}{TBD}
+
+\item{similarityLevels}{TBD}
+
+\item{aggregate}{TBD}
+
+\item{minGroupSize}{TBD}
+
+\item{showNames}{TBD}
+
+\item{markerScale}{TBD}
+
+\item{width}{TBD}
+
+\item{height}{TBD}
 }
 \value{
-
+TBD
 }
 \description{
-Title
+Map barcode group frequencies
+}
+\examples{
+ #TBD
 }
