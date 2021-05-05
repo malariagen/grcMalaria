@@ -186,12 +186,12 @@ markerMap.estimateMeasures <- function(ctx, datasetName, aggLevel, aggUnitData, 
         
         # Get the admin division values from the first sample of this unit (assuming the values are the same for all)
         if (mapType=="diversity") {
-            cValues <- markerMap.estimateDiversityMeasures (aggBarcodes, aggDist, measures)
+            cValues <- markerMap.estimateDiversityMeasures (ctx, aggBarcodes, aggDist, measures)
         } else if (mapType=="drug") {
-            cValues <- meta.getResistancePrevalence (aggSamplesMeta, measures, params)
+            cValues <- meta.getResistancePrevalence (ctx, aggSamplesMeta, measures, params)
         } else if (mapType=="mutation") {
-            cValues <- markerMap.estimateMutationPrevalence (aggSamplesMeta, measures, params)
-        }									#; print(cValues)
+            cValues <- markerMap.estimateMutationPrevalence (ctx, aggSamplesMeta, measures, params)
+        }                                                           #; print(cValues)
         measureData <- rbind(measureData, cValues)
     }
     measureData <- data.frame(measureData)
@@ -207,7 +207,7 @@ markerMap.estimateMeasures <- function(ctx, datasetName, aggLevel, aggUnitData, 
     aggUnitData
 }
 
-markerMap.estimateDiversityMeasures <- function (barcodeData, distData, measures) {
+markerMap.estimateDiversityMeasures <- function (ctx, barcodeData, distData, measures) {
     result <- c()
     for (mIdx in 1:length(measures)) {
         measure <- measures[mIdx]
@@ -241,7 +241,7 @@ markerMap.estimateDiversityMeasures <- function (barcodeData, distData, measures
     result
 }
 
-markerMap.estimateMutationPrevalence <- function (sampleMeta, mutationNames, params) {
+markerMap.estimateMutationPrevalence <- function (ctx, sampleMeta, mutationNames, params) {
     positionNames <- c()
     alleles <- c()
     for (mIdx in 1:length(mutationNames)) {
@@ -251,6 +251,6 @@ markerMap.estimateMutationPrevalence <- function (sampleMeta, mutationNames, par
         positionNames <- c(positionNames, pos)
         alleles <- c(alleles, all)
     }										#; print(positionNames); print(alleles)
-    prevData <- meta.getAllelePrevalence (sampleMeta, positionNames, alleles)	#; print(prevData)
+    prevData <- meta.getAllelePrevalence (ctx, sampleMeta, positionNames, alleles)	#; print(prevData)
     prevData
 }

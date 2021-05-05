@@ -20,7 +20,7 @@ meta.getMetaDataFile <- function (ctx, datasetName) {
 ###############################################################################
 # Metadata Statistics
 ################################################################################
-meta.getResistancePrevalence <- function (sampleMeta, drugNames, params=NULL) {
+meta.getResistancePrevalence <- function (ctx, sampleMeta, drugNames, params=NULL) {
     if (is.null(drugNames) || (length(drugNames) == 0)) {
         return (c());
     }
@@ -46,7 +46,7 @@ meta.getResistancePrevalence <- function (sampleMeta, drugNames, params=NULL) {
     result
 }
 #
-meta.getAllelePrevalence <- function (sampleMeta, positionNames, alleles, params=NULL) {
+meta.getAllelePrevalence <- function (ctx, sampleMeta, positionNames, alleles, params=NULL) {
     if (is.null(positionNames) || (length(positionNames) == 0)) {
         return (c());
     }
@@ -56,8 +56,8 @@ meta.getAllelePrevalence <- function (sampleMeta, positionNames, alleles, params
     }  							#; print(aggregateCountMin)
     result <- c()
     for (mIdx in 1:length(positionNames)) {
-        positionName <- positionNames[mIdx]		; print(positionName)
-        allele <- alleles[mIdx]				; print(allele)
+        positionName <- positionNames[mIdx]			#; print(positionName)
+        allele <- alleles[mIdx]						#; print(allele)
 
         # FUTURE
         #columnName <- paste("M", positionName, sep="_")
@@ -66,13 +66,13 @@ meta.getAllelePrevalence <- function (sampleMeta, positionNames, alleles, params
         gene <- toupper(mParts[1])
         ref <- substring(mParts[2], 1, 1)
         pos <- as.integer(substring(mParts[2], 2))
-        columnPrefix <- config.species
-        columnName <- paste(columnPrefix, gene, ":", pos, sep="")	; print(columnName)
+        columnPrefix <- ctx$config$species
+        columnName <- paste(columnPrefix, gene, ":", pos, sep="")	#; print(columnName)
 
         # Remove hets and missing
-        genos <- sampleMeta[,columnName]		#; print(genos)
+        genos <- sampleMeta[,columnName]		        #; print(genos)
         genos <- genos[which(!(genos %in% c("*","-")))]	#; print(genos)
-        genos <- genos[which(nchar(genos)==1)]		#; print(genos)
+        genos <- genos[which(nchar(genos)==1)]	    	#; print(genos)
 
         totalCount <- length(genos)
         preval <- NA

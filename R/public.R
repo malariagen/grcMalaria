@@ -140,13 +140,21 @@ mapDrugResistancePrevalence <- function (ctx, sampleSet,
 #'  #TBD
 mapMutationPrevalence <- function (ctx, sampleSet,
                    mutations="ALL",
-                   aggregate=1,
-                   minAggregateCount=10,
-                   showNames=TRUE,
-                   markerSize=16,
-                   width=15,
-                   height=15) {}
+                   aggregate=1, minAggregateCount=10,
+                   showNames=TRUE, markerSize=16,
+                   width=15, height=15) {
 
+    params <- list(
+        map.aggregateCountMin=minAggregateCount,
+        map.markerSize=markerSize,			# Use this for constant marker size
+        #map.markerSize=c(4,40),			# Use this for count-proportional marker size
+        map.markerNames=showNames,
+        map.size=c(width=width,height=height)
+    )
+    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/mutation", plotList=NULL,
+                                 aggregation=aggregate, measures=mutations, params=params)
+}
+                   
 #############################################################
 #
 #' Map genetic Diversity
