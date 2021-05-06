@@ -9,7 +9,7 @@ mapGroupFrequencies(
   sampleSet,
   type = c("bar", "pie"),
   similarityLevels = 1,
-  aggregate = 1,
+  aggregate = "Province",
   minGroupSize = 10,
   showNames = TRUE,
   markerScale = 0.8,

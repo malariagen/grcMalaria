@@ -1,9 +1,3 @@
-
-default.map.markerSize <- 12
-default.map.markerNames <- FALSE
-default.map.diversity.markerColours <- c("white","red3")
-default.map.prevalence.markerColours <- c("white","red3")
-
 ###############################################################################
 # Map Aggregated Measure Analysis
 ################################################################################
@@ -54,7 +48,7 @@ markerMap.execute <- function(ctx, datasetName, analysisName, mapType, visType, 
             mapPlot <- baseMapInfo$baseMap
             
             # If we need to show aggregation unit names, we need to compute the label positioning and plot before the markers
-            showMarkerNames <- analysis.getParam ("map.markerNames",   params, default.map.markerNames)
+            showMarkerNames <- analysis.getParam ("map.markerNames", params)
             if (showMarkerNames) {
                 aggColName <- c("Country","AdmDiv1","AdmDiv2")[aggLevelIdx]
                 lp <- map.computeLabelParams (selAggUnitData, aggColName, baseMapInfo)
@@ -75,7 +69,12 @@ markerMap.execute <- function(ctx, datasetName, analysisName, mapType, visType, 
             # Now add the markers, coloured according to the appropriate scale, depending on the type of map
             mValues <- selAggUnitData[,measure]
             if (mapType=="diversity") {
-                markerColours <- analysis.getParam ("map.diversity.markerColours", params, default.map.diversity.markerColours)
+                markerColours <- analysis.getParam ("map.diversity.markerColours", params)
+                # Two marker colours can be specified to create a gradient. If a single marker colour is 
+                # specified, then create a gradient from white to that colour.
+                if (length(markerColours) == 1) {
+                    markerColours <- c("white", markerColours)
+                }
                 mMax <- max(mValues); scaleMax <- round(mMax,digits=1); scaleMax <- ifelse(scaleMax<mMax, scaleMax+0.1, scaleMax)
                 mMin <- min(mValues); scaleMin <- round(mMin,digits=1); scaleMin <- ifelse(scaleMin>mMin, scaleMin-0.1, scaleMin)  #; print(paste(scaleMin, scaleMax))
                 mapPlot <- mapPlot +
@@ -86,7 +85,12 @@ markerMap.execute <- function(ctx, datasetName, analysisName, mapType, visType, 
 	              ggplot2::geom_point(data=selAggUnitData, aes_string2(x="Longitude", y="Latitude", fill=measure), size=pointSizes, shape=21, stroke=2) +
 	              ggplot2::scale_fill_gradientn(limits=c(0,1), colours=c("green3","orange2","red3","red3"), values=c(0, 0.2, 0.75, 1))
             } else if (mapType=="mutation") {
-                markerColours <- analysis.getParam ("map.prevalence.markerColours", params, default.map.prevalence.markerColours)
+                markerColours <- analysis.getParam ("map.prevalence.markerColours", params)
+                # Two marker colours can be specified to create a gradient. If a single marker colour is 
+                # specified, then create a gradient from white to that colour.
+                if (length(markerColours) == 1) {
+                    markerColours <- c("white", markerColours)
+                }
                 scaleMin <- 0; scaleMax <- 1
                 mapPlot <- mapPlot +
 	              ggplot2::geom_point(data=selAggUnitData, aes_string2(x="Longitude", y="Latitude", fill=measure), size=pointSizes, shape=21, stroke=2) +
@@ -96,7 +100,7 @@ markerMap.execute <- function(ctx, datasetName, analysisName, mapType, visType, 
             # Now add the decorative elements
             valueLabels <- round(mValues, digits=2)
             mapPlot <- mapPlot +
-	                        ggplot2::geom_text(data=selAggUnitData, ggplot2::aes_string(x="Longitude", y="Latitude"), label=valueLabels, hjust=0.5, vjust=0.5, size=4.5, fontface="bold") +
+                          ggplot2::geom_text(data=selAggUnitData, ggplot2::aes_string(x="Longitude", y="Latitude"), label=valueLabels, hjust=0.5, vjust=0.5, size=4.5, fontface="bold") +
                           ggplot2::theme(plot.title = ggplot2::element_text(face = "bold",size = ggplot2::rel(1.2), hjust = 0.5),
                           panel.background = ggplot2::element_rect(colour = NA),
                           plot.background = ggplot2::element_rect(colour = NA),
@@ -104,10 +108,11 @@ markerMap.execute <- function(ctx, datasetName, analysisName, mapType, visType, 
                           axis.title.y = ggplot2::element_text(angle=90,vjust =2),
                           axis.title.x = ggplot2::element_text(vjust = -0.2))
 	    
-	          # Save to file. the size in inches is given in the config.
-	          mapSize  <- analysis.getParam ("map.size", params, default.map.size)
-    	      plotFolder <- getOutFolder(ctx, analysisName, c(paste("map", mapType, sep="-"), "plots"))
-            graphicFilenameRoot  <- paste(plotFolder, paste("map", analysisName, aggLevel, measure, sep="-"), sep="/")
+            # Save to file. the size in inches is given in the config.
+            mapSize  <- analysis.getParam ("map.size", params)
+            plotFolder <- getOutFolder(ctx, analysisName, c(paste("map", mapType, sep="-"), "plots"))
+            aggLabel <- map.getAggregationLabels(aggLevel)
+            graphicFilenameRoot  <- paste(plotFolder, paste("map", analysisName, aggLabel, measure, sep="-"), sep="/")
             ggplot2::ggsave(plot=mapPlot, filename=paste(graphicFilenameRoot,"png",sep="."), device="png", width=mapSize[1], height=mapSize[2], units="in", dpi=300)
         }
     }
@@ -122,7 +127,7 @@ markerMap.getAggUnitMarkerSizes <- function(aggUnitData, params) {
     # If only one size was given in the config, then the markers will be constant size/
     # If there are two sizes, then merkers will be sized proportional to the number of samples, with the smaller
     # size representing 1 sample, and the larger size representing the numer of samples in the largest aggregation
-    mSizeParam <- analysis.getParam ("map.markerSize", params, default.map.markerSize)
+    mSizeParam <- analysis.getParam ("map.markerSize", params)
     if (length(mSizeParam) > 1) {
         minSize  <- mSizeParam[1]
         maxSize  <- mSizeParam[2]
@@ -230,9 +235,9 @@ markerMap.estimateDiversityMeasures <- function (ctx, barcodeData, distData, mea
             hets <- apply(barcodeData, 2, pegas::heterozygosity)
             value <- mean(hets)
         } else if (measure == "medianDistance") {
-	    mat <- as.matrix(distData)
-	    mat[lower.tri(mat,diag=TRUE)] <- NA
-	    value <- stats::median(mat, na.rm=TRUE)
+            mat <- as.matrix(distData)
+            mat[lower.tri(mat,diag=TRUE)] <- NA
+	          value <- stats::median(mat, na.rm=TRUE)
         } else {
             stop(paste("Invalid diversity measure:", measure))
         }

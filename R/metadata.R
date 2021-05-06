@@ -26,7 +26,7 @@ meta.getResistancePrevalence <- function (ctx, sampleMeta, drugNames, params=NUL
     }
     aggregateCountMin <- 1
     if (!is.null(params)) {
-        aggregateCountMin <- analysis.getParam ("map.aggregateCountMin", params, default.map.aggregateCountMin)
+        aggregateCountMin <- analysis.getParam ("map.aggregateCountMin", params)
     }  							#; print(aggregateCountMin)
     result <- c()
     for (mIdx in 1:length(drugNames)) {
@@ -52,7 +52,7 @@ meta.getAllelePrevalence <- function (ctx, sampleMeta, positionNames, alleles, p
     }
     aggregateCountMin <- 1
     if (!is.null(params)) {
-        aggregateCountMin <- analysis.getParam ("map.aggregateCountMin", params, default.map.aggregateCountMin)
+        aggregateCountMin <- analysis.getParam ("map.aggregateCountMin", params)
     }  							#; print(aggregateCountMin)
     result <- c()
     for (mIdx in 1:length(positionNames)) {
@@ -92,7 +92,7 @@ meta.getValueCounts <- function (sampleMeta, colNames, params=NULL) {
     }
     aggregateCountMin <- 0
     if (!is.null(params)) {
-        aggregateCountMin <- analysis.getParam ("map.aggregateCountMin", params, default.map.aggregateCountMin)
+        aggregateCountMin <- analysis.getParam ("map.aggregateCountMin", params)
     }  							#; print(aggregateCountMin)
     result <- list()
     for (mIdx in 1:length(colNames)) {

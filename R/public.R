@@ -104,7 +104,7 @@ selectSampleSet <- function (ctx, sampleSetName, select) {
 #
 mapDrugResistancePrevalence <- function (ctx, sampleSet,
                    drugs="ALL",
-                   aggregate=1, minAggregateCount=10,
+                   aggregate="Province", minAggregateCount=10,
                    showNames=TRUE, markerSize=16,
                    width=15, height=15) {
 
@@ -115,8 +115,9 @@ mapDrugResistancePrevalence <- function (ctx, sampleSet,
         map.markerNames=showNames,
         map.size=c(width=width,height=height)
     )
+    aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
     analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/drug", plotList=NULL,
-                                 aggregation=aggregate, measures=drugs, params=params)
+                                 aggregation=aggLevels, measures=drugs, params=params)
 }
 #
 #############################################################
@@ -140,7 +141,7 @@ mapDrugResistancePrevalence <- function (ctx, sampleSet,
 #'  #TBD
 mapMutationPrevalence <- function (ctx, sampleSet,
                    mutations="ALL",
-                   aggregate=1, minAggregateCount=10,
+                   aggregate="Province", minAggregateCount=10,
                    showNames=TRUE, markerSize=16,
                    width=15, height=15) {
 
@@ -151,8 +152,9 @@ mapMutationPrevalence <- function (ctx, sampleSet,
         map.markerNames=showNames,
         map.size=c(width=width,height=height)
     )
+    aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
     analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/mutation", plotList=NULL,
-                                 aggregation=aggregate, measures=mutations, params=params)
+                                 aggregation=aggLevels, measures=mutations, params=params)
 }
                    
 #############################################################
@@ -177,13 +179,23 @@ mapMutationPrevalence <- function (ctx, sampleSet,
 #'  #TBD
 mapDiversity <- function (ctx, sampleSet,
                    measures="ALL",
-                   aggregate=1,
-                   minAggregateCount=10,
-                   showNames=TRUE,
-                   markerColours=c("white","red3"),
-                   markerSize=16,
-                   width=15,
-                   height=15) {}
+                   aggregate="Province", minAggregateCount=10,
+                   showNames=TRUE, markerSize=16,
+                   markerColours="red3",
+                   width=15, height=15) {
+    
+    params <- list(
+        map.aggregateCountMin=minAggregateCount,
+        map.markerSize=markerSize,			# Use this for constant marker size
+        #map.markerSize=c(4,40),			# Use this for count-proportional marker size
+        map.markerNames=showNames,
+        map.diversity.markerColours=markerColours,
+        map.size=c(width=width,height=height)
+    )
+    aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
+    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/diversity", plotList=NULL,
+                                 aggregation=aggLevels, measures=measures, params=params)
+}
 
 #############################################################
 #
@@ -209,16 +221,25 @@ mapDiversity <- function (ctx, sampleSet,
 mapConnections <- function (ctx, sampleSet,
                    measures="ALL",
                    similarityLevels=1.0,
-                   aggregate=1,
-                   minAggregateCount=10,
+                   meanDistanceLevels=0.5,
+                   aggregate="Province", minAggregateCount=10,
                    showNames=TRUE,
-                   markerColours=c("white","red3"),
                    markerSize=16,
-                   width=15,
-                   height=15) {}
-
-# Q: Check this:     map.connect.meanDistance.min=c(0.55,0.6)
-#                    measures=allConnectednessMeasures,
+                   width=15, height=15) {
+                   
+    params <- list(
+        map.aggregateCountMin=minAggregateCount,
+        map.markerSize=markerSize,			# Use this for constant marker size
+        #map.markerSize=c(4,40),			# Use this for count-proportional marker size
+        map.markerNames=showNames,
+	map.connect.similarity.min=similarityLevels,
+	map.connect.meanDistance.min=meanDistanceLevels,
+        map.size=c(width=width,height=height)
+    )
+    aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
+    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/connect", plotList=NULL,
+                                 aggregation=aggLevels, measures=measures, params=params)
+}
 
 #############################################################
 #
@@ -243,7 +264,7 @@ mapConnections <- function (ctx, sampleSet,
 mapGroupFrequencies <- function (ctx, sampleSet,
                    type=c("bar","pie"),
                    similarityLevels=1.0,
-                   aggregate=1,
+                   aggregate="Province",
                    minGroupSize=10,
                    showNames=TRUE,
                    markerScale=0.8,
@@ -274,8 +295,7 @@ mapGroupFrequencies <- function (ctx, sampleSet,
 #'
 #' @examples
 #'  #TBD
-plotTree <- function (ctx, sampleSet,
-                   method="njt",
+plotTree <- function (ctx, sampleSet, method="njt",
                    attributes=NULL,
                    width=15,
                    height=15,
@@ -304,8 +324,7 @@ plotTree <- function (ctx, sampleSet,
 #'
 #' @examples
 #'  #TBD
-plotPCA <- function (ctx, sampleSet,
-                   method="PCoA",
+plotPCA <- function (ctx, sampleSet, method="PCoA",
                    attributes=NULL,
                    width=15,
                    height=15) {}

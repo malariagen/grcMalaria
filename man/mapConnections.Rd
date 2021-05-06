@@ -9,10 +9,10 @@ mapConnections(
   sampleSet,
   measures = "ALL",
   similarityLevels = 1,
-  aggregate = 1,
+  meanDistanceLevels = 0.5,
+  aggregate = "Province",
   minAggregateCount = 10,
   showNames = TRUE,
-  markerColours = c("white", "red3"),
   markerSize = 16,
   width = 15,
   height = 15
@@ -33,13 +33,13 @@ mapConnections(
 
 \item{showNames}{TBD}
 
-\item{markerColours}{TBD}
-
 \item{markerSize}{TBD}
 
 \item{width}{TBD}
 
 \item{height}{TBD}
+
+\item{markerColours}{TBD}
 }
 \value{
 TBD

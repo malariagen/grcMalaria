@@ -20,7 +20,7 @@ haploNet.execute <- function(ctx, datasetName, analysisName, plotList, params) {
     h <- pegas::haplotype(barcodeSeqs)
     
     # Keep only haplotypes that are common (i.e. in a number of parasites)
-    minHaploCount <- analysis.getParam ("haploNet.minHaploCount", params, 1)
+    minHaploCount <- analysis.getParam ("haploNet.minHaploCount", params)
     h <- subset(h, minfreq=minHaploCount)
     
     net <- pegas::haploNet(h)

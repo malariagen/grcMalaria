@@ -1,8 +1,3 @@
-default.map.adminLevelColumns <- c("Country","AdmDiv1","AdmDiv2")
-default.map.locationColumns <- c("Location","Latitude","Longitude")
-default.map.aggregateCountMin <- 5
-default.map.size <- c(12,12)
-
 ###############################################################################
 # Common Routines for Map Generation.
 ################################################################################
@@ -35,10 +30,8 @@ map.execute <- function(ctx, datasetName, analysisName, mapType, aggregation, me
 map.buildBaseMap <- function(ctx, datasetName, analysisName, sampleMeta, dataFolder, params) {
 
     # Get relevant column names
-    adminLevelCols  <- analysis.getParam ("map.adminLevelColumns", params, default.map.adminLevelColumns)
-    locationCols    <- analysis.getParam ("map.locationColumns",   params, default.map.locationColumns)
+    adminLevelCols  <- map.getAggregationColumns()
     cCountry  <- adminLevelCols[1]; cProvince <- adminLevelCols[2]; cDistrict <- adminLevelCols[3]
-    cLocation <- locationCols[1];   cLat      <- locationCols[2];   cLon      <- locationCols[3]
 
     # Now read the countries and provinces so we can get the contours from GADM
     unitList <- list()
@@ -113,10 +106,54 @@ map.buildBaseMap <- function(ctx, datasetName, analysisName, sampleMeta, dataFol
     # Return all the elements
     list(baseMap=baseMapPlot, bgMap=bgMap, gadmBB=gadmBB, gadm0_df=gadm0_df, gadm1_df=gadm1_df)
 }
-
+#
+###############################################################################
+# 
+################################################################################
+#
+map.getLocationColumns <- function(colIdx=c()) {
+    allCols <- c("Country", "AdmDiv1", "AdmDiv2")
+    if (length(colIdx) == 0) {
+        return (allCols)
+    }
+    allCols[colIdx]
+}
+#
 ###############################################################################
 # Aggregation of site data
 ################################################################################
+#
+map.getAggregationColumns <- function(colIdx=c()) {
+    allCols <- c("Country", "AdmDiv1", "AdmDiv2")
+    if (length(colIdx) == 0) {
+        return (allCols)
+    }
+    allCols[colIdx]
+}
+#
+map.getAggregationLabels <- function(aggLevels=c()) {
+    allLabels <- c("Country", "Province", "District")
+    if (length(aggLevels) == 0) {
+        return (allLabels)
+    }
+    labelIdx <- aggLevels + 1
+    allLabels[labelIdx]
+}
+#
+map.getAggregationLevelsFromLabels <- function(aggLabels) {
+    result <- c()
+    allLabels <- map.getAggregationLabels()
+    for (i in 1:length(aggLabels)) {
+        aggLabel <- aggLabels[i]
+        idx <- which(allLabels == aggLabel)
+        if (length(idx) == 0) {
+            stop (paste("Invalid aggregation level specified:",aggLabel))
+        }
+        result <- c(result, (idx-1))
+    }
+    result <- as.integer(result)
+    result 
+}
 #
 map.getAggregationUnitData <- function(ctx, datasetName, aggLevel, analysisName, mapType, params, dataFolder) {
 
@@ -125,14 +162,14 @@ map.getAggregationUnitData <- function(ctx, datasetName, aggLevel, analysisName,
     barcodeData  <- dataset$barcodes
     distData     <- dataset$distance
 
-    adminLevelCols  <- analysis.getParam ("map.adminLevelColumns", params, default.map.adminLevelColumns)
     aggLevelIdx <- aggLevel + 1
+    adminLevelCols  <- map.getAggregationColumns()
 
     # Create aggregation unit id; this is unique for each aggregation unit 
     aggIndex <- map.getAggregationUnitIds (aggLevel, sampleMeta, params)
     
     # Get all aggregation units, in order
-    aggregateCountMin <- analysis.getParam ("map.aggregateCountMin", params, default.map.aggregateCountMin)
+    aggregateCountMin <- analysis.getParam ("map.aggregateCountMin", params)
     aggUnitCounts <- table(aggIndex)
     aggUnits <- names(aggUnitCounts[aggUnitCounts >= aggregateCountMin])	#; print(aggUnits)
     aggUnits <- aggUnits[order(aggUnits)]					#; print(aggUnits)
@@ -174,13 +211,12 @@ map.getAggregationUnitData <- function(ctx, datasetName, aggLevel, analysisName,
 
     aggUnitData
 }
-
+#
 map.getAggregationUnitIds <- function(aggLevel, sampleMeta, params) {
     # Get relevant column names
-    adminLevelCols  <- analysis.getParam ("map.adminLevelColumns", params, default.map.adminLevelColumns)
-    locationCols    <- analysis.getParam ("map.locationColumns",   params, default.map.locationColumns)
-    cCountry  <- adminLevelCols[1]; cProvince <- adminLevelCols[2]; cDistrict <- adminLevelCols[3]
-    cLocation <- locationCols[1];   cLat <- locationCols[2];        cLon <- locationCols[3]
+    cCountry  <- map.getAggregationColumns(1); 
+    cProvince <- map.getAggregationColumns(2); 
+    cDistrict <- map.getAggregationColumns(3); 
     
     # Create aggregation unitI IDs; this is unique for each aggregation unit 
     aggUnitId <- sampleMeta[,cCountry]
@@ -192,7 +228,11 @@ map.getAggregationUnitIds <- function(aggLevel, sampleMeta, params) {
     }										#; print(head(aggIndex))
     aggUnitId
 }
-
+#
+###############################################################################
+# Geo Data (e.g. GADM names)
+################################################################################
+#
 map.getGeoTables <- function () {
     map.geoTables	# From the .rda file
 }

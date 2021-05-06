@@ -8,11 +8,11 @@ mapDiversity(
   ctx,
   sampleSet,
   measures = "ALL",
-  aggregate = 1,
+  aggregate = "Province",
   minAggregateCount = 10,
   showNames = TRUE,
-  markerColours = c("white", "red3"),
   markerSize = 16,
+  markerColours = "red3",
   width = 15,
   height = 15
 )
@@ -30,9 +30,9 @@ mapDiversity(
 
 \item{showNames}{TBD}
 
-\item{markerColours}{TBD}
-
 \item{markerSize}{TBD}
+
+\item{markerColours}{TBD}
 
 \item{width}{TBD}
 

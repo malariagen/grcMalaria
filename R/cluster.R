@@ -1,8 +1,3 @@
-###############################################################################
-# 
-###############################################################################
-default.cluster.identity.thresholds <- c(1.0)
-default.cluster.identity.minCount <- 5
 
 ###############################################################################
 # Cluster Analysis 
@@ -18,7 +13,7 @@ cluster.findbyIdentity <- function (ctx, datasetName, analysisName, thresholdVal
     }
 
     thresholdLabel <- cluster.getIdentityLevelLabel (thresholdValue)
-    minCount <- analysis.getParam ("cluster.identity.minCount", params, default.cluster.identity.minCount)
+    minCount <- analysis.getParam ("cluster.identity.minCount", params)
 
     # Create graph from connectivity data
     distData <- dataset$distance		#; print(nrow(distData))
@@ -194,7 +189,7 @@ cluster.findNodes <- function (gr, curr, nodes) {
 # Get the connectivity thresholds, sorted from highest to lowest
 #
 cluster.getIdentityLevels <- function (params) {
-    identityLevels <- analysis.getParam ("cluster.identity.thresholds", params, default.cluster.identity.thresholds)
+    identityLevels <- analysis.getParam ("cluster.identity.thresholds", params)
     identityLevels <- identityLevels[order(identityLevels, decreasing=TRUE)]	#; print(identityLevels)
     identityLevels
 }

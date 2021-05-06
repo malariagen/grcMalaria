@@ -8,7 +8,7 @@ mapDrugResistancePrevalence(
   ctx,
   sampleSet,
   drugs = "ALL",
-  aggregate = 1,
+  aggregate = "Province",
   minAggregateCount = 10,
   showNames = TRUE,
   markerSize = 16,

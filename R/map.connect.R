@@ -36,7 +36,7 @@ connectMap.execute <- function(ctx, datasetName, analysisName, mapType, visType,
         for (mIdx in 1:length(measures)) {
             measure <- measures[mIdx]						#; print(measure)
             if (connectMap.filterThreshold (measure)) {
-                minValues <- as.numeric(analysis.getParam(paste("map.connect", measure, "min", sep="."), params, 0))
+                minValues <- as.numeric(analysis.getParam(paste("map.connect", measure, "min", sep="."), params))
             } else {
                 minValues <- 0
             }									#; print(minValues)
@@ -75,7 +75,7 @@ connectMap.execute <- function(ctx, datasetName, analysisName, mapType, visType,
                     ggplot2::geom_point(aes_string2(x="Longitude", y="Latitude"), data=aggUnitData, size=4, shape=19, col="red")
     	    
                 # If we need to show aggregation unit names, we need to compute the label positioning and plot
-                showMarkerNames <- analysis.getParam ("map.markerNames",   params, default.map.markerNames)
+                showMarkerNames <- analysis.getParam ("map.markerNames", params)
                 if (showMarkerNames) {
                 aggColName <- c("Country","AdmDiv1","AdmDiv2")[aggLevelIdx]
                     lp <- map.computeLabelParams (aggUnitData, aggColName, baseMapInfo)
@@ -95,9 +95,10 @@ connectMap.execute <- function(ctx, datasetName, analysisName, mapType, visType,
                                axis.title.x = ggplot2::element_text(vjust = -0.2))
     	    
     	        # Save to file. the size in inches is given in the config.
-    	        mapSize  <- analysis.getParam ("map.size", params, default.map.size)
+    	        mapSize  <- analysis.getParam ("map.size", params)
     	        plotFolder <- getOutFolder(ctx, analysisName, c(paste("map", mapType, sep="-"), "plots"))
-                graphicFilenameRoot  <- paste(plotFolder, paste("map", analysisName, aggLevel, measure, sep="-"), sep="/")
+                aggLabel <- map.getAggregationLabels(aggLevel)
+                graphicFilenameRoot  <- paste(plotFolder, paste("map", analysisName, aggLabel, measure, sep="-"), sep="/")
                 if (connectMap.filterThreshold (measure)) {
     	            graphicFilenameRoot  <- paste(graphicFilenameRoot, paste("ge", format(minValue, digits=2, nsmall=2), sep=""), sep="-")
                 }
@@ -114,10 +115,13 @@ connectMap.filterThreshold  <- function(measure) {
 
 connectMap.expandMeasures <- function(measures, params) {
     result <- c()
+    if ("ALL" %in% measures) {
+        measures <- connectMap.getConnectednessMeasures()
+    }
     for (mIdx in 1:length(measures)) {
         measure <- measures[mIdx]
         if (measure == "similarity") {
-            levels <- as.numeric(analysis.getParam("map.connect.similarity.min", params, 1.0))
+            levels <- as.numeric(analysis.getParam("map.connect.similarity.min", params))
             for (lIdx in 1 : length(levels)) {
                 measureStr <- paste("similarity-ge", format(levels[lIdx], digits=2, nsmall=2), sep="")
                 result <- c(result, measureStr)

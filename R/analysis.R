@@ -82,13 +82,16 @@ analysis.addTrimmedDataset <- function (ctx, datasetName, sampleNames, trimCtx) 
     trimCtx[[datasetName]] <- list(name=dataset$name)
     #
     trimMeta <- dataset$meta[sampleNames,]
-    trimCtx <- meta.setDatasetMeta (trimCtx, datasetName, trimMeta,store=FALSE)
+    trimCtx <- meta.setDatasetMeta (trimCtx, datasetName, trimMeta, store=FALSE)
     #
     if (!is.null(dataset$barcodes)) {
         trimCtx <- barcode.setDatasetBarcodes (trimCtx, datasetName, dataset$barcodes[sampleNames,], store=FALSE)
     }
+    if (!is.null(dataset$genos)) {
+        trimCtx <- geno.setDatasetGenotypes (trimCtx, datasetName, dataset$genos[sampleNames,], store=FALSE)
+    }
     if (!is.null(dataset$distance)) {
-        trimCtx <- distance.setDatasetDistance (trimCtx, datasetName, ctx$distance[sampleNames,sampleNames], store=FALSE)
+        trimCtx <- distance.setDatasetDistance (trimCtx, datasetName, dataset$distance[sampleNames,sampleNames], store=FALSE)
     }
     trimCtx
 }
@@ -186,20 +189,4 @@ analysis.executeOnSampleSet <- function(ctx, sampleSetName, tasks, plotList, agg
         }
     }
     print(paste("Analysis", analysisName, "completed"))
-}
-
-###################################################################
-# Task Parameters retrieval
-###################################################################
-#
-#
-#
-analysis.getParam <- function (paramName, paramList, defaultValue) {
-    value <- defaultValue
-    if (!is.null(paramList)) {
-        if (!is.null(paramList[[paramName]])) {
-            value <- paramList[[paramName]]
-        }
-    }
-    value
 }

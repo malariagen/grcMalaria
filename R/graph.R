@@ -2,13 +2,6 @@
 # Network Analysis Tasks
 # Draw more edges, recompute subgraphs at every frequency level
 ###############################################################################
-default.graph.connectIdentityMin <- 0.4
-default.graph.weightFunction <- "identity"
-default.graph.layoutAlgorithm <- "fr"
-
-###############################################################################
-# Network Analysis 
-###############################################################################
 graph.execute <- function (ctx, datasetName, analysisName, params) {
     dataset <- ctx[[datasetName]]
 
@@ -45,7 +38,7 @@ graph.execute <- function (ctx, datasetName, analysisName, params) {
         nodeData <- graph.buildNodeData (sampleNames, clusterMembers)
         
         # Trim data to include only the nodes that are connected by edges; but make sure we preserve all clusters
-        minIdentity <- analysis.getParam ("graph.connectIdentityMin", params, default.graph.connectIdentityMin)
+        minIdentity <- analysis.getParam ("graph.connectIdentityMin", params)
         edgeData <- graph.getWeightedEdgeData (distData, minIdentity, params)
         nodeNames <- unique(c(as.character(edgeData$Sample1),as.character(edgeData$Sample2)))
 
@@ -192,7 +185,7 @@ graph.executePlots <- function (ctx, datasetName, analysisName, plotList, params
 }
 #
 graph.getLayout <- function (gr, params) {
-    layoutAlgo <- analysis.getParam ("graph.layoutAlgorithm", params, default.graph.layoutAlgorithm)
+    layoutAlgo <- analysis.getParam ("graph.layoutAlgorithm", params)
     if (layoutAlgo == "fr") {
         layout <- igraph::layout_with_fr(gr)
     } else if (layoutAlgo == "kk") {
@@ -216,7 +209,7 @@ graph.getWeightedEdgeData <- function (distData, minIdentity, params) {
     # Get a table of pairwise distance/identity values for all pairs of samples that meet the threshold
     pairData <- cluster.getPairwiseIdentityData (distData, minIdentity, params)
     # Compute the link weights
-    fnName <- analysis.getParam ("graph.weightFunction", params, default.graph.weightFunction)
+    fnName <- analysis.getParam ("graph.weightFunction", params)
     # Default function
     if (fnName == "identity") {
         identityToWeight <- function (identities) identities

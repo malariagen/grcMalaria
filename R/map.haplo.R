@@ -1,5 +1,3 @@
-default.map.haplo.markerSampleCount <- "mean"  # Can be "mean", a number or "none"
-
 ###############################################################################
 # Map Haplotype Frequency Analysis
 ################################################################################
@@ -28,13 +26,13 @@ haploMap.execute <- function(ctx, datasetName, analysisName, mapType, visType, a
         aggUnitData <- info$aggUnitData <- map.getAggregationUnitData (ctx, datasetName, aggLevel, analysisName, mapType, params, dataFolder)	#; print(aggUnitData)
 
         # Work out a "standard" haplotype marker size (1/25 of the shortest side) and apply a scaling factor
-        scalingFactor <- analysis.getParam ("map.haplo.markerScale", params, 1.0)		#; print(scalingFactor)
+        scalingFactor <- analysis.getParam ("map.haplo.markerScale", params)		#; print(scalingFactor)
         bbox <- baseMapInfo$gadmBB;
         minSide <- min(abs(bbox$yMax-bbox$yMin),abs(bbox$xMax-bbox$xMin))
         stdMarkerSize <- info$stdMarkerSize <- scalingFactor * minSide / 25			#; print(info$stdMarkerSize)
         
         # Compute the number of samples that correspond to this standard size
-        stdMarkerCountParam <- analysis.getParam ("map.haplo.markerSampleCount", params, default.map.haplo.markerSampleCount)	#; print(stdMarkerCountParam)
+        stdMarkerCountParam <- analysis.getParam ("map.haplo.markerSampleCount", params)	#; print(stdMarkerCountParam)
         stdMarkerCount <- 0
         if (is.numeric(stdMarkerCountParam)) {
             stdMarkerCount <- stdMarkerCountParam
@@ -56,7 +54,7 @@ haploMap.execute <- function(ctx, datasetName, analysisName, mapType, visType, a
 
         } else if (mapType=="haploShare") {
 	    identityLevels <- cluster.getIdentityLevels (params)
-	    analysis.getParam ("cluster.identity.thresholds", params, default.cluster.identity.thresholds)
+	    analysis.getParam ("cluster.identity.thresholds", params)
             for (mIdx in 1:length(identityLevels)) {
                 identityLevel <- info$identityLevel <- identityLevels[mIdx]			#; print (identityLevel)
                 
@@ -112,9 +110,9 @@ haploMap.plotMap <- function (info, params) {
     aggUnitData <- info$aggUnitData
     aggLevel <- info$aggLevel
     aggLevelIdx <- aggLevel+1
-    showMarkerNames <- analysis.getParam ("map.markerNames", params, default.map.markerNames)
+    showMarkerNames <- analysis.getParam ("map.markerNames", params)
     if (showMarkerNames) {
-        aggColName <- c("Country","AdmDiv1","AdmDiv2")[aggLevelIdx]		#; print(aggColName)
+        aggColName <- map.getAggregationColumns(aggLevelIdx)				#; print(aggColName)
         lp <- map.computeLabelParams (aggUnitData, aggColName, baseMapInfo)		#; print(lp)
         mapPlot <- mapPlot + 
                    ggrepel::geom_label_repel(ggplot2::aes(x=lon, y=lat, label=label, fill=1.0), 
@@ -170,10 +168,11 @@ haploMap.plotMap <- function (info, params) {
                      axis.title.x=ggplot2::element_text(vjust=-0.2))
      
     # Save to file. the size in inches is given in the config.
-    mapSize  <- analysis.getParam ("map.size", params, default.map.size)
+    mapSize  <- analysis.getParam ("map.size", params)
 
     plotFolder <- getOutFolder(ctx, info$analysisName, c(paste("map", mapType, sep="-"), "plots"))
-    graphicFilename  <- paste("map", info$analysisName, aggLevel, mapType, visType, sep="-")
+    aggLabel <- map.getAggregationLabels(aggLevel)
+    graphicFilename  <- paste("map", info$analysisName, aggLabel, mapType, visType, sep="-")
     if (info$mapType == "haploShare") {
         levelLabel <- cluster.getIdentityLevelLabel(info$identityLevel)
         graphicFilename  <- paste(graphicFilename, levelLabel, sep="-")
