@@ -11,7 +11,7 @@ markerMap.getDiversityMeasures <- function() {
       "medianDistance")
 }
 
-markerMap.execute <- function(ctx, datasetName, analysisName, mapType, visType, aggregation, measures, params) {
+markerMap.execute <- function(ctx, datasetName, analysisName, mapType, aggregation, measures, params) {
     config <- ctx$config
     dataset <- ctx[[datasetName]]
 

@@ -1,17 +1,23 @@
 ###############################################################################
 # Initialization and configuration
 ################################################################################
-analysis.defaultColour <- "gray"
-analysis.defaultPch    <- 21
-analysis.defaultSize   <- 1.0
-analysis.defaultLwd    <- 1.0
-analysis.defaultLcolour<- "black"
-
-analysis.autoPalette <- c("red", "orange1", "yellow", "palegreen", 
-                       "cyan", "blue", "magenta", "purple", 
-                       "pink", "lightseagreen", "lightblue", "plum4", 
-                       "darkred", "darkgoldenrod", "green4", "orchid")
-analysis.autoPch <- c(rep(21,8),rep(24,8),rep(23,8),rep(22,8))
+#
+graphics.getDefaultAttributes <- function (ctx) {
+    if (!"defGraphicAttr" %in% names(ctx$config)) {
+        ctx$config$defGraphicAttr <- list(
+            colour  = "gray",
+            pch     = 21,
+            size    = 1.0,
+            lwd     = 1.0,
+            lcolour = "black"
+        )
+    }
+    ctx$config$defGraphicAttr
+}
+#
+graphics.setDefaultAttributes <- function (ctx,defGraphicAttr ) {
+    ctx$config$defGraphicAttr <- defGraphicAttr
+}
 
 ###############################################################################
 # Plot Configuration
@@ -115,6 +121,15 @@ applyGraphicalAttributes <- function(sampleMetadata, renderDefs) {
     
     return (list(meta=sampleMetadata, legend=legendData))
 }
+
+###############################################################################
+# Automatic attribute setup and rendering
+###############################################################################
+analysis.autoPalette <- c("red", "orange1", "yellow", "palegreen", 
+                       "cyan", "blue", "magenta", "purple", 
+                       "pink", "lightseagreen", "lightblue", "plum4", 
+                       "darkred", "darkgoldenrod", "green4", "orchid")
+analysis.autoPch <- c(rep(21,8),rep(24,8),rep(23,8),rep(22,8))
 
 #
 # Resolve all the automatic rendering in the plots

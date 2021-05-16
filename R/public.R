@@ -248,10 +248,88 @@ mapConnections <- function (ctx, sampleSet,
 #' @param ctx TBD
 #' @param sampleSet TBD
 #' @param type TBD
+#' @param aggregate TBD
+#' @param markerScale TBD
+#' @param showNames TBD
+#' @param width TBD
+#' @param height TBD
+#'
+#' @return TBD
+#' @export
+#'
+#' @examples
+#'  #TBD
+mapBarcodeFrequencies <- function (ctx, sampleSet,
+                   type=c("bar","pie"),
+                   aggregate="Province", minAggregateCount=10, showNames=TRUE,
+                   markerScale=0.8,
+                   width=15, height=15) {
+
+    mapParams <- list(
+        map.aggregateCountMin=minAggregateCount,
+        map.markerNames=showNames,
+        map.haplo.visualizations=type,        
+        map.haplo.markerScale=markerScale,
+        map.size=c(width=width,height=height)
+    )
+    aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
+    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/haploFreq", plotList=NULL,
+                                 aggregation=aggLevels, measures=measures, params=mapParams)
+}
+#############################################################
+#
+#' Map barcode sharing
+#'
+#' @param ctx TBD
+#' @param sampleSet TBD
+#' @param type TBD
 #' @param similarityLevels TBD
 #' @param aggregate TBD
+#' @param minAggregateCount TBD
+#' @param showNames TBD TBD
+#' @param markerScale TBD
 #' @param minGroupSize TBD
+#' @param width TBD
+#' @param height TBD
+#'
+#' @return TBD
+#' @export
+#'
+#' @examples
+#'  #TBD
+mapGroupSharing <- function (ctx, sampleSet,
+                   type=c("bar","pie"),
+                   aggregate="Province", 
+                   minAggregateCount=5, showNames=TRUE, markerScale=0.8,
+                   similarityLevels=1.0, minGroupSize=10,
+                   width=15, height=15) {
+                   
+    mapParams <- list(
+        cluster.identity.thresholds=similarityLevels,
+        cluster.identity.minCount=minGroupSize,
+        map.aggregateCountMin=minAggregateCount,
+        map.markerNames=showNames,
+        map.haplo.visualizations=type,        
+        map.haplo.markerScale=markerScale,
+        map.size=c(width=width,height=height)
+    )
+    aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
+    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/haploShare", plotList=NULL,
+                                 aggregation=aggLevels, measures=measures, params=mapParams)
+                   
+}
+
+#############################################################
+#
+#' Map Barcode Group prevalence
+#'
+#' @param ctx TBD
+#' @param sampleSet TBD
+#' @param similarityLevels TBD
+#' @param aggregate TBD
+#' @param minAggregateCount TBD
 #' @param showNames TBD
+#' @param minGroupSize TBD
 #' @param markerScale TBD
 #' @param width TBD
 #' @param height TBD
@@ -261,18 +339,36 @@ mapConnections <- function (ctx, sampleSet,
 #'
 #' @examples
 #'  #TBD
-mapGroupFrequencies <- function (ctx, sampleSet,
-                   type=c("bar","pie"),
-                   similarityLevels=1.0,
-                   aggregate="Province",
-                   minGroupSize=10,
-                   showNames=TRUE,
-                   markerScale=0.8,
-                   width=15,
-                   height=15) {}
+mapGroupPrevalence <- function (ctx, sampleSet,
+                   aggregate="Province", 
+                   minAggregateCount=5, showNames=TRUE, markerScale=0.8,
+                   similarityLevels=1.0, minGroupSize=10,
+                   width=15, height=15) {
 
-# Q: Check this:     map.haplo.markerSampleCount="mean"  #"none", or a count
+    mapParams <- list(
+        cluster.identity.thresholds=similarityLevels,
+        cluster.identity.minCount=minGroupSize,
+        map.aggregateCountMin=minAggregateCount,
+        map.markerNames=showNames,
+        map.haplo.visualizations="group",        
+        map.haplo.markerScale=markerScale,
+        map.size=c(width=width,height=height)
+    )
+    aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
+    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/haploShare", plotList=NULL,
+                                 aggregation=aggLevels, measures=measures, params=mapParams)
+}
 
+
+
+
+
+##############################################################
+#
+#                 T O   B E   D O N E
+#
+##############################################################
+# 
 #############################################################
 #
 #' Plot a tree (e.g. neighbour joining tree, NJT)
@@ -307,6 +403,16 @@ plotTree <- function (ctx, sampleSet, method="njt",
                    sampleLabels=FALSE) {}
 
 # Q: DEFINE A DEFAULT SET OF ATTRIBUTES
+
+#         ############## PREV ##########################
+#analysis.execute(ctx=ctx, datasetList=list(dataset.Laos), tasks=c("njt"), 
+#                plotList=list(plot.def$byProvince, plot.def$byProvinceK1P1, plot.def$byK13, plot.def$byPm23))
+#
+#analysis.execute(ctx=ctx, datasetList=list(dataset.Laos), tasks=c("pca/PCoA"), 
+#                plotList=list(plot.def$byProvince, plot.def$byProvinceK1P1, plot.def$byK13, plot.def$byPm23))
+#         ############## PREV ##########################
+
+
 
 #############################################################
 #
@@ -353,6 +459,16 @@ plotBarcodeNetwork <- function (ctx, sampleSet,
                    width=15,
                    height=15) {}
 
+
+#         ############## PREV ##########################
+#haploNetParams <- list(
+#    haploNet.minHaploCount=3
+#)
+#
+#analysis.execute(ctx=ctx, datasetList=list(dataset.Laos), tasks="haploNet", params=haploNetParams, 
+#		plotList=list(plot.def$byProvince, plot.def$byK13, plot.def$byPm23))
+#         ############## PREV ##########################
+
 #############################################################
 #
 #' Plot barcode similarity graphs
@@ -385,68 +501,16 @@ mapGroupGraph <- function (ctx, sampleSet,
 
 # Q: No min aggregation count?
 
-#############################################################
+#         ############## PREV ##########################
+#graphParams <- list(
+#    cluster.identity.thresholds=c(1.0,0.95,0.9,0.85,0.8,0.75),
+#    cluster.identity.minCount=5,
+#    graph.connectIdentityMin=0.7,
+#    graph.layoutAlgorithm="fr",			#"drl", "fr","kk","lgl","mds","graphopt"
+#    graph.weightFunction="identitySquared"
+#)
 #
-#' Map barcode sharing
-#'
-#' @param ctx TBD
-#' @param sampleSet TBD
-#' @param type TBD
-#' @param similarityLevels TBD
-#' @param aggregate TBD
-#' @param minAggregateCount TBD
-#' @param showNames TBD TBD
-#' @param markerScale TBD
-#' @param minGroupSize TBD
-#' @param width TBD
-#' @param height TBD
-#'
-#' @return TBD
-#' @export
-#'
-#' @examples
-#'  #TBD
-mapGroupSharing <- function (ctx, sampleSet,
-                   type=c("bar","pie"),
-                   similarityLevels=1.0,
-                   aggregate=1,
-                   minAggregateCount=5,
-                   showNames=TRUE,
-                   markerScale=0.8,
-                   minGroupSize=10,
-                   width=15,
-                   height=15) {}
+#analysis.execute(ctx=ctx, datasetList=list(dataset.Laos), tasks="graph", params=graphParams, 
+#                plotList=list(plot.def$byProvince, plot.def$byK13, plot.def$byPm23))
+#         ############## PREV ##########################
 
-# Q: Check this:     map.haplo.markerSampleCount="mean"  #"none", or a count
-
-#############################################################
-#
-#' Map Barcode Group prevalence
-#'
-#' @param ctx TBD
-#' @param sampleSet TBD
-#' @param similarityLevels TBD
-#' @param aggregate TBD
-#' @param minAggregateCount TBD
-#' @param showNames TBD
-#' @param minGroupSize TBD
-#' @param markerScale TBD
-#' @param width TBD
-#' @param height TBD
-#'
-#' @return TBD
-#' @export
-#'
-#' @examples
-#'  #TBD
-mapGroupPrevalence <- function (ctx, sampleSet,
-                   similarityLevels=1.0,
-                   aggregate=1,
-                   minAggregateCount=5,
-                   showNames=TRUE,
-                   minGroupSize=10,
-                   markerScale=0.8,
-                   width=15,
-                   height=15) {}
-
-# Q: Check this:     map.haplo.markerSampleCount="mean"  #"none", or a count

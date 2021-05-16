@@ -4,19 +4,16 @@
 ###############################################################################
 #
 cluster.findbyIdentity <- function (ctx, datasetName, analysisName, thresholdValue, params) {
-
-    dataset <- ctx[[datasetName]]
-
-    clustersData <- cluster.getClustersData (analysisName, thresholdValue)
+    dataset <- ctx[[datasetName]]    			#; print(thresholdValue)
+    clustersData <- cluster.getClustersData (ctx, analysisName, thresholdValue)
     if (!is.null(clustersData)) {
         return (clustersData)
     }
-
     thresholdLabel <- cluster.getIdentityLevelLabel (thresholdValue)
     minCount <- analysis.getParam ("cluster.identity.minCount", params)
 
     # Create graph from connectivity data
-    distData <- dataset$distance		#; print(nrow(distData))
+    distData <- dataset$distance			#; print(nrow(distData))
     edgeData <- cluster.getPairwiseIdentityData (distData, thresholdValue, params)	#; print(nrow(edgeData))
     nodeNames <- unique(c(as.character(edgeData$Sample1),as.character(edgeData$Sample2)))
     nodeCount <- length(nodeNames)			#; print (paste(length(nodeNames),length(unique(edgeData$Sample1)),length(unique(edgeData$Sample2))))
@@ -42,6 +39,7 @@ cluster.findbyIdentity <- function (ctx, datasetName, analysisName, thresholdVal
         wg <- igraph::induced_subgraph(wg, keepSamples, impl="copy_and_delete")
         nodeCnt <- length(igraph::V(wg))
     }									#; print(head(clustersData))
+
     if (is.null(clustersData)) {
         print(paste("No clusters of desired minimum side were found at identity threshold", thresholdValue))
         return (NULL)
@@ -64,29 +62,36 @@ cluster.findbyIdentity <- function (ctx, datasetName, analysisName, thresholdVal
     writeSampleData(clusterMembers, clMembersFile)
 
     # Write out cluster definitions
-    clustersData <- cluster.estimateClusterStats (clustersData, clusterMembers, dataset$meta) 
+    clustersData <- cluster.estimateClusterStats (ctx, clustersData, clusterMembers, dataset$meta)
     clustersDataFile <- cluster.getClustersDataFile(ctx, analysisName, "clusters", thresholdValue)
-    utils::write.table(clustersData, file=clustersDataFile, quote=FALSE, sep="\t", row.names=FALSE, col.names=TRUE)
+    utils::write.table(clustersData, file=clustersDataFile, quote=TRUE, sep="\t", row.names=FALSE, col.names=TRUE)
 
     clustersData
 }
 
-cluster.estimateClusterStats <- function(clustersData, clusterMembers, sampleMeta) {
-    clNames <- rownames(clustersData)			#; print(head(clustersData)); print(clNames)
+cluster.estimateClusterStats <- function(ctx, clustersData, clusterMembers, sampleMeta) {
+    config <- ctx$config
+    clNames <- rownames(clustersData)			#; print(head(clustersData))	#; print(clNames)
     
     # Create a table of stats data
     statsData <- NULL
     
     # Get the prevalence/counts columns to be reported- if nothing, don't bother doing calculations
     prevCols  <- c()
-    if(!is.null(cluster.prevalenceColumns)) { prevCols  <- cluster.prevalenceColumns}
+    if(!is.null(config$cluster.prevalenceColumns)) { 
+        prevCols  <- config$cluster.prevalenceColumns
+    }
+
     countCols  <- c()
-    if(!is.null(cluster.countColumns)) { countCols <- cluster.countColumns}
+    if(!is.null(config$cluster.countColumns)) {
+        countCols <- config$cluster.countColumns
+    }
     cNames <- c(prevCols, countCols)
+
     if (length(cNames) == 0) {
         return(clustersData)
     }
-    
+
     for (clIdx in 1 : length(clNames)) {
         clName <- clNames[clIdx]
         clSampleNames <- clusterMembers$Sample[which(clusterMembers$Cluster==clName)]
@@ -95,12 +100,13 @@ cluster.estimateClusterStats <- function(clustersData, clusterMembers, sampleMet
         statValues <- c()
         # Get the prevalence of drug resistances for this cluster- result is a vector of numeric
         if (length(prevCols) > 0) {
-            clPrevalence <- meta.getResistancePrevalence (clSampleMeta, prevCols)
+            clPrevalence <- meta.getResistancePrevalence (ctx, clSampleMeta, prevCols)
             clPrevalence <- round(as.numeric(clPrevalence), digits=2)
             statValues <- c(statValues, clPrevalence)
 	}
+
         # Get the allele counts for this cluster- result is a vector of integers
-        if (length(countCols) > 0) {
+        if (length(countCols) > 0) {			; print (countCols)
             clCounts <- meta.getValueCounts (clSampleMeta, countCols)
             statValues <- c(statValues, clCounts)
         }
@@ -112,13 +118,17 @@ cluster.estimateClusterStats <- function(clustersData, clusterMembers, sampleMet
     clustersData
 }
 
-cluster.getClusterStatsText <- function(clusterName, clustersData) {
+cluster.getClusterStatsText <- function(ctx, clusterName, clustersData) {
+    config <- ctx$config
     # Get the prevalence/counts columns to be reported- if nothing, don't bother doing calculations
     prevCols  <- c()
-    if(!is.null(cluster.prevalenceColumns)) { prevCols  <- cluster.prevalenceColumns}
+    if(!is.null(config$cluster.prevalenceColumns)) {
+        prevCols  <- config$cluster.prevalenceColumns
+    }
     countCols  <- c()
-    if(!is.null(cluster.countColumns)) { countCols <- cluster.countColumns}
-
+    if(!is.null(config$cluster.countColumns)) { 
+        countCols <- config$cluster.countColumns
+    }
     inclCols <- c("Count", prevCols, countCols)
     inclVals <- clustersData[clusterName,inclCols]
     statTextLines <- paste(inclCols, inclVals, sep=": ")
@@ -131,7 +141,7 @@ cluster.getClustersData <- function(ctx, analysisName, thresholdValue) {
     if (!file.exists(clustersDataFile)) {
         return(NULL)
     }
-    clustersData <- utils::read.table(clustersDataFile, as.is=TRUE, header=TRUE, quote="", sep="\t", check.names=FALSE)
+    clustersData <- utils::read.table(clustersDataFile, as.is=TRUE, header=TRUE, sep="\t", quote="\"", check.names=FALSE)
     rownames(clustersData) <- clustersData$ClusterId
     clustersData
 }

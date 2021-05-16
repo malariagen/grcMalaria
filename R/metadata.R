@@ -42,6 +42,7 @@ meta.getResistancePrevalence <- function (ctx, sampleMeta, drugNames, params=NUL
         }
         result <- c(result, preval)			#; print(preval)
     }
+    result <- as.numeric(result)
     names(result) <- drugNames
     result
 }
@@ -56,8 +57,8 @@ meta.getAllelePrevalence <- function (ctx, sampleMeta, positionNames, alleles, p
     }  							#; print(aggregateCountMin)
     result <- c()
     for (mIdx in 1:length(positionNames)) {
-        positionName <- positionNames[mIdx]			#; print(positionName)
-        allele <- alleles[mIdx]						#; print(allele)
+        positionName <- positionNames[mIdx]		#; print(positionName)
+        allele <- alleles[mIdx]				#; print(allele)
 
         # FUTURE
         #columnName <- paste("M", positionName, sep="_")
@@ -70,7 +71,7 @@ meta.getAllelePrevalence <- function (ctx, sampleMeta, positionNames, alleles, p
         columnName <- paste(columnPrefix, gene, ":", pos, sep="")	#; print(columnName)
 
         # Remove hets and missing
-        genos <- sampleMeta[,columnName]		        #; print(genos)
+        genos <- sampleMeta[,columnName]		#; print(genos)
         genos <- genos[which(!(genos %in% c("*","-")))]	#; print(genos)
         genos <- genos[which(nchar(genos)==1)]	    	#; print(genos)
 
@@ -82,6 +83,7 @@ meta.getAllelePrevalence <- function (ctx, sampleMeta, positionNames, alleles, p
         }
         result <- c(result, preval)			#; print(preval)
     }
+    result <- as.numeric(result)
     names(result) <- paste(positionNames, alleles, sep="")
     result
 }
@@ -105,6 +107,7 @@ meta.getValueCounts <- function (sampleMeta, colNames, params=NULL) {
         valPairStr <- paste(valPairs, collapse = "\n")
         result <- c(result, valPairStr)			#; print(valPairStr)
     }
+    result <- as.character(result)
     names(result) <- colNames
     result
 }

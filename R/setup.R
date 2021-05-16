@@ -97,7 +97,7 @@ setup.getPfConfig <- function (version) {
             "mdr1_D1246Y", "arps10_V127M", "arps10_D128H", "arps10_D128Y", "fd_D193Y", "mdr2_T484I", "exo_E415G"
         ),
         countColumns = c(
-            "K13"
+            "Kelch"
         )
     )
     config

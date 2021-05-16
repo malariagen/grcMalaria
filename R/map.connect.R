@@ -11,7 +11,7 @@ connectMap.getConnectednessMeasures <- function() {
 # Map Aggregated Measure Analysis
 ################################################################################
 #
-connectMap.execute <- function(ctx, datasetName, analysisName, mapType, visType, aggregation, measures, params) {
+connectMap.execute <- function(ctx, datasetName, analysisName, mapType, aggregation, measures, params) {
     dataset <- ctx[[datasetName]]
     # Get the output folders
     dataOutFolder <- getOutFolder(ctx, analysisName, c(paste("map", mapType, sep="-"), "data"))

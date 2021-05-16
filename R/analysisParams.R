@@ -27,8 +27,10 @@ analysis.defaultParams <- list (
     map.diversity.markerColours="red3",
     map.prevalence.markerColours="red3",
     
+    # The number of samples that correspond to the "standard" size marker. Can be "mean", or an integer count
+    map.haplo.markerSampleCount="mean",
+    # The multiplier for sizing the marker wrt the "standard" size
     map.haplo.markerScale=1.0,
-    map.haplo.markerSampleCount="mean",  # Can be "mean", a number or "none"
     
     map.aggregateCountMin=5,
     

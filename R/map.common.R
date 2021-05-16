@@ -4,18 +4,14 @@
 #
 map.execute <- function(ctx, datasetName, analysisName, mapType, aggregation, measures, params) {
 
-    parts <- unlist(strsplit(mapType,"\\."))	#; print(mapType)
-    mapType <- parts[1]				#; print(mapType)
-    visType <- parts[2]				#; print(visType)
-
     if (mapType %in% c("diversity", "drug", "mutation")) {
-        markerMap.execute (ctx, datasetName, analysisName, mapType, visType, aggregation, measures, params)
+        markerMap.execute (ctx, datasetName, analysisName, mapType, aggregation, measures, params)
         
     } else if (mapType == "connect") {
-        connectMap.execute (ctx, datasetName, analysisName, mapType, visType, aggregation, measures, params)
+        connectMap.execute (ctx, datasetName, analysisName, mapType, aggregation, measures, params)
         
     } else if (mapType %in% c("haploFreq","haploShare")) {
-        haploMap.execute (ctx, datasetName, analysisName, mapType, visType, aggregation, measures, params)
+        haploMap.execute (ctx, datasetName, analysisName, mapType, aggregation, measures, params)
 
     } else {
         stop(paste("Invalid map type:", mapType))
