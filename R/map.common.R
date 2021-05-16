@@ -4,7 +4,7 @@
 #
 map.execute <- function(ctx, datasetName, analysisName, mapType, aggregation, measures, params) {
 
-    if (mapType %in% c("diversity", "drug", "mutation")) {
+    if (mapType %in% c("sampleCount", "diversity", "drug", "mutation")) {
         markerMap.execute (ctx, datasetName, analysisName, mapType, aggregation, measures, params)
         
     } else if (mapType == "connect") {
@@ -26,8 +26,9 @@ map.execute <- function(ctx, datasetName, analysisName, mapType, aggregation, me
 map.buildBaseMap <- function(ctx, datasetName, analysisName, sampleMeta, dataFolder, params) {
 
     # Get relevant column names
-    adminLevelCols  <- map.getAggregationColumns()
-    cCountry  <- adminLevelCols[1]; cProvince <- adminLevelCols[2]; cDistrict <- adminLevelCols[3]
+    cCountry  <- map.getAggregationColumns(0)
+    cProvince <- map.getAggregationColumns(1)
+    cDistrict <- map.getAggregationColumns(2)
 
     # Now read the countries and provinces so we can get the contours from GADM
     unitList <- list()
@@ -107,23 +108,24 @@ map.buildBaseMap <- function(ctx, datasetName, analysisName, sampleMeta, dataFol
 # 
 ################################################################################
 #
-map.getLocationColumns <- function(colIdx=c()) {
+map.getLocationColumns <- function(aggLevels=c()) {
     allCols <- c("Country", "AdmDiv1", "AdmDiv2")
-    if (length(colIdx) == 0) {
+    if (length(aggLevels) == 0) {
         return (allCols)
     }
-    allCols[colIdx]
+    allCols[(aggLevels+1)]
 }
 #
 ###############################################################################
 # Aggregation of site data
 ################################################################################
 #
-map.getAggregationColumns <- function(colIdx=c()) {
+map.getAggregationColumns <- function(aggLevels=c()) {
     allCols <- c("Country", "AdmDiv1", "AdmDiv2")
-    if (length(colIdx) == 0) {
+    if (length(aggLevels) == 0) {
         return (allCols)
     }
+    colIdx <- aggLevels + 1
     allCols[colIdx]
 }
 #
@@ -210,9 +212,9 @@ map.getAggregationUnitData <- function(ctx, datasetName, aggLevel, analysisName,
 #
 map.getAggregationUnitIds <- function(aggLevel, sampleMeta, params) {
     # Get relevant column names
-    cCountry  <- map.getAggregationColumns(1); 
-    cProvince <- map.getAggregationColumns(2); 
-    cDistrict <- map.getAggregationColumns(3); 
+    cCountry  <- map.getAggregationColumns(0); 
+    cProvince <- map.getAggregationColumns(1); 
+    cDistrict <- map.getAggregationColumns(2); 
     
     # Create aggregation unitI IDs; this is unique for each aggregation unit 
     aggUnitId <- sampleMeta[,cCountry]

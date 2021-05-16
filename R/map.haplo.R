@@ -121,10 +121,9 @@ haploMap.plotMap <- function (ctx, info, params) {
     # If we need to show aggregation unit names, we need to compute the label positioning and plot before the markers
     aggUnitData <- info$aggUnitData
     aggLevel <- info$aggLevel
-    aggLevelIdx <- aggLevel+1
     showMarkerNames <- analysis.getParam ("map.markerNames", params)
     if (showMarkerNames) {
-        aggColName <- map.getAggregationColumns(aggLevelIdx)				#; print(aggColName)
+        aggColName <- map.getAggregationColumns(aggLevel)				#; print(aggColName)
         lp <- map.computeLabelParams (aggUnitData, aggColName, baseMapInfo)		#; print(lp)
         mapPlot <- mapPlot + 
                    ggplot2::geom_point(ggplot2::aes(x=lon, y=lat), data=lp, colour="red") +

@@ -79,6 +79,52 @@ selectSampleSet <- function (ctx, sampleSetName, select) {
 
 #############################################################
 #
+#' Map of Sample Counts
+#'
+#' Creates a map showing the numbers of samples collected at different aggregation levels.
+#' For each aggregation unit, we place a marker on the map, coloured according to the administrative
+#' division it is in
+#'
+#' @param ctx The analysis context, created by intializeContext().
+#' @param sampleSet The name of the sample set being used; must have been previusly created by selectSampleSet().
+#' @param aggregate The administrative level at which we aggregate (Province or District)
+#' @param minAggregateCount The minimum count of aggregated samples, below which a marker is not shown.
+#' @param showNames If TRUE, labels are shown with the name of the aggregation unit (Province or District)
+#' @param colourBy Shows the aggregation level to be used to colour the markers (Country or Province)
+#' @param markerSize Allows adjustment of the size of markers on the map. If only one value is passed, 
+#'                   all markers will be that size; if two values are passed, they will be used as the min 
+#'                   and max sizeof the marker, whose size will reflect the number of samples.
+#' @param width The width (in inches) of the map image.
+#' @param height The heigt (in inches) of the map image.
+#'
+#' @export
+#'
+#' @examples
+#' #TBD
+#
+mapSampleCounts <- function (ctx, sampleSet,
+                   aggregate="Province", minAggregateCount=1,
+                   markerSize=c(4,40), colourBy="Province", showNames=TRUE,
+                   width=15, height=15) {
+
+    if (length(colourBy) > 1) {
+        die ("colourBy parameter can only accet a single value (\"Country\" or \"Province\")")
+    }
+    colourAggLevel <- map.getAggregationLevelsFromLabels (colourBy)
+    params <- list(
+        map.aggregateCountMin=minAggregateCount,
+        map.markerColourAggLevel=colourAggLevel,
+        map.markerSize=markerSize,
+        map.markerNames=showNames,
+        map.size=c(width=width,height=height)
+    )
+    aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
+    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/sampleCount", plotList=NULL,
+                                 aggregation=aggLevels, measures=NULL, params=params)
+}
+#
+#############################################################
+#
 #' Map prevalence of Drug resistance
 #'
 #' Creates a map showing the levels of resistance to a particular drug for different administrative divisions.

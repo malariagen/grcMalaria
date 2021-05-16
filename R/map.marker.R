@@ -14,11 +14,20 @@ markerMap.getDiversityMeasures <- function() {
 markerMap.execute <- function(ctx, datasetName, analysisName, mapType, aggregation, measures, params) {
     config <- ctx$config
     dataset <- ctx[[datasetName]]
+    # Get the sample metadata
+    sampleMeta <- dataset$meta
+
+    if (mapType=="sampleCount") {
+        measures <- "NumberOfSamples"
+        colourAdmDivLevel <- analysis.getParam ("map.markerColourAggLevel", params)
+	admDivColumn <- map.getAggregationColumns (colourAdmDivLevel)
+        admDivs <- unique(sampleMeta[,admDivColumn])
+	admDivPalette <- config$defaultPalette[1:length(admDivs)]
+	names(admDivPalette) <- admDivs
+    } 
 
     # Get the output folders
     dataFolder <- getOutFolder(ctx, analysisName, c(paste("map", mapType, sep="-"), "data"))
-    # Get the sample metadata
-    sampleMeta <- dataset$meta
     # Build the map necessary to display these samples
     # Construct a base plot for completing subsequent maps
     baseMapInfo <- map.buildBaseMap (ctx, datasetName, analysisName, sampleMeta, dataFolder, params)
@@ -80,9 +89,17 @@ markerMap.execute <- function(ctx, datasetName, analysisName, mapType, aggregati
                 mapPlot <- mapPlot +
                 ggplot2::geom_point(data=selAggUnitData, aes_string2(x="Longitude", y="Latitude", fill=measure), size=pointSizes, shape=21, stroke=2) +
                 ggplot2::scale_fill_gradientn(limits=c(scaleMin,scaleMax), colours=markerColours, values=c(0,1))
+            } else if (mapType=="sampleCount") {
+                #print(admDivColumn)
+                mapPlot <- mapPlot +
+	              ggplot2::geom_point(aes_string2(x="Longitude", y="Latitude", fill=admDivColumn), data=selAggUnitData, 
+	                                  size=pointSizes, shape=21, stroke=2) +
+                      ggplot2::scale_fill_manual(values=admDivPalette, guide=ggplot2::guide_legend(override.aes=list(size=3,stroke=0.5)))
+                      
             } else if (mapType=="drug") {
                 mapPlot <- mapPlot +
-	              ggplot2::geom_point(data=selAggUnitData, aes_string2(x="Longitude", y="Latitude", fill=measure), size=pointSizes, shape=21, stroke=2) +
+	              ggplot2::geom_point(aes_string2(x="Longitude", y="Latitude", fill=measure), 
+	                                  data=selAggUnitData, size=pointSizes, shape=21, stroke=2) +
 	              ggplot2::scale_fill_gradientn(limits=c(0,1), colours=c("green3","orange2","red3","red3"), values=c(0, 0.2, 0.75, 1))
             } else if (mapType=="mutation") {
                 markerColours <- analysis.getParam ("map.prevalence.markerColours", params)
@@ -93,7 +110,8 @@ markerMap.execute <- function(ctx, datasetName, analysisName, mapType, aggregati
                 }
                 scaleMin <- 0; scaleMax <- 1
                 mapPlot <- mapPlot +
-	              ggplot2::geom_point(data=selAggUnitData, aes_string2(x="Longitude", y="Latitude", fill=measure), size=pointSizes, shape=21, stroke=2) +
+	              ggplot2::geom_point(aes_string2(x="Longitude", y="Latitude", fill=measure), 
+	                                  data=selAggUnitData, size=pointSizes, shape=21, stroke=2) +
 	              ggplot2::scale_fill_gradientn(limits=c(scaleMin,scaleMax), colours=markerColours, values=c(0,1))
 	          } 
 	    
@@ -190,7 +208,9 @@ markerMap.estimateMeasures <- function(ctx, datasetName, aggLevel, aggUnitData, 
         aggDist <- distData[aggSamples,aggSamples]
         
         # Get the admin division values from the first sample of this unit (assuming the values are the same for all)
-        if (mapType=="diversity") {
+        if (mapType=="sampleCount") {
+            cValues <- length(aggSamples)
+        } else if (mapType=="diversity") {
             cValues <- markerMap.estimateDiversityMeasures (ctx, aggBarcodes, aggDist, measures)
         } else if (mapType=="drug") {
             cValues <- meta.getResistancePrevalence (ctx, aggSamplesMeta, measures, params)
@@ -255,7 +275,7 @@ markerMap.estimateMutationPrevalence <- function (ctx, sampleMeta, mutationNames
         all <- substring(mut, nchar(mut), nchar(mut))
         positionNames <- c(positionNames, pos)
         alleles <- c(alleles, all)
-    }										#; print(positionNames); print(alleles)
+    }											#; print(positionNames); print(alleles)
     prevData <- meta.getAllelePrevalence (ctx, sampleMeta, positionNames, alleles)	#; print(prevData)
     prevData
 }
