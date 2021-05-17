@@ -7,12 +7,12 @@
 mapGroupPrevalence(
   ctx,
   sampleSet,
-  similarityLevels = 1,
-  aggregate = 1,
+  aggregate = "Province",
   minAggregateCount = 5,
   showNames = TRUE,
-  minGroupSize = 10,
   markerScale = 0.8,
+  similarityLevels = 1,
+  minGroupSize = 10,
   width = 15,
   height = 15
 )
@@ -22,17 +22,17 @@ mapGroupPrevalence(
 
 \item{sampleSet}{TBD}
 
-\item{similarityLevels}{TBD}
-
 \item{aggregate}{TBD}
 
 \item{minAggregateCount}{TBD}
 
 \item{showNames}{TBD}
 
-\item{minGroupSize}{TBD}
-
 \item{markerScale}{TBD}
+
+\item{similarityLevels}{TBD}
+
+\item{minGroupSize}{TBD}
 
 \item{width}{TBD}
 

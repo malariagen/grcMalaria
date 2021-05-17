@@ -8,11 +8,11 @@ mapGroupSharing(
   ctx,
   sampleSet,
   type = c("bar", "pie"),
-  similarityLevels = 1,
-  aggregate = 1,
+  aggregate = "Province",
   minAggregateCount = 5,
   showNames = TRUE,
   markerScale = 0.8,
+  similarityLevels = 1,
   minGroupSize = 10,
   width = 15,
   height = 15
@@ -25,8 +25,6 @@ mapGroupSharing(
 
 \item{type}{TBD}
 
-\item{similarityLevels}{TBD}
-
 \item{aggregate}{TBD}
 
 \item{minAggregateCount}{TBD}
@@ -34,6 +32,8 @@ mapGroupSharing(
 \item{showNames}{TBD TBD}
 
 \item{markerScale}{TBD}
+
+\item{similarityLevels}{TBD}
 
 \item{minGroupSize}{TBD}
 
