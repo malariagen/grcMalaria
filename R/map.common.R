@@ -88,7 +88,7 @@ map.buildBaseMap <- function(ctx, datasetName, analysisName, sampleMeta, dataFol
     gadm1_df <- ggplot2::fortify(gadm1Spdf)
         
     # Get the background map, and adjust coordinates
-    bgMap <- OpenStreetMap::openmap(gadmBB$tl, gadmBB$br, zoom=NULL, type=c("nps"), mergeTiles=TRUE)
+    bgMap <- OpenStreetMap::openmap(gadmBB$tl, gadmBB$br, zoom=NULL, type=c("nps"), minNumTiles=4, mergeTiles=TRUE)
     ## OSM CRS :: "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs"
     bgMap <- OpenStreetMap::openproj(bgMap, projection="+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs")
 
