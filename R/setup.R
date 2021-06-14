@@ -14,7 +14,8 @@ setup.getConfig <- function (grc, dir, minSnpTypability, minSampleTypability) {
         folder.out=getSubFolder (dir, "out"),
         minSnpTypability=minSnpTypability,
         minSampleTypability=minSampleTypability,
-        defaultPalette=setup.getDefaultPalette()
+        defaultPalette=setup.getDefaultPalette(),
+        defaultTextPalette=setup.getDefaultTextColours()
     )
 
     # Merge the config with the species config
@@ -206,4 +207,12 @@ setup.getDefaultPalette <- function () {
         "brown"
     )
     c25Palette
+}
+
+setup.getDefaultTextColours <- function () {
+    rgbs <- t(col2rgb(setup.getDefaultPalette()))
+    lum <- rgbs[,1]*0.299 + rgbs[,2]*0.587 + rgbs[,3]*0.114
+    textCol <- rep("black",nrow(rgbs))
+    textCol[which(lum<130)] <- "white"
+    textCol
 }

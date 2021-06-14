@@ -1,19 +1,31 @@
-## code to prepare `DATASET` dataset goes here
-
+#
+# Reconfigure when updating
+#
+aggUnitsFilename <- "annotatedAggregationUnits-20210614.tab"
+#
 # ###########################################################
 # Geographical setup data
 # ###########################################################
-geoFile <- "data-raw/GeoData.xlsx"
-
-print("Loading GADM province names")
-gadmProvTable <- data.frame(readxl::read_excel(geoFile, sheet="GADM-provinces", col_types="text"))
-
-print("Loading Country Data")
-countryDataTable <- data.frame(readxl::read_excel(geoFile, sheet="ISO-3166", col_types="text"))
-rownames(countryDataTable) <- countryDataTable$iso2
-
-map.geoTables <- list(gadmProv=gadmProvTable, countries=countryDataTable)
-
+#geoFile <- "data-raw/GeoData.xlsx"
+convertUnicodeNames <- function (names) {
+    converted <- gsub(">","", gsub("<U\\+", "\\\\u", names))
+    result <- stringi::stri_unescape_unicode(converted)
+    result
+}
+#
+print("Loading Aggregation Units")
+aggUnitsFile <- paste ("data-raw", aggUnitsFilename, sep="/")
+aggUnitData <- read.table(aggUnitsFile, as.is=TRUE, header=TRUE, quote="", sep="\t", encoding="ASCII")
+#aggUnitData$GadmName <- convertUnicodeNames(aggUnitData$GadmName)
+rownames(aggUnitData) <- aggUnitData$Id
+#
+print("Loading ISO-3166 Country Data")
+countryFile <- "data-raw/ISO-3166.tab"
+countryData <- read.table(countryFile, as.is=TRUE, header=TRUE, quote="", na.strings=c(), sep="\t")
+rownames(countryData) <- countryData$iso2
+#
+map.geoTables <- list(gadmUnits=aggUnitData, countries=countryData)
+#
 # ###########################################################
 # Barcode SNP structure
 # ###########################################################
@@ -27,21 +39,21 @@ readBarcodeMeta <- function(filename) {
     rownames(meta) <- meta$SnpName
     meta
 }
-
+#
 barcode.metadata.Pf <- list (
     "v1.0" = readBarcodeMeta("BarcodingSnps-Pf-1.0.tab")
 )
 barcode.metadata.Pv <- list (
     "v1.0" = readBarcodeMeta("BarcodingSnps-Pv-1.0.tab")
 )
-
+#
 barcode.metadata <- list (
     Pf=barcode.metadata.Pf,
     Pv=barcode.metadata.Pv
 )
-
+#
 # ###########################################################
 # File Storage
 # ###########################################################
-
+#
 usethis::use_data(map.geoTables, barcode.metadata, internal=TRUE, overwrite=TRUE)

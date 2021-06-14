@@ -56,6 +56,14 @@ strReverse <- function(x) {
     sapply(lapply(strsplit(x, NULL), rev), paste, collapse="")
 }
 #
+#
+#
+convertUnicodeNames <- function (names) {
+    converted <- gsub(">","", gsub("<U\\+", "\\\\u", names))
+    result <- stringi::stri_unescape_unicode(converted)
+    result
+}
+#
 # #####################################################################################
 #  Data I/O Utilities - read/write/filter samples tables data
 # #####################################################################################

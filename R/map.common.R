@@ -55,20 +55,27 @@ map.buildBaseMap <- function(ctx, datasetName, analysisName, sampleMeta, dataFol
     gadmBB <- list(xMin=1000, xMax=-1000, yMin=1000, yMax=-1000)
 
     for (cIdx in 1:length(countries)) {
-        country <- countries[cIdx]
-        cl <- unitList[[country]]								#; print(country)
-        cGadm1 <- GADMTools::gadm_sp_loadCountries(cl$iso3, level=1, basefile=gadmFolder)	#; print(1)
+        country <- countries[cIdx]								#; print(country)
+        cl <- unitList[[country]]								#; print(cl)
+        cGadm1 <- GADMTools::gadm_sp_loadCountries(cl$iso3, level=1, basefile=gadmFolder)
+#print(names(cGadm1$spdf))
+#gadmNames <- unique(cGadm1$spdf$NAME_1)
+#print(gadmNames)
+#print(Encoding(gadmNames))
         # Select the provinces we need
-        cGadm1 <- GADMTools::gadm_subset(cGadm1, level=1, regions=cl$gadmAdm1Names)		#; print(cGadm1)
+#print(cl$gadmAdm1Names)
+#print(Encoding(cl$gadmAdm1Names))
+        provNames <- convertUnicodeNames(cl$gadmAdm1Names)
+        cGadm1 <- GADMTools::gadm_subset(cGadm1, level=1, regions=provNames)		#; print(cGadm1)
         # Append the data to that of other countries
-	      cl$gadmAdm1Data <- cGadm1								#; print(3)
-	      if (is.null(gadm1Spdf)) {
-	          gadm1Spdf <- cGadm1$spdf
-	      } else {
-	          gadm1Spdf <- rbind(gadm1Spdf, cGadm1$spdf)
-	      }																				#; print(4)
+	cl$gadmAdm1Data <- cGadm1
+	if (is.null(gadm1Spdf)) {
+	    gadm1Spdf <- cGadm1$spdf
+	} else {
+	    gadm1Spdf <- rbind(gadm1Spdf, cGadm1$spdf)
+	}																				#; print(4)
         # Get the bounding box and merge with the other countries
-        bb <- GADMTools::gadm_getBbox (cGadm1)							#; print(5)
+        bb <- GADMTools::gadm_getBbox (cGadm1)
         gadmBB <- list(xMin=min(gadmBB$xMin,bb[1]), xMax=max(gadmBB$xMax,bb[3]), 
                        yMin=min(gadmBB$yMin,bb[2]), yMax=max(gadmBB$yMax,bb[4]))		#; print(gadmBB)
     }
@@ -84,8 +91,12 @@ map.buildBaseMap <- function(ctx, datasetName, analysisName, sampleMeta, dataFol
     gadm0 <- GADMTools::gadm_crop(gadm0, xmin=gadmBB$xMin, ymin=gadmBB$yMin, xmax=gadmBB$xMax, ymax=gadmBB$yMax)
 
     # Prepare the GADM polygons for plotting
+    #print(colnames(gadm0$spdf))
+    #print(colnames(gadm1Spdf))
     gadm0_df <- ggplot2::fortify(gadm0$spdf)
     gadm1_df <- ggplot2::fortify(gadm1Spdf)
+    #print(colnames(gadm0_df))
+    #print(colnames(gadm1_df))
         
     # Get the background map, and adjust coordinates
     bgMap <- OpenStreetMap::openmap(gadmBB$tl, gadmBB$br, zoom=NULL, type=c("nps"), minNumTiles=4, mergeTiles=TRUE)
@@ -174,7 +185,8 @@ map.getAggregationUnitData <- function(ctx, datasetName, aggLevel, analysisName,
     
     # Get the data for all aggregation units
     aggUnitData <- NULL
-    
+    geo <- map.getGeoTables()
+    gadmUnits <- geo$gadmUnits
     for (aIdx in 1:length(aggUnits)) {
 
         # Get the sample data to be aggregated for this unit
@@ -190,8 +202,10 @@ map.getAggregationUnitData <- function(ctx, datasetName, aggLevel, analysisName,
         admNames <- adminLevelCols[1:aggLevelIdx]
         cValues <- c(cValues, as.character(aggSamplesMeta[1,admNames]))
         
-        cValues <- c(cValues, mean(as.numeric(aggSamplesMeta$Latitude)))
-        cValues <- c(cValues, mean(as.numeric(aggSamplesMeta$Longitude)))	#; print(cValues)
+        gadmUnit <- gadmUnits[which(gadmUnits$Id==aggUnit),]			#; print(gadmUnit)
+        cValues <- c(cValues, gadmUnit$Latitude)        			#; print(gadmUnit$Latitude)
+        cValues <- c(cValues, gadmUnit$Longitude)				#; print(gadmUnit$Longitude)
+        
         cValues <- c(cValues, nrow(aggSamplesMeta))				#; print(cValues)
 
         aggUnitData <- rbind(aggUnitData, cValues)
@@ -235,11 +249,11 @@ map.getGeoTables <- function () {
     map.geoTables	# From the .rda file
 }
 map.getGADMNames <- function (country, provinces) {
-    geo <- map.getGeoTables()
-    gadmProvTable <- geo$gadmProv
-    countryTable <- gadmProvTable[which(gadmProvTable$Iso2==country),]
-    rownames(countryTable) <- as.character(countryTable$AdmDiv1)
-    gadmNames <- countryTable[provinces,"GADMname"]			#; print(provinces); print(gadmNames)
+    geo <- map.getGeoTables()							#; print(country); print(str(geo))
+    countryTable <- geo$gadmUnits[which(geo$gadmUnits$Country==country),]	#; print(countryTable)
+    countryTable <- countryTable[which(countryTable$AdmLevel==1),]		#; print(countryTable)
+    rownames(countryTable) <- as.character(countryTable$AdmDiv1)		#; print(countryTable)
+    gadmNames <- countryTable[provinces,"GadmName"]				#; print(provinces); print(gadmNames)
     gadmNames
 }
 map.iso2ToIso3 <- function (iso2Countries) {

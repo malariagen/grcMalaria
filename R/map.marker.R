@@ -23,6 +23,7 @@ markerMap.execute <- function(ctx, datasetName, analysisName, mapType, aggregati
 	admDivColumn <- map.getAggregationColumns (colourAdmDivLevel)
         admDivs <- unique(sampleMeta[,admDivColumn])
 	admDivPalette <- config$defaultPalette[1:length(admDivs)]
+	admDivTextPalette <- config$defaultTextPalette[1:length(admDivs)]
 	names(admDivPalette) <- admDivs
     } 
 
@@ -77,6 +78,7 @@ markerMap.execute <- function(ctx, datasetName, analysisName, mapType, aggregati
 
             # Now add the markers, coloured according to the appropriate scale, depending on the type of map
             mValues <- selAggUnitData[,measure]
+
             if (mapType=="diversity") {
                 markerColours <- analysis.getParam ("map.diversity.markerColours", params)
                 # Two marker colours can be specified to create a gradient. If a single marker colour is 
@@ -92,7 +94,7 @@ markerMap.execute <- function(ctx, datasetName, analysisName, mapType, aggregati
             } else if (mapType=="sampleCount") {
                 #print(admDivColumn)
                 mapPlot <- mapPlot +
-	              ggplot2::geom_point(aes_string2(x="Longitude", y="Latitude", fill=admDivColumn), data=selAggUnitData, 
+	              ggplot2::geom_point(data=selAggUnitData, aes_string2(x="Longitude", y="Latitude", fill=admDivColumn), 
 	                                  size=pointSizes, shape=21, stroke=2) +
                       ggplot2::scale_fill_manual(values=admDivPalette, guide=ggplot2::guide_legend(override.aes=list(size=3,stroke=0.5)))
                       
@@ -113,18 +115,26 @@ markerMap.execute <- function(ctx, datasetName, analysisName, mapType, aggregati
 	              ggplot2::geom_point(aes_string2(x="Longitude", y="Latitude", fill=measure), 
 	                                  data=selAggUnitData, size=pointSizes, shape=21, stroke=2) +
 	              ggplot2::scale_fill_gradientn(limits=c(scaleMin,scaleMax), colours=markerColours, values=c(0,1))
-	          } 
+	    } 
 	    
             # Now add the decorative elements
             valueLabels <- round(mValues, digits=2)
+            if (mapType=="sampleCount") {
+                mapPlot <- mapPlot +
+                           ggplot2::geom_text(data=selAggUnitData, ggplot2::aes_string(x="Longitude", y="Latitude", colour=admDivColumn), 
+                                              label=valueLabels, hjust=0.5, vjust=0.5, size=4.5, fontface="bold", show.legend=FALSE) +
+                           ggplot2::scale_colour_manual(values=admDivTextPalette)
+            } else {
+                mapPlot <- mapPlot +
+                           ggplot2::geom_text(data=selAggUnitData, ggplot2::aes_string(x="Longitude", y="Latitude"), label=valueLabels, hjust=0.5, vjust=0.5, size=4.5, fontface="bold")
+            }
             mapPlot <- mapPlot +
-                          ggplot2::geom_text(data=selAggUnitData, ggplot2::aes_string(x="Longitude", y="Latitude"), label=valueLabels, hjust=0.5, vjust=0.5, size=4.5, fontface="bold") +
-                          ggplot2::theme(plot.title = ggplot2::element_text(face = "bold",size = ggplot2::rel(1.2), hjust = 0.5),
-                          panel.background = ggplot2::element_rect(colour = NA),
-                          plot.background = ggplot2::element_rect(colour = NA),
-                          axis.title = ggplot2::element_text(face = "bold",size = ggplot2::rel(1)),
-                          axis.title.y = ggplot2::element_text(angle=90,vjust =2),
-                          axis.title.x = ggplot2::element_text(vjust = -0.2))
+                       ggplot2::theme(plot.title = ggplot2::element_text(face = "bold",size = ggplot2::rel(1.2), hjust = 0.5),
+                       panel.background = ggplot2::element_rect(colour = NA),
+                       plot.background = ggplot2::element_rect(colour = NA),
+                       axis.title = ggplot2::element_text(face = "bold",size = ggplot2::rel(1)),
+                       axis.title.y = ggplot2::element_text(angle=90,vjust =2),
+                       axis.title.x = ggplot2::element_text(vjust = -0.2))
 	    
             # Save to file. the size in inches is given in the config.
             mapSize  <- analysis.getParam ("map.size", params)
