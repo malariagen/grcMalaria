@@ -210,7 +210,7 @@ setup.getDefaultPalette <- function () {
 }
 
 setup.getDefaultTextColours <- function () {
-    rgbs <- t(col2rgb(setup.getDefaultPalette()))
+    rgbs <- t(grDevices::col2rgb(setup.getDefaultPalette()))
     lum <- rgbs[,1]*0.299 + rgbs[,2]*0.587 + rgbs[,3]*0.114
     textCol <- rep("black",nrow(rgbs))
     textCol[which(lum<130)] <- "white"

@@ -36,7 +36,7 @@ pca.execute <- function(ctx, sampleSetName, analysisName, pcaMethod) {
         #pcScores <- pcaResults@scores
         #varExplained <- pcaResults@R2
     } else if (pcaMethod == "PCoA") {
-        pcaResults <- cmdscale(as.matrix(distData), eig=TRUE, k=phylo.pcCount)
+        pcaResults <- stats::cmdscale(as.matrix(distData), eig=TRUE, k=phylo.pcCount)
         pcScores <- pcaResults$points
         varExplained <- pcaResults$eig / sum(abs(pcaResults$eig))
     } else  {
@@ -59,7 +59,7 @@ pca.execute <- function(ctx, sampleSetName, analysisName, pcaMethod) {
     pcaVarData <- data.frame(pcNames, varExplained[1:length(pcNames)])
     colnames(pcaVarData) <- c("PC","VarianceExplained")
     pcaVarFilename  <- paste(dataFolder, pca.getDataFileName("-varExplained", analysisName, pcaMethod), sep="/")
-    write.table(pcaVarData, file=pcaVarFilename, sep="\t", quote=FALSE, row.names=FALSE)
+    utils::write.table(pcaVarData, file=pcaVarFilename, sep="\t", quote=FALSE, row.names=FALSE)
 }
 
 pca.getDataFileName <- function(suffix, analysisName, pcaMethod) {
@@ -138,11 +138,11 @@ pca.plotPrincipalComponents <- function(plotName, sampleMeta, legendData,
     #print(colnames(sampleMeta))
   
     if (plotThree) {
-        par(mfrow=c(2,2))
+        graphics::par(mfrow=c(2,2))
     } else {
-#        par(mfrow=c(1,2))
+#        graphics::par(mfrow=c(1,2))
     }
-    par(mar=c(4,4,1,1) + 0.1)
+    graphics::par(mar=c(4,4,1,1) + 0.1)
     x <- sampleMeta[,pcAIdx]
     y <- sampleMeta[,pcBIdx]
     plot(x,y, xlab=pcAIdx, ylab=pcBIdx, cex.lab=0.8, cex.axis=0.8, bg=sampleColours, col=sampleLcolours, pch=samplePch, lwd=sampleLwd, cex=sampleSize)
@@ -155,21 +155,21 @@ pca.plotPrincipalComponents <- function(plotName, sampleMeta, legendData,
         plot(x,y, xlab=pcAIdx, ylab=pcCIdx, cex.lab=0.8, cex.axis=0.8, bg=sampleColours, col=sampleLcolours, pch=samplePch, lwd=sampleLwd, cex=sampleSize)
         plot(x,y,xaxt="n",xlab="", ylab="",yaxt="n",type="n",bty="n")
     }
-    dev.off()
+    grDevices::dev.off()
     
     # Do a separate legend- useful if the names are long
     plotFilename  <- paste("pca-",plotName,"-legend", sep="")
     graphicFilenameRoot  <- paste(plotsFolder, plotFilename, sep="/")
     initializeGraphics (getGraphicsFilename (graphicFilenameRoot), widthInch=8, heightInch=12, resolution=300)
-    #par(mar=c(1,1,1,1) + 0.1)
+    #graphics::par(mar=c(1,1,1,1) + 0.1)
     #plot(x,y,xaxt="n",xlab="", ylab="",yaxt="n",type="n",bty="n")
-    plot.new()
-    par(mar=c(0,0,0,0))
-    legend("topleft", ncol=1, inset=0.05, cex=1.0, 
+    graphics::plot.new()
+    graphics::par(mar=c(0,0,0,0))
+    graphics::legend("topleft", ncol=1, inset=0.05, cex=1.0, 
              legendData$label, pt.bg=legendData$colour, col=legendData$lcolour, 
              pch=as.numeric(legendData$pch), pt.lwd=as.numeric(legendData$lwd), 
              pt.cex=as.numeric(legendData$size))
-    dev.off()
+    grDevices::dev.off()
 }
 
 pca.plotThreeComponents <- function(plotName, sampleMeta, legendData, pcAIdx, pcBIdx, pcCIdx, plotsFolder) {
