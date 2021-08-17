@@ -106,7 +106,7 @@ cluster.estimateClusterStats <- function(ctx, clustersData, clusterMembers, samp
 	}
 
         # Get the allele counts for this cluster- result is a vector of integers
-        if (length(countCols) > 0) {			; print (countCols)
+        if (length(countCols) > 0) {			#; print (countCols)
             clCounts <- meta.getValueCounts (clSampleMeta, countCols)
             statValues <- c(statValues, clCounts)
         }
