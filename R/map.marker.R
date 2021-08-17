@@ -140,7 +140,10 @@ markerMap.execute <- function(ctx, datasetName, analysisName, mapType, aggregati
             mapSize  <- analysis.getParam ("map.size", params)
             plotFolder <- getOutFolder(ctx, analysisName, c(paste("map", mapType, sep="-"), "plots"))
             aggLabel <- map.getAggregationLabels(aggLevel)
-            graphicFilenameRoot  <- paste(plotFolder, paste("map", analysisName, aggLabel, measure, sep="-"), sep="/")
+            if (mapType=="sampleCount") {
+                aggLabel <- paste(aggLabel, datasetName, sep="-")
+            }												#;print(aggLabel)
+            graphicFilenameRoot  <- paste(plotFolder, paste("map", analysisName, aggLabel, measure, sep="-"), sep="/")	#;print(graphicFilenameRoot)
             ggplot2::ggsave(plot=mapPlot, filename=paste(graphicFilenameRoot,"png",sep="."), device="png", width=mapSize[1], height=mapSize[2], units="in", dpi=300)
         }
     }

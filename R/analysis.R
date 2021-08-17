@@ -102,10 +102,6 @@ analysis.addTrimmedDataset <- function (ctx, datasetName, sampleNames, trimCtx) 
 #
 analysis.selectSampleSet <- function (ctx, sampleSetName, select) {
     sampleMeta <- ctx$unfiltered$meta
-    # Create merged metadata fields if needed - TODO
-    #if (!is.null(dataset$mergeFields)) {
-    #     sampleMeta <- meta.addMergedFields(sampleMeta, dataset$mergeFields)
-    #}
 
     # Select the samples to be analyzed
     sampleMeta <- meta.select(sampleMeta, select)
@@ -121,6 +117,10 @@ analysis.selectSampleSet <- function (ctx, sampleSetName, select) {
         ctx=trimCtx
     )
     ctx$sampleSets[[sampleSetName]] <- sampleSet
+    
+    unfilteredCount <- length(sampleNames)
+    filteredCount <- nrow(trimCtx$filtered$meta)
+    print(paste0("Selected ", unfilteredCount, " samples for dataset '", sampleSetName, "', including ", filteredCount, " quality filtered samples"))
     ctx
 }
 #
@@ -180,10 +180,12 @@ analysis.executeOnSampleSet <- function(ctx, sampleSetName, tasks, plotList, agg
         } else if (task == "map") {
             if (method == "drug") {
                 map.execute(trimCtx, "unfiltered", analysisName, method, aggregation, measures, params)
+            } else if (method == "sampleCount") {
+                map.execute(trimCtx, "unfiltered", analysisName, method, aggregation, measures, params)
+                map.execute(trimCtx, "filtered", analysisName, method, aggregation, measures, params)
             } else {
                 map.execute(trimCtx, "imputed", analysisName, method, aggregation, measures, params)
             }
-
         } else {
             stop(paste("Invalid analysis task:", task))
         }
