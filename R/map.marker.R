@@ -207,15 +207,15 @@ markerMap.estimateMeasures <- function(ctx, datasetName, aggLevel, aggUnitData, 
     aggIndex <- map.getAggregationUnitIds (aggLevel, sampleMeta, params)
     
     # Get all aggregation units
-    aggUnits <- rownames(aggUnitData)	#; print(aggUnits)
+    aggUnits <- rownames(aggUnitData)					#; print(aggUnits)
     
     # Get the data for all aggregation units
-    measureData <- NULL
+    measureData <- matrix(nrow=0, ncol=length(measures), dimnames=list(c(),measures))
     for (aIdx in 1:length(aggUnits)) {
 
         # Get the sample data to be aggregated for this unit
-        aggUnit <- aggUnits[aIdx]
-        aggSamplesMeta <- sampleMeta[which(aggIndex == aggUnit),]		#; print(nrow(aggSamplesMeta))
+        aggUnit <- aggUnits[aIdx]					#; print(aggUnit)
+        aggSamplesMeta <- sampleMeta[which(aggIndex == aggUnit),]	#; print(nrow(aggSamplesMeta))
         aggSamples <- rownames(aggSamplesMeta)
         aggBarcodes <- barcodeData[aggSamples,]
         aggDist <- distData[aggSamples,aggSamples]
@@ -229,15 +229,16 @@ markerMap.estimateMeasures <- function(ctx, datasetName, aggLevel, aggUnitData, 
             cValues <- meta.getResistancePrevalence (ctx, aggSamplesMeta, measures, params)
         } else if (mapType=="mutation") {
             cValues <- markerMap.estimateMutationPrevalence (ctx, aggSamplesMeta, measures, params)
-        }                                                           #; print(cValues)
-        measureData <- rbind(measureData, cValues)
+        }                                                           	#; print(cValues)
+        measureData <- rbind(measureData, cValues)                 	#; print(measureData)
     }
-    measureData <- data.frame(measureData)
-    measureData <- sapply(measureData, as.numeric)
-    cNames <- c(colnames(aggUnitData), measures)
-    aggUnitData <- cbind(aggUnitData, measureData)
-    colnames(aggUnitData) <- cNames
-    
+    measureData <- as.data.frame(measureData)				#;  print(measureData)
+    aggUnitData <- cbind(aggUnitData, measureData)			#;  print(dim(aggUnitData))
+    for (mIdx in 1:length(measures)) {
+         measure <- measures[mIdx]
+         aggUnitData[,measure] <- as.numeric(aggUnitData[,measure])
+    }
+
     # Write out the aggregation unit data to file
     aggDataFilename  <- paste(dataFolder, "/AggregatedData-", analysisName, "-", aggLevel, ".tab", sep="")
     utils::write.table(aggUnitData, file=aggDataFilename, sep="\t", quote=FALSE, row.names=FALSE)
@@ -270,7 +271,7 @@ markerMap.estimateDiversityMeasures <- function (ctx, barcodeData, distData, mea
         } else if (measure == "medianDistance") {
             mat <- as.matrix(distData)
             mat[lower.tri(mat,diag=TRUE)] <- NA
-	          value <- stats::median(mat, na.rm=TRUE)
+	    value <- stats::median(mat, na.rm=TRUE)
         } else {
             stop(paste("Invalid diversity measure:", measure))
         }

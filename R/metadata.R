@@ -42,8 +42,8 @@ meta.getResistancePrevalence <- function (ctx, sampleMeta, drugNames, params=NUL
         }
         result <- c(result, preval)			#; print(preval)
     }
-    result <- as.numeric(result)
-    names(result) <- drugNames
+    result <- as.numeric(result)			#; print(result)
+    names(result) <- drugNames				#; print(result)
     result
 }
 #

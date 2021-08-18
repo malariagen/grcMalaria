@@ -58,15 +58,11 @@ map.buildBaseMap <- function(ctx, datasetName, analysisName, sampleMeta, dataFol
         country <- countries[cIdx]								#; print(country)
         cl <- unitList[[country]]								#; print(cl)
         cGadm1 <- GADMTools::gadm_sp_loadCountries(cl$iso3, level=1, basefile=gadmFolder)
-#print(names(cGadm1$spdf))
-#gadmNames <- unique(cGadm1$spdf$NAME_1)
-#print(gadmNames)
-#print(Encoding(gadmNames))
+
         # Select the provinces we need
-#print(cl$gadmAdm1Names)
-#print(Encoding(cl$gadmAdm1Names))
-        provNames <- convertUnicodeNames(cl$gadmAdm1Names)
-        cGadm1 <- GADMTools::gadm_subset(cGadm1, level=1, regions=provNames)		#; print(cGadm1)
+        provNames <- convertUnicodeNames(cl$gadmAdm1Names)					#; print(cl$gadmAdm1Names)
+        cGadm1 <- GADMTools::gadm_subset(cGadm1, level=1, regions=provNames)			#; print(cGadm1)
+
         # Append the data to that of other countries
 	cl$gadmAdm1Data <- cGadm1
 	if (is.null(gadm1Spdf)) {
@@ -166,17 +162,20 @@ map.getAggregationLevelsFromLabels <- function(aggLabels) {
 #
 map.getAggregationUnitData <- function(ctx, datasetName, aggLevel, analysisName, mapType, params, dataFolder) {
 
+    # Trim all data to discard samples that have incomplete geographical data
+    validSamples <- map.getAggregableSamples (ctx, datasetName, aggLevel)
+    
     dataset <- ctx[[datasetName]]
-    sampleMeta   <- dataset$meta
-    barcodeData  <- dataset$barcodes
-    distData     <- dataset$distance
+    sampleMeta   <- dataset$meta[validSamples,]
+    barcodeData  <- dataset$barcodes[validSamples,]
+    distData     <- dataset$distance[validSamples,validSamples]
 
     aggLevelIdx <- aggLevel + 1
     adminLevelCols  <- map.getAggregationColumns()
 
     # Create aggregation unit id; this is unique for each aggregation unit 
     aggIndex <- map.getAggregationUnitIds (aggLevel, sampleMeta, params)
-    
+
     # Get all aggregation units, in order
     aggregateCountMin <- analysis.getParam ("map.aggregateCountMin", params)
     aggUnitCounts <- table(aggIndex)
@@ -214,8 +213,9 @@ map.getAggregationUnitData <- function(ctx, datasetName, aggLevel, analysisName,
     numericColIdx <- c((aggLevelIdx+2):ncol(aggUnitData))
     aggUnitData[, numericColIdx] <- sapply(aggUnitData[, numericColIdx], as.numeric)
     rownames(aggUnitData) <- aggUnits
-    colnames(aggUnitData) <- c("UnitId", c("Country","AdmDiv1","AdmDiv2")[1:aggLevelIdx],
+    aggUnitCnames <- c("UnitId", c("Country","AdmDiv1","AdmDiv2")[1:aggLevelIdx],
                                "Latitude","Longitude","SampleCount")		#; print(aggUnitCnames)
+    colnames(aggUnitData) <- aggUnitCnames
 
     # Write out the aggregation unit data to file
     aggDataFilename  <- paste(dataFolder, "/AggregationUnits-", analysisName, "-", aggLevel, ".tab", sep="")
@@ -224,11 +224,25 @@ map.getAggregationUnitData <- function(ctx, datasetName, aggLevel, analysisName,
     aggUnitData
 }
 #
+map.getAggregableSamples <- function(ctx, datasetName, aggLevel) {
+    dataset <- ctx[[datasetName]]
+    sampleMeta <- dataset$meta
+    for (aIdx in 0:aggLevel) {
+        cName  <- map.getAggregationColumns(aIdx);
+        missingIdx <- which (sampleMeta[,cName] == "-")
+        if (length(missingIdx) > 0) {
+            sampleMeta <- sampleMeta[-missingIdx,]
+        }
+    }
+    rownames(sampleMeta)
+}
+#
 map.getAggregationUnitIds <- function(aggLevel, sampleMeta, params) {
+
     # Get relevant column names
     cCountry  <- map.getAggregationColumns(0); 
     cProvince <- map.getAggregationColumns(1); 
-    cDistrict <- map.getAggregationColumns(2); 
+    cDistrict <- map.getAggregationColumns(2);
     
     # Create aggregation unitI IDs; this is unique for each aggregation unit 
     aggUnitId <- sampleMeta[,cCountry]
@@ -274,7 +288,6 @@ map.getCountryData <- function (iso2Country) {
 ################################################################################
 #
 map.computeLabelParams <- function (aggUnitData, aggColName, baseMapInfo) {
-
     bbox <- baseMapInfo$gadmBB
     xNudge <- (bbox$xMax - bbox$xMin)/15
     yNudge <- (bbox$yMax - bbox$yMin)/15
