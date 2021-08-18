@@ -14,9 +14,8 @@ haploMap.execute <- function(ctx, datasetName, analysisName, mapType, aggregatio
 }
 #
 haploMap.executeVisualization <- function(ctx, datasetName, analysisName, mapType, visType, aggregation, measures, params) {
-    #print(visType)
-    dataset <- ctx[[datasetName]]
-    
+    dataset <- ctx[[datasetName]]    								#; print(datasetName) #; print(visType)
+
     # Create the information object, used to create the plot
     # Start by getting the output folders
     dataFolder <- getOutFolder(ctx, analysisName, c(paste("map", mapType, sep="-"), "data"))
@@ -75,6 +74,9 @@ haploMap.executeVisualization <- function(ctx, datasetName, analysisName, mapTyp
 	    
 	        # Get the haplotype sharing data
 	        groupData <- cluster.findbyIdentity (ctx, datasetName, analysisName, identityLevel, params)
+	        if (is.null(groupData)) {	# No clusters found
+	            next
+	        }
 	        haploShareData <- haploMap.buildSharedCountData (aggLevel, aggUnitData, 
 	                                     groupData, dataset$meta, maxGroups, params)	#; print(head(haploShareData)
 	        info$groupData <- groupData
