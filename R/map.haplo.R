@@ -74,7 +74,7 @@ haploMap.executeVisualization <- function(ctx, datasetName, analysisName, mapTyp
 	    
 	        # Get the haplotype sharing data
 	        groupData <- cluster.findbyIdentity (ctx, datasetName, analysisName, identityLevel, params)
-	        if (is.null(groupData)) {	# No clusters found
+	        if (is.null(groupData)) {	# If no clusters found, skip this identity level
 	            next
 	        }
 	        haploShareData <- haploMap.buildSharedCountData (aggLevel, aggUnitData, 
