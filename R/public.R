@@ -334,6 +334,7 @@ mapBarcodeFrequencies <- function (ctx, sampleSet,
 #' @param minAggregateCount TBD
 #' @param showNames TBD TBD
 #' @param markerScale TBD
+#' @param clusteringMethod TBD
 #' @param minGroupSize TBD
 #' @param width TBD
 #' @param height TBD
@@ -347,11 +348,12 @@ mapGroupSharing <- function (ctx, sampleSet,
                    type=c("bar","pie"),
                    aggregate="Province", 
                    minAggregateCount=5, showNames=TRUE, markerScale=0.8,
-                   similarityLevels=1.0, minGroupSize=10,
+                   similarityLevels=1.0, clusteringMethod="allNeighbours", minGroupSize=10,
                    width=15, height=15) {
                    
     mapParams <- list(
         cluster.identity.thresholds=similarityLevels,
+        cluster.method=clusteringMethod,
         cluster.identity.minCount=minGroupSize,
         map.aggregateCountMin=minAggregateCount,
         map.markerNames=showNames,
@@ -375,6 +377,7 @@ mapGroupSharing <- function (ctx, sampleSet,
 #' @param aggregate TBD
 #' @param minAggregateCount TBD
 #' @param showNames TBD
+#' @param clusteringMethod TBD
 #' @param minGroupSize TBD
 #' @param markerScale TBD
 #' @param width TBD
@@ -388,11 +391,12 @@ mapGroupSharing <- function (ctx, sampleSet,
 mapGroupPrevalence <- function (ctx, sampleSet,
                    aggregate="Province", 
                    minAggregateCount=5, showNames=TRUE, markerScale=0.8,
-                   similarityLevels=1.0, minGroupSize=10,
+                   similarityLevels=1.0, clusteringMethod="allNeighbours", minGroupSize=10,
                    width=15, height=15) {
 
     mapParams <- list(
         cluster.identity.thresholds=similarityLevels,
+        cluster.method=clusteringMethod,
         cluster.identity.minCount=minGroupSize,
         map.aggregateCountMin=minAggregateCount,
         map.markerNames=showNames,

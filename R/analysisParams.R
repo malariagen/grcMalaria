@@ -17,6 +17,7 @@ analysis.defaultParams <- list (
     graph.layoutAlgorithm="fr",
     graph.weightFunction="identitySquared",
     
+    cluster.method="allNeighbours",
     cluster.identity.minCount=5,
     cluster.identity.thresholds=c(1.0),
     

@@ -207,7 +207,7 @@ graph.getLayout <- function (gr, params) {
 #
 graph.getWeightedEdgeData <- function (distData, minIdentity, params) {
     # Get a table of pairwise distance/identity values for all pairs of samples that meet the threshold
-    pairData <- cluster.getPairwiseIdentityData (distData, minIdentity, params)
+    pairData <- graph.getPairwiseIdentityData (distData, minIdentity, params)
     # Compute the link weights
     fnName <- analysis.getParam ("graph.weightFunction", params)
     # Default function
@@ -217,6 +217,24 @@ graph.getWeightedEdgeData <- function (distData, minIdentity, params) {
         identityToWeight <- function (identities) (identities * identities)
     }
     pairData$weight <- identityToWeight(pairData$Identity)
+    pairData
+}
+#
+# Get Unweighted Graph Edge Data
+# Turn the distance matrix into a table of pairwise identity with four columns: "Sample1", "Sample2", "Distance", "Identity"
+#
+graph.getPairwiseIdentityData <- function (distData, minIdentity, params) {
+    mat <- as.matrix(distData)
+    mat[lower.tri(mat,diag=TRUE)] = NA
+    pairData <- as.data.frame(as.table(mat))
+    pairData <- stats::na.omit(pairData) # remove NA
+    colnames(pairData) <- c("Sample1", "Sample2", "Distance")
+    
+    # Convert genetic distance to barcode identity
+    pairData$Identity <- 1.0 - pairData$Distance
+    
+    # Keep only pairs above  threshold
+    pairData <- pairData[which(pairData$Identity >= minIdentity),]
     pairData
 }
 #
