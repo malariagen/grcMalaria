@@ -1,7 +1,7 @@
 #
 # Reconfigure when updating
 #
-aggUnitsFilename <- "annotatedAggregationUnits-20210818.tab"
+aggUnitsFilename <- "annotatedAggregationUnits-20210924.tab"
 #
 # ###########################################################
 # Geographical setup data
