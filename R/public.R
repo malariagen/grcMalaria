@@ -12,7 +12,7 @@
 #' @param species The species being analyzed ("Pf" or "Pv")
 #' @param version The version number of the GRC data file format. This is in the documentation when you receive or download the file.
 #'
-#' @return A list containing a data frame with the data ready to be analyzed, plus some metadata
+#' @return A list containing a data frame with the data ready to be analyzed, plus some configuration metadata
 #' @export
 #'
 #' @examples
@@ -22,6 +22,32 @@ loadGrc <- function (file, sheet="GenRe-Mekong", species="Pf", version="1.0") {
     grcData <- grcData.load (file, sheet, species, version)
     grcData
 }
+
+#############################################################
+#
+#' Combine two Genetic Report Cards datasets
+#'
+#' Merge two GRC datasets which have been loaded from data files. The new dataset is added to the source dataset. 
+#' If the new dataset contains new columns, they can be either ignored, or the same columns are added to the source dataset, 
+#' with null values. If the new dataset contains sample data that is already in the source dataset, they can be either ignored, 
+#' or the source data rows can be overwritten.
+#'
+#' @param srcGrc The source GRC dataset (loaded by loadGrc())
+#' @param newGrc The new GRC dataset to be added(loaded by loadGrc())
+#' @param overwrite Boolean: if TRUE, sample rows in newGrc will replace rows in srcGrc that have the same sampleId. If FALSE, they will be disregarded.
+#' @param extendColumns Boolean: if TRUE, new columns in newGrc will also be added to srcGrc, filled with <NA> values.  If FALSE, they will be disregarded.
+#'
+#' @return A list containing a data frame with the merged data ready to be analyzed, plus some configuration metadata
+#' @export
+#'
+#' @examples
+#' #TBD
+#
+mergeGrc <- function (srcData, newData, overwrite=FALSE, extendColumns=FALSE) {
+    grcData <- grcData.merge (srcData, newData, overwrite, extendColumns)
+    grcData
+}
+
 
 #############################################################
 #
