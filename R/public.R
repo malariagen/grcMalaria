@@ -43,8 +43,8 @@ loadGrc <- function (file, sheet="GenRe-Mekong", species="Pf", version="1.0") {
 #' @examples
 #' #TBD
 #
-mergeGrc <- function (srcData, newData, overwrite=FALSE, extendColumns=FALSE) {
-    grcData <- grcData.merge (srcData, newData, overwrite, extendColumns)
+mergeGrc <- function (srcGrc, newGrc, overwrite=FALSE, extendColumns=FALSE) {
+    grcData <- grcData.merge (srcGrc, newGrc, overwrite, extendColumns)
     grcData
 }
 
@@ -89,7 +89,7 @@ initializeContext <- function (grcData, dir=".",
 #' A selected sample must match all the criteria.
 #'
 #' @param ctx The analysis context, created by intializeContext().
-#' @param sampleSet The name of the sample set, to be used to identifty it when calling analysis tasks.
+#' @param sampleSetName The name of the sample set, to be used to identifty it when calling analysis tasks.
 #' @param select The criteria for selecting the samples. The value must be a list.
 #'
 #' @return The analysis context, augmented with the new sample set
@@ -276,11 +276,11 @@ mapDiversity <- function (ctx, sampleSet,
 #' @param ctx TBD
 #' @param sampleSet TBD
 #' @param measures TBD
-#' @param similarityLevels TBD TBD
+#' @param similarityLevels TBD 
+#' @param meanDistanceLevels TBD
 #' @param aggregate TBD
 #' @param minAggregateCount TBD
 #' @param showNames TBD
-#' @param markerColours TBD
 #' @param markerSize TBD
 #' @param width TBD
 #' @param height TBD
@@ -321,8 +321,9 @@ mapConnections <- function (ctx, sampleSet,
 #' @param sampleSet TBD
 #' @param type TBD
 #' @param aggregate TBD
-#' @param markerScale TBD
+#' @param minAggregateCount TBD
 #' @param showNames TBD
+#' @param markerScale TBD
 #' @param width TBD
 #' @param height TBD
 #'
@@ -451,7 +452,7 @@ mapGroupPrevalence <- function (ctx, sampleSet,
 #'
 #' @param ctx TBD
 #' @param sampleSet TBD TBD
-#' @param type TBD
+#' @param method TBD
 #' @param attributes TBD
 #' @param width TBD
 #' @param height TBD

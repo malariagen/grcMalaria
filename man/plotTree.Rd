@@ -24,6 +24,8 @@ plotTree(
 
 \item{sampleSet}{TBD TBD}
 
+\item{method}{TBD}
+
 \item{attributes}{TBD}
 
 \item{width}{TBD}
@@ -41,8 +43,6 @@ plotTree(
 \item{popLabels}{TBD}
 
 \item{sampleLabels}{TBD}
-
-\item{type}{TBD}
 }
 \value{
 TBD

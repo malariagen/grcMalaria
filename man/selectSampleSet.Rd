@@ -9,9 +9,9 @@ selectSampleSet(ctx, sampleSetName, select)
 \arguments{
 \item{ctx}{The analysis context, created by intializeContext().}
 
-\item{select}{The criteria for selecting the samples. The value must be a list.}
+\item{sampleSetName}{The name of the sample set, to be used to identifty it when calling analysis tasks.}
 
-\item{sampleSet}{The name of the sample set, to be used to identifty it when calling analysis tasks.}
+\item{select}{The criteria for selecting the samples. The value must be a list.}
 }
 \value{
 The analysis context, augmented with the new sample set

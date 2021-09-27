@@ -164,15 +164,15 @@ analysis.executeOnSampleSet <- function(ctx, sampleSetName, tasks, plotList, agg
         datasetName <- "imputed"
         if (task == "njt") {
             njt.execute (trimCtx, "imputed", analysisName)
-            njt.executePlots (analysisCtx, analysisName, plotList)
+            njt.executePlots (trimCtx, analysisName, plotList)
 
         } else if (task == "pca") {
             pca.execute (trimCtx, "imputed", analysisName, method)
-            pca.executePlots (analysisCtx, analysisName, method, plotList)
+            pca.executePlots (trimCtx, analysisName, method, plotList)
 
         } else if (task == "graph") {
             graph.execute (trimCtx, "imputed", analysisName, params)
-            graph.executePlots (analysisCtx, "imputed", analysisName, plotList, params)
+            graph.executePlots (trimCtx, "imputed", analysisName, plotList, params)
 
         } else if (task == "haploNet") {
             haploNet.execute (trimCtx, "imputed", analysisName, plotList, params)

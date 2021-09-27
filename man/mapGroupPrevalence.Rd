@@ -12,6 +12,7 @@ mapGroupPrevalence(
   showNames = TRUE,
   markerScale = 0.8,
   similarityLevels = 1,
+  clusteringMethod = "allNeighbours",
   minGroupSize = 10,
   width = 15,
   height = 15
@@ -31,6 +32,8 @@ mapGroupPrevalence(
 \item{markerScale}{TBD}
 
 \item{similarityLevels}{TBD}
+
+\item{clusteringMethod}{TBD}
 
 \item{minGroupSize}{TBD}
 

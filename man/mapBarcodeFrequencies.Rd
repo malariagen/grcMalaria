@@ -25,6 +25,8 @@ mapBarcodeFrequencies(
 
 \item{aggregate}{TBD}
 
+\item{minAggregateCount}{TBD}
+
 \item{showNames}{TBD}
 
 \item{markerScale}{TBD}

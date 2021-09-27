@@ -16,7 +16,7 @@ loadGrc(file, sheet = "GenRe-Mekong", species = "Pf", version = "1.0")
 \item{version}{The version number of the GRC data file format. This is in the documentation when you receive or download the file.}
 }
 \value{
-A list containing a data frame with the data ready to be analyzed, plus some metadata
+A list containing a data frame with the data ready to be analyzed, plus some configuration metadata
 }
 \description{
 Load a GRC data file, ready for analysis.

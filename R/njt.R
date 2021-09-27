@@ -87,7 +87,7 @@ njt.plotNjt <- function(ctx, analysisName, tree, sampleMeta, plotDef) {
     treeName  <- paste("njt", analysisName, plotName, sep="-")
     graphicFilenameRoot  <- paste(plotsFolder, treeName, sep="/")
     initializeGraphics (getGraphicsFilename (graphicFilenameRoot), widthInch=24, heightInch=24)
-    par(mar=c(3.1, 3.1, 3.1, 3.1))
+    graphics::par(mar=c(3.1, 3.1, 3.1, 3.1))
     treePlot <- NULL
     treePlot <- ape::plot.phylo(tree, type="unrooted", root.edge=FALSE, edge.color=edgeColours, edge.width=nj.branchThickness, 
                                 show.tip.label=nj.showLeafText, tip.color=tipColours, label.offset=2, cex=tipSizeFactor, font=2)
@@ -99,7 +99,7 @@ njt.plotNjt <- function(ctx, analysisName, tree, sampleMeta, plotDef) {
         ape::tiplabels(NULL, pch=as.numeric(tipPch), cex=sizes, 
                        frame="none", col=tipLcolours, bg=tipColours, lwd=lineWidths)
     }
-    dev.off()
+    grDevices::dev.off()
 }
 
 njt.colourEdges <- function(tree, sampleMeta) {

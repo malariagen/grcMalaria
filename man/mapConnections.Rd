@@ -25,7 +25,9 @@ mapConnections(
 
 \item{measures}{TBD}
 
-\item{similarityLevels}{TBD TBD}
+\item{similarityLevels}{TBD}
+
+\item{meanDistanceLevels}{TBD}
 
 \item{aggregate}{TBD}
 
@@ -38,8 +40,6 @@ mapConnections(
 \item{width}{TBD}
 
 \item{height}{TBD}
-
-\item{markerColours}{TBD}
 }
 \value{
 TBD
