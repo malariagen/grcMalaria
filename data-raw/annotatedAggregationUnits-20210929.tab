@@ -38,7 +38,7 @@ BD__Chittagong__Rangamati	2	BD	Chittagong	Rangamati	BGD.2.11_1	22.82958232	92.27
 BD__Chittagong__Chittagong	2	BD	Chittagong	Chittagong	BGD.2.4_1	22.43509029	91.86518178	Chittagong
 BD__Chittagong__Cox's Bazar	2	BD	Chittagong	Cox's Bazar	BGD.2.6_1	21.46601851	92.07585257	Cox'S Bazar
 BD__Chittagong__Khagrachhari	2	BD	Chittagong	Khagrachhari	BGD.2.8_1	23.16131595	91.95331259	Khagrachhari
-CD__Kinshasa __Kinshasa 	2	CD	Kinshasa 	Kinshasa 	COD.10.1_1	-4.436710158	15.9042405	Kinshasa
+CD__Kinshasa __Kinshasa	2	CD	Kinshasa	Kinshasa	COD.10.1_1	-4.436710158	15.9042405	Kinshasa
 IN__Odisha __Sundargarh	2	IN	Odisha 	Sundargarh	IND.26.30_1	22.07666601	84.50392837	Sundargarh
 IN__Tripura __West Tripura	2	IN	Tripura 	West Tripura	IND.33.8_1	23.8764389	91.39718144	West Tripura
 IN__West Bengal__Pashchim Medinipur	2	IN	West Bengal	Pashchim Medinipur	IND.36.16_1	22.4104231	87.26240707	Pashchim Medinipur
@@ -48,7 +48,7 @@ KH__Preah Vihear__Chey Saen	2	KH	Preah Vihear	Chey Saen	KHM.18.1_1	13.58189887	1
 KH__Preah Vihear__Chhaeb	2	KH	Preah Vihear	Chhaeb	KHM.18.2_1	13.91066359	105.4617038	Chhaeb
 KH__Preah Vihear__Rovieng	2	KH	Preah Vihear	Rovieng	KHM.18.5_1	13.35131248	105.0967055	Rovieng
 KH__Preah Vihear__Tbaeng Meanchey	2	KH	Preah Vihear	Tbaeng Meanchey	KHM.18.7_1	13.78607346	105.0151902	Tbaeng Mean chey
-KH__Battambang __Samlout 	2	KH	Battambang 	Samlout 	KHM.2.8_1	12.58314818	102.8593845	Samlout
+KH__Battambang __Samlout 	2	KH	Battambang	Samlout	KHM.2.8_1	12.58314818	102.8593845	Samlout
 KH__Ratanakiri__Andoung Meas	2	KH	Ratanakiri	Andoung Meas	KHM.20.1_1	13.93352635	107.3120426	Andoung Meas
 KH__Ratanakiri__Ban Lung	2	KH	Ratanakiri	Ban Lung	KHM.20.2_1	13.68224583	107.0298255	Ban Lung
 KH__Ratanakiri__Bar Kaev	2	KH	Ratanakiri	Bar Kaev	KHM.20.3_1	13.70763568	107.1947003	Bar Kaev
@@ -62,7 +62,7 @@ KH__Steung Treng__Thala Barivat	2	KH	Steung Treng	Thala Barivat	KHM.22.5_1	13.67
 LA__Attapeu__Phouvong	2	LA	Attapeu	Phouvong	LAO.1.1_1	14.56874857	107.0116249	Phouvong
 LA__Attapeu__Samakkhixay	2	LA	Attapeu	Samakkhixay	LAO.1.2_1	14.80547841	106.7818494	Samakkhixay
 LA__Attapeu__Sanamxay	2	LA	Attapeu	Sanamxay	LAO.1.3_1	14.73830315	106.4137776	Sanamxay
-LA__Attapeu__Xanxay	2	LA	Attapeu	Xanxay	LAO.1.4_1	15.02929869	107.2317261	Sanxay
+LA__Attapeu__Xanxay	2	LA	Attapeu	Sanxay	LAO.1.4_1	15.02929869	107.2317261	Sanxay
 LA__Attapeu__Xaysetha	2	LA	Attapeu	Xaysetha	LAO.1.5_1	14.90612966	106.9795503	Xaysetha
 LA__Salavan__Lao Ngarm	2	LA	Salavan	Lao Ngarm	LAO.11.3_1	15.47747331	106.1411053	Lao Ngarm
 LA__Salavan__Samuoi	2	LA	Salavan	Samuoi	LAO.11.4_1	16.35923485	106.8757075	Samuoi
@@ -70,7 +70,7 @@ LA__Salavan__Salavan	2	LA	Salavan	Salavan	LAO.11.5_1	15.71592416	106.3616636	Sar
 LA__Salavan__Ta Oy	2	LA	Salavan	Ta Oy	LAO.11.6_1	16.0777703	106.7032865	Ta Oi
 LA__Salavan__Toomlarn	2	LA	Salavan	Toomlarn	LAO.11.7_1	16.02286347	106.238499	Toomlarn
 LA__Salavan__Vapy	2	LA	Salavan	Vapy	LAO.11.8_1	15.75024875	105.955301	Vapy
-LA__Savannakhet__Thapanthong	2	LA	Savannakhet	Thapanthong	LAO.12.10_1	16.09149541	105.8106103	Thapangthong
+LA__Savannakhet__Thapanthong	2	LA	Savannakhet	Thapangthong	LAO.12.10_1	16.09149541	105.8106103	Thapangthong
 LA__Savannakhet__Thaphalanxay	2	LA	Savannakhet	Thaphalanxay	LAO.12.11_1	16.70307175	105.609975	Thaphalanxay
 LA__Savannakhet__Vilabuly	2	LA	Savannakhet	Vilabuly	LAO.12.12_1	16.9406037	105.936666	Vilabuly
 LA__Savannakhet__Atsaphone	2	LA	Savannakhet	Atsaphone	LAO.12.2_1	16.94817524	105.4025666	Atsaphone
@@ -82,26 +82,26 @@ LA__Sekong__Kaleum	2	LA	Sekong	Kaleum	LAO.17.2_1	15.8630936	107.0331262	Kaleum
 LA__Sekong__Lamarm	2	LA	Sekong	Lamarm	LAO.17.3_1	15.41280915	106.8171386	Lamarm
 LA__Sekong__Thateng	2	LA	Sekong	Thateng	LAO.17.4_1	15.42780493	106.4813986	Thateng
 LA__Champasak__Khong	2	LA	Champasak	Khong	LAO.4.3_1	14.14708342	105.9591965	Khong
-LA__Champasak__Mounlapamok	2	LA	Champasak	Mounlapamok	LAO.4.4_1	14.29009195	105.5684007	Moonlapamok
+LA__Champasak__Mounlapamok	2	LA	Champasak	Moonlapamok	LAO.4.4_1	14.29009195	105.5684007	Moonlapamok
 LA__Champasak__Paksong	2	LA	Champasak	Paksong	LAO.4.5_1	15.09860494	106.4335681	Paksong
 LA__Champasak__Pakse	2	LA	Champasak	Pakse	LAO.4.6_1	15.13143869	105.816114	Pakxe
-LA__Champasak__Pathoumphone	2	LA	Champasak	Pathoumphone	LAO.4.7_1	14.68487816	106.0631753	Pathoomphone
+LA__Champasak__Pathoumphone	2	LA	Champasak	Pathoomphone	LAO.4.7_1	14.68487816	106.0631753	Pathoomphone
 MM__Rakhine__Kyaunkpyu	2	MM	Rakhine	Kyaunkpyu	MMR.11.2_1	19.91772542	94.03116175	Kyaunkpyu
 MM__Tanintharyi__Kawthoung	2	MM	Tanintharyi	Kawthoung	MMR.14.2_1	26.07383705	97.34742773	Kawthoung
 MM__Bago__Pyay	2	MM	Bago	Pyay	MMR.2.2_1	18.74817388	95.32039261	Pyay
 MM__Kachin__Myitkyina	2	MM	Kachin	Myitkyina	MMR.4.2_1	12.7680151	98.79511641	Myitkyina
-MM__Mandalay__Pyin Oo Lwin	2	MM	Mandalay	Pyin Oo Lwin	MMR.8.5_1	22.80917469	96.18317447	Pyin-Oo-Lwin
-TH__Ranong__Ranong	2	TH	Ranong	Ranong	THA.51.5_1	9.970920167	98.70587749	Muang Ranong
+MM__Mandalay__Pyin Oo Lwin	2	MM	Mandalay	Pyin-Oo-Lwin	MMR.8.5_1	22.80917469	96.18317447	Pyin-Oo-Lwin
+TH__Ranong__Ranong	2	TH	Ranong	Muang Ranong	THA.51.5_1	9.970920167	98.70587749	Muang Ranong
 TH__Sisakhet__Phu Sing	2	TH	Sisakhet	Phu Sing	THA.62.16_1	14.4894336	104.153762	Phu Sing
 TH__Sisakhet__Kantharalak	2	TH	Sisakhet	Kantharalak	THA.62.6_1	14.56902664	104.6710157	Kantharalak
 TH__Sisakhet__Khun Han	2	TH	Sisakhet	Khun Han	THA.62.9_1	14.53541787	104.4068978	Khun Han
 TH__Tak__Mae Ramat	2	TH	Tak	Mae Ramat	THA.69.3_1	17.09608639	98.59004221	Mae Ramat
 TH__Tak__Mae Sot	2	TH	Tak	Mae Sot	THA.69.4_1	16.7353931	98.72563662	Mae Sot
-TH__Tak__Phop Phra 	2	TH	Tak	Phop Phra 	THA.69.6_1	16.47212859	98.83371512	Phop Phra
+TH__Tak__Phop Phra 	2	TH	Tak	Phop Phra	THA.69.6_1	16.47212859	98.83371512	Phop Phra
 TH__Tak__Tha Song Yang	2	TH	Tak	Tha Song Yang	THA.69.8_1	17.49077936	98.11347116	Tha Song Yang
 TH__Ubon Ratchathani__Buntharik	2	TH	Ubon Ratchathani	Buntharik	THA.72.1_1	14.7062112	105.4039223	Buntharik
 TH__Ubon Ratchathani__Na Chaluai	2	TH	Ubon Ratchathani	Na Chaluai	THA.72.15_1	14.56713679	105.2227689	Na Chaluai
-TH__Ubon Ratchathani__Nam Yuen	2	TH	Ubon Ratchathani	Nam Yuen	THA.72.16_1	14.43687044	105.0739361	Nam Yun
+TH__Ubon Ratchathani__Nam Yuen	2	TH	Ubon Ratchathani	Nam Yun	THA.72.16_1	14.43687044	105.0739361	Nam Yun
 VN__Binh Phuoc__Bu Dop	2	VN	Binh Phuoc	Bu Dop	VNM.10.2_1	11.99273306	106.8214977	B<U+00F9> <U+0110><U+1ED1>p
 VN__Binh Phuoc__Bu Dang	2	VN	Binh Phuoc	Bu Dang	VNM.10.3_1	11.78262058	107.2183848	B<U+00F9> <U+0110><U+0103>ng
 VN__Binh Phuoc__Bu Gia Map	2	VN	Binh Phuoc	Bu Gia Map	VNM.10.4_1	12.02445168	107.0468278	B<U+00F9> Gia M<U+1EAD>p
@@ -110,8 +110,8 @@ VN__Binh Phuoc__Hon Quan	2	VN	Binh Phuoc	Hon Quan	VNM.10.8_1	11.61883338	106.612
 VN__Dak Lak__Buon Don	2	VN	Dak Lak	Buon Don	VNM.15.1_1	12.90241449	107.7282867	Bu<U+00F4>n <U+0110><U+00F4>n
 VN__Dak Lak__Krong Nang	2	VN	Dak Lak	Krong Nang	VNM.15.11_1	13.01677481	108.3935028	Kr<U+00F4>ng N<U+0103>ng
 VN__Dak Lak__Buon Ma Thuot	2	VN	Dak Lak	Buon Ma Thuot	VNM.15.2_1	12.65806005	108.0292649	Bu<U+00F4>n Ma Thu<U+1ED9>t
-VN__Dak Lak__Cu Mgar	2	VN	Dak Lak	Cu Mgar	VNM.15.4_1	12.88513147	108.072918	C<U+01B0> M'gar
-VN__Dak Lak__Ea Hleo	2	VN	Dak Lak	Ea Hleo	VNM.15.5_1	13.24114329	108.1754521	Ea H'leo
+VN__Dak Lak__Cu Mgar	2	VN	Dak Lak	Cu M'gar	VNM.15.4_1	12.88513147	108.072918	C<U+01B0> M'gar
+VN__Dak Lak__Ea Hleo	2	VN	Dak Lak	Ea H'leo	VNM.15.5_1	13.24114329	108.1754521	Ea H'leo
 VN__Dak Lak__Ea Kar	2	VN	Dak Lak	Ea Kar	VNM.15.6_1	12.80436656	108.5584648	Ea Kar
 VN__Dak Lak__Ea Sup	2	VN	Dak Lak	Ea Sup	VNM.15.7_1	13.18767608	107.79765	Ea S<U+00FA>p
 VN__Dak Nong__Cu Jut	2	VN	Dak Nong	Cu Jut	VNM.16.1_1	12.6926063	107.7598253	C<U+01B0> J<U+00FA>t
@@ -120,18 +120,17 @@ VN__Gia Lai__Ia Grai	2	VN	Gia Lai	Ia Grai	VNM.21.10_1	13.97623647	107.7252488	Ia
 VN__Gia Lai__Ia Pa	2	VN	Gia Lai	Ia Pa	VNM.21.11_1	13.53142759	108.5248181	Ia Pa
 VN__Gia Lai__Kong Chro	2	VN	Gia Lai	Kong Chro	VNM.21.13_1	13.74523039	108.590649	K<U+00F4>ng Chro
 VN__Gia Lai__Krong Pa	2	VN	Gia Lai	Krong Pa	VNM.21.14_1	13.23322723	108.6564157	Kr<U+00F4>ng Pa
-VN__Gia Lai__Gia Lai	2	VN	Gia Lai	Gia Lai	VNM.21.17_1	13.95146283	107.9923991	Pleiku
+VN__Gia Lai__Gia Lai	2	VN	Gia Lai	Pleiku	VNM.21.17_1	13.95146283	107.9923991	Pleiku
 VN__Gia Lai__Duc Co	2	VN	Gia Lai	Duc Co	VNM.21.7_1	13.78094221	107.6564422	<U+0110><U+1EE9>c C<U+01A1>
 VN__Khanh Hoa__Cam Lam	2	VN	Khanh Hoa	Cam Lam	VNM.32.1_1	12.08080356	109.080569	Cam L<U+00E2>m
 VN__Khanh Hoa__Khanh Vinh	2	VN	Khanh Hoa	Khanh Vinh	VNM.32.5_1	12.31227796	108.8409123	Kh<U+00E1>nh V<U+0129>nh
-VN__Khanh Hoa__Khanh Hoa	2	VN	Khanh Hoa	Khanh Hoa	VNM.32.6_1	12.26268482	109.169057	Nha Trang
+VN__Khanh Hoa__Khanh Hoa	2	VN	Khanh Hoa	Nha Trang	VNM.32.6_1	12.26268482	109.169057	Nha Trang
 VN__Ninh Thuan__Bac Ai	2	VN	Ninh Thuan	Bac Ai	VNM.43.1_1	11.90309213	108.8473326	B<U+00E1>c <U+00C1>i
 VN__Ninh Thuan__Ninh Son	2	VN	Ninh Thuan	Ninh Son	VNM.43.4_1	11.70326497	108.729637	Ninh S<U+01A1>n
 VN__Ninh Thuan__Thuan Bac	2	VN	Ninh Thuan	Thuan Bac	VNM.43.6_1	11.7440615	109.0705578	Thu<U+1EAD>n B<U+1EAF>c
 VN__Phu Yen__Dong Xuan	2	VN	Phu Yen	Dong Xuan	VNM.45.1_1	13.43032195	108.9672599	<U+0110><U+1ED3>ng Xu<U+00E2>n
 VN__Phu Yen__Son Hoa	2	VN	Phu Yen	Son Hoa	VNM.45.4_1	13.1711836	108.9548955	S<U+01A1>n H<U+00F2>a
 VN__Phu Yen__Song Hinh	2	VN	Phu Yen	Song Hinh	VNM.45.6_1	12.92234336	108.9086528	S<U+00F4>ng Hinh
-VN__Quang Tri__Dakrong	2	VN	Quang Tri	Dakrong	VNM.50.3_1	16.57098504	106.9422306	<U+0110>a Kr<U+00F4>ng
 VN__Quang Tri__Da Krong	2	VN	Quang Tri	Da Krong	VNM.50.3_1	16.57098504	106.9422306	<U+0110>a Kr<U+00F4>ng
 VN__Quang Tri__Dong Ha	2	VN	Quang Tri	Dong Ha	VNM.50.4_1	16.80136107	107.0883998	<U+0110><U+00F4>ng H<U+00E0>
 VN__Quang Tri__Huong Hoa	2	VN	Quang Tri	Huong Hoa	VNM.50.7_1	16.70689104	106.6763511	H<U+01B0><U+1EDB>ng H<U+00F3>a

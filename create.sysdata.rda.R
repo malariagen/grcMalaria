@@ -1,7 +1,25 @@
 #
 # Reconfigure when updating
 #
-aggUnitsFilename <- "annotatedAggregationUnits-20210924.tab"
+getFilePathInfo <- function (filePath, checkFileExists=FALSE) {
+    filePath <- normalizePath(filePath, mustWork=checkFileExists)
+    fileDir  <- dirname(filePath)
+    fileName <- basename(filePath)
+    fileExt  <- tools::file_ext(fileName)
+    fileBaseName <- tools::file_path_sans_ext(fileName)
+    list(dir=fileDir, name=fileName, base=fileBaseName, ext=fileExt)
+}
+getDatedFilePath <- function(filePath) {
+    fp <- getFilePathInfo(filePath)
+    searchPattern <- paste(fp$base, "-\\d{8}.", fp$ext, sep="")
+    filesFound <- dir(path=fp$dir, pattern=searchPattern)
+    if (length(filesFound) == 0) {
+        stop(paste("Dated file ",fp$name," not found in ",fp$dir,sep=""))
+    }
+    latestFile <- max(filesFound)  # The one with the latest date
+    latestFile <- file.path(fp$dir, latestFile)
+    latestFile
+}
 #
 # ###########################################################
 # Geographical setup data
@@ -14,7 +32,7 @@ convertUnicodeNames <- function (names) {
 }
 #
 print("Loading Aggregation Units")
-aggUnitsFile <- paste ("data-raw", aggUnitsFilename, sep="/")
+aggUnitsFile <- getDatedFilePath ("./data-raw/annotatedAggregationUnits.tab")
 aggUnitData <- read.table(aggUnitsFile, as.is=TRUE, header=TRUE, quote="", sep="\t", encoding="ASCII")
 #aggUnitData$GadmName <- convertUnicodeNames(aggUnitData$GadmName)
 rownames(aggUnitData) <- aggUnitData$Id
