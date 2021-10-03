@@ -7,7 +7,7 @@ Author: Olivo Miotto
 Maintainer: Olivo Miotto <olivo@tropmedres.ac>
 Description: Various functions for producing analysis results such as maps an reports from the Genetic Report Cards datasets delivered by SpotMalaria rpojects, such as GenRe-Mekong.
     Typical outputs include drug resistance prevalence maps, population genetic analyses such as PCA and NJ trees, and analyses of genetic barcodes such as barcode sharing networks, etc.
-License: MIT license + file LICENSE
+License: MIT + file LICENSE
 LazyData: true
 Imports: 
     Rcpp (>= 1.0.5),
