@@ -137,6 +137,9 @@ mapSampleCounts <- function (ctx, sampleSet,
         die ("colourBy parameter can only accet a single value (\"Country\" or \"Province\")")
     }
     colourAggLevel <- map.getAggregationLevelsFromLabels (colourBy)
+    if (colourAggLevel > 1) {
+        die ("colourBy parameter can only accet values \"Country\" or \"Province\"")
+    }
     params <- list(
         map.aggregateCountMin=minAggregateCount,
         map.markerColourAggLevel=colourAggLevel,

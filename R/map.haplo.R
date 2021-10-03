@@ -74,7 +74,7 @@ haploMap.executeVisualization <- function(ctx, datasetName, analysisName, mapTyp
 	    
 	        # Get the haplotype sharing data
 	        groupData <- cluster.findbyIdentity (ctx, datasetName, analysisName, identityLevel, params)
-	        if (is.null(groupData)) {	# If no clusters found, skip this identity level
+	        if (is.null(groupData)) {	# No clusters found
 	            next
 	        }
 	        haploShareData <- haploMap.buildSharedCountData (aggLevel, aggUnitData, 
@@ -125,8 +125,7 @@ haploMap.plotMap <- function (ctx, info, params) {
     aggLevel <- info$aggLevel
     showMarkerNames <- analysis.getParam ("map.markerNames", params)
     if (showMarkerNames) {
-        aggColName <- map.getAggregationColumns(aggLevel)				#; print(aggColName)
-        lp <- map.computeLabelParams (aggUnitData, aggColName, baseMapInfo)		#; print(lp)
+        lp <- map.computeLabelParams (aggUnitData, baseMapInfo)		#; print(lp)
         mapPlot <- mapPlot + 
                    ggplot2::geom_point(ggplot2::aes(x=lon, y=lat), data=lp, colour="red") +
                    ggrepel::geom_label_repel(ggplot2::aes(x=lon, y=lat, label=label), data=lp,
@@ -233,10 +232,10 @@ haploMap.addFreqBars <- function (mapPlot, countData, aggUnitData, stdMarkerCoun
 
     # Get all aggregation unit ids, in descending order of sample count
     aggUnitData <- aggUnitData[order(-aggUnitData$SampleCount),]
-    aggUnits <- rownames(aggUnitData)							#; print(aggUnits)
+    aggUnitGids <- rownames(aggUnitData)							#; print(aggUnitGids)
     freqBarData <- NULL
-    for (aIdx in 1:length(aggUnits)) {
-        aggUnit <- aggUnits[aIdx]
+    for (aIdx in 1:length(aggUnitGids)) {
+        aggUnitGid <- aggUnitGids[aIdx]
         sampleCount <- aggUnitData$SampleCount[aIdx]
         
         # Determine the desired size of the marker
@@ -256,7 +255,7 @@ haploMap.addFreqBars <- function (mapPlot, countData, aggUnitData, stdMarkerCoun
         x2 <- aggUnitData$Longitude[aIdx] + (mWidth/2)
         
         # Get all the haplos for this unit, ordered by sample count
-        unitHaploData <- countData[which(countData$UnitId==aggUnit),]
+        unitHaploData <- countData[which(countData$UnitId==aggUnitGid),]
         unitHaploData <- unitHaploData[order(unitHaploData$HaploCount),]
         unitRowCount <- nrow(unitHaploData)
         
@@ -288,18 +287,18 @@ haploMap.buildCountData <- function(aggLevel, aggUnitData, dataset, params) {
     barcodeData  <- dataset$barcodes
 
     # Get all aggregation unit ids
-    aggUnits <- rownames(aggUnitData)	#; print(aggUnits)
+    aggUnitGids <- rownames(aggUnitData)	#; print(aggUnitGids)
     
     # Create aggregation index for each sample (the id of the aggregation unit where the sample originates)
-    aggIndex <- map.getAggregationUnitIds (aggLevel, sampleMeta, params)
+    aggIndex <- map.getAggregationUnitIds (aggLevel, sampleMeta)
     haplos <- apply(barcodeData,1,paste,collapse="")
 
     # Get the data for all aggregation units
     countData <- NULL
-    for (aIdx in 1:length(aggUnits)) {
+    for (aIdx in 1:length(aggUnitGids)) {
         # Get the sample data to be aggregated for this unit
-        aggUnit <- aggUnits[aIdx]
-        unitHaplos <- haplos[which(aggIndex == aggUnit)]		#; print(nrow(aggHaplos))
+        aggUnitGid <- aggUnitGids[aIdx]
+        unitHaplos <- haplos[which(aggIndex == aggUnitGid)]		#; print(nrow(aggHaplos))
         unitHaploCounts <- as.integer(table(unitHaplos))
         unitHaploCounts <- unitHaploCounts[order(-unitHaploCounts)]
         unitHaploNum <- length (unitHaploCounts)
@@ -333,7 +332,6 @@ haploMap.addShareMarkers <- function (mapPlot, visType, haploShareData, haploGro
 }
 
 haploMap.addSharePies <- function (mapPlot, haploShareData, haploGroupPalette, aggUnitData, stdMarkerCount, stdMarkerSize) {
-
     # Now add the pie chart markers
     if (stdMarkerCount==0) {
         mapPlot <- mapPlot +
@@ -359,10 +357,10 @@ haploMap.addShareBars <- function (mapPlot, haploShareData, haploGroupPalette, a
     # Get all aggregation unit ids, in descending order of sample count
     aggUnitData <- aggUnitData[order(-aggUnitData$SampleCount),]
     
-    aggUnits <- rownames(aggUnitData)							#; print(aggUnits)
+    aggUnitGids <- rownames(aggUnitData)							#; print(aggUnitGids)
     freqBarData <- NULL
-    for (aIdx in 1:length(aggUnits)) {
-        aggUnit <- aggUnits[aIdx]
+    for (aIdx in 1:length(aggUnitGids)) {
+        aggUnitGid <- aggUnitGids[aIdx]
         sampleCount <- aggUnitData$SampleCount[aIdx] 
         
         # Determine the desired size of the marker
@@ -382,7 +380,7 @@ haploMap.addShareBars <- function (mapPlot, haploShareData, haploGroupPalette, a
         x2 <- aggUnitData$Longitude[aIdx] + (mWidth/2)
         
         # Get all the haplos for this unit, ordered by Haplo Group name
-        unitHaploData <- haploShareData[which(haploShareData$UnitId==aggUnit),]		#; print(unitHaploData)
+        unitHaploData <- haploShareData[which(haploShareData$UnitId==aggUnitGid),]	#; print(unitHaploData)
         unitHaploGroups <- as.character(unitHaploData$HaploGroup)			#; print(unitHaploGroups)
         unitHaploData <- unitHaploData[order(unitHaploGroups, decreasing=TRUE),]	#; print(unitHaploData)
         unitRowCount <- nrow(unitHaploData)
@@ -432,17 +430,17 @@ haploMap.buildSharedCountData <- function(aggLevel, aggUnitData, groupData, samp
     sampleMeta$HaploGroup <- hGroup
     
     # Get all aggregation unit ids
-    aggUnits <- rownames(aggUnitData)	#; print(aggUnits)
+    aggUnitGids <- rownames(aggUnitData)	#; print(aggUnitGids)
     
     # Create aggregation index for each sample (the id of the aggregation unit where the sample originates)
-    aggIndex <- map.getAggregationUnitIds (aggLevel, sampleMeta, params)
+    aggIndex <- map.getAggregationUnitIds (aggLevel, sampleMeta)
 
     # Get the data for all aggregation units
     countData <- NULL
-    for (aIdx in 1:length(aggUnits)) {
+    for (aIdx in 1:length(aggUnitGids)) {
         # Get the sample data to be aggregated for this unit
-        aggUnit <- aggUnits[aIdx]
-        unitMeta <- sampleMeta[which(aggIndex == aggUnit),]		#; print(nrow(unitMeta))
+        aggUnitGid <- aggUnitGids[aIdx]
+        unitMeta <- sampleMeta[which(aggIndex == aggUnitGid),]		#; print(nrow(unitMeta))
         gpUnitMeta <- unitMeta[which(unitMeta$HaploGroup != "-"),]
         unitGroupCounts <- table(gpUnitMeta$HaploGroup)
         unitGroupCounts <- unitGroupCounts[order(-unitGroupCounts)]

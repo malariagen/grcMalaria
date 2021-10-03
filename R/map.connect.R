@@ -77,8 +77,7 @@ connectMap.execute <- function(ctx, datasetName, analysisName, mapType, aggregat
                 # If we need to show aggregation unit names, we need to compute the label positioning and plot
                 showMarkerNames <- analysis.getParam ("map.markerNames", params)
                 if (showMarkerNames) {
-                aggColName <- c("Country","AdmDiv1","AdmDiv2")[aggLevelIdx]
-                    lp <- map.computeLabelParams (aggUnitData, aggColName, baseMapInfo)
+                    lp <- map.computeLabelParams (aggUnitData, baseMapInfo)
                     mapPlot <- mapPlot +
                         ggrepel::geom_label_repel(ggplot2::aes(x=lon, y=lat, label=label), data=lp, size=4.5, fontface="bold", color="darkgray",
                                                   hjust=lp$just, vjust=0.5, nudge_x=lp$x, nudge_y=lp$y, label.padding=grid::unit(0.2, "lines"))
@@ -148,41 +147,41 @@ connectMap.estimateMeasures <- function (ctx, datasetName, analysisName, aggLeve
     distData     <- dataset$distance
 
     # Create aggregation index for each sample (the id of the aggregation unit where the sample originates)
-    aggUnitIds <- as.character(map.getAggregationUnitIds (aggLevel, sampleMeta, params))
+    sampleGids <- as.character(map.getAggregationUnitIds (aggLevel, sampleMeta))
     sampleIds <- rownames(sampleMeta)
     
     # Get all aggregation units
-    aggUnits <- rownames(aggUnitData)							#; print(aggUnits) ; print(head(aggUnitData))
+    aggUnitGids <- rownames(aggUnitData)						#; print(aggUnitGids) ; print(head(aggUnitData))
     
     # Get the data for all aggregation units
     measureData <- NULL
-    for (a1Idx in 1:(length(aggUnits)-1)) {
-        for (a2Idx in (a1Idx+1):length(aggUnits)) {
+    for (a1Idx in 1:(length(aggUnitGids)-1)) {
+        for (a2Idx in (a1Idx+1):length(aggUnitGids)) {
             # Get the sample data
-            aggUnit1 <- aggUnits[a1Idx]							#; print(aggUnit1)
+            gid1 <- aggUnitGids[a1Idx]							#; print(gid1)
+            name1 <- aggUnitData$AdmDivName[a1Idx]					#; print(name1)
             lat1 <- aggUnitData$Latitude[a1Idx]
             lon1 <- aggUnitData$Longitude[a1Idx]
-            aggSamples1 <- sampleIds[which(aggUnitIds == aggUnit1)]			#; print(length(aggSamples1))
-            #aggBarcodes1 <- barcodeData[aggSamples1,]
+            samples1 <- sampleIds[which(sampleGids == gid1)]				#; print(length(samples1))
             #
-            aggUnit2 <- aggUnits[a2Idx]							#; print(aggUnit2)
+            gid2 <- aggUnitGids[a2Idx]							#; print(gid2)
+            name2 <- aggUnitData$AdmDivName[a2Idx]					#; print(name2)
             lat2 <- aggUnitData$Latitude[a2Idx]
             lon2 <- aggUnitData$Longitude[a2Idx]
-            aggSamples2 <- sampleIds[which(aggUnitIds == aggUnit2)]			#; print(length(aggSamples2))
-            #aggBarcodes2 <- barcodeData[aggSamples2,]
+            samples2 <- sampleIds[which(sampleGids == gid2)]				#; print(length(samples2))
             #
-            pairDist <- distData[aggSamples1,aggSamples2]				#; print(dim(pairDist))
-        
+            pairDist <- distData[samples1,samples2]					#; print(dim(pairDist))
+            #
             # Get the admin division values from the first sample of this unit (assuming the values are the same for all)
-            mValues <- connectMap.estimateDistMeasures (pairDist, measures)			#; print (mValues)
-            cValues <- c(aggUnit1, aggUnit2, lat1, lon1, lat2, lon2, mValues)
+            mValues <- connectMap.estimateDistMeasures (pairDist, measures)		#; print (mValues)
+            cValues <- c(gid1, gid2, name1, name2, lat1, lon1, lat2, lon2, mValues)
             measureData <- rbind(measureData, cValues)
         }
     }
     aggUnitPairData <- data.frame(measureData)						#; print (dim(aggUnitPairData))
     nc <- ncol(aggUnitPairData)
-    aggUnitPairData[,3:nc] <- sapply(aggUnitPairData[,3:nc], as.numeric)		#; print(ncol(aggUnitPairData))
-    colnames(aggUnitPairData) <- c("Unit1", "Unit2", "Lat1", "Lon1", "Lat2", "Lon2", measures)
+    aggUnitPairData[,5:nc] <- sapply(aggUnitPairData[,5:nc], as.numeric)		#; print(ncol(aggUnitPairData))
+    colnames(aggUnitPairData) <- c("Unit1", "Unit2", "UnitName1", "UnitName2", "Lat1", "Lon1", "Lat2", "Lon2", measures)
     
     # Write out the aggregation unit data to file
     aggDataFilename  <- paste(dataFolder, "/AggregatedPairData-", analysisName, "-", aggLevel, ".tab", sep="")

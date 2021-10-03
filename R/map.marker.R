@@ -14,21 +14,17 @@ markerMap.getDiversityMeasures <- function() {
 markerMap.execute <- function(ctx, datasetName, analysisName, mapType, aggregation, measures, params) {
     config <- ctx$config
     dataset <- ctx[[datasetName]]
+    
     # Get the sample metadata
     sampleMeta <- dataset$meta
-
+    
     if (mapType=="sampleCount") {
         measures <- "NumberOfSamples"
-        colourAdmDivLevel <- analysis.getParam ("map.markerColourAggLevel", params)
-	admDivColumn <- map.getAggregationColumns (colourAdmDivLevel)
-        admDivs <- unique(sampleMeta[,admDivColumn])
-	admDivPalette <- config$defaultPalette[1:length(admDivs)]
-	admDivTextPalette <- config$defaultTextPalette[1:length(admDivs)]
-	names(admDivPalette) <- admDivs
     } 
 
     # Get the output folders
     dataFolder <- getOutFolder(ctx, analysisName, c(paste("map", mapType, sep="-"), "data"))
+    
     # Build the map necessary to display these samples
     # Construct a base plot for completing subsequent maps
     baseMapInfo <- map.buildBaseMap (ctx, datasetName, analysisName, sampleMeta, dataFolder, params)
@@ -40,6 +36,20 @@ markerMap.execute <- function(ctx, datasetName, analysisName, mapType, aggregati
 
         # Get the aggregated data for the aggregation units
         aggUnitData <- map.getAggregationUnitData (ctx, datasetName, aggLevel, analysisName, mapType, params, dataFolder)	#; print(aggUnitData)
+
+        # For sample count markers, the colour may be based on a different admin division level from the aggregation
+        if (mapType=="sampleCount") {
+	    colourAdmDivLevel <- analysis.getParam ("map.markerColourAggLevel", params)		#; print(colourAdmDivLevel) # should be 0 or 1
+	    colourAdmDivTitle <- ADM_DIV_LABELS[colourAdmDivLevel+1]				#; print(colourAdmDivCol)
+	    colourAdmDivCol <- GID_COLUMNS[colourAdmDivLevel+1]					#; print(colourAdmDivCol)
+	    colourAdmDivs <- aggUnitData[,colourAdmDivCol]					#; print(colourAdmDivs)
+	    colourGids    <- unique(colourAdmDivs)						#; print(colourGids)
+	    admDivPalette     <- config$defaultPalette[1:length(colourGids)]
+	    admDivTextPalette <- config$defaultTextPalette[1:length(colourGids)]		
+	    names(admDivPalette) <- names(admDivTextPalette) <- colourGids			#; print(admDivPalette); print(admDivTextPalette)
+	    admDivPaletteLabels  <- map.getAdmDivNames (colourGids)				#; print(admDivPaletteLabels)
+	} 
+
         measures <- markerMap.checkMeasures (ctx, mapType, measures)
         aggUnitData <- markerMap.estimateMeasures (ctx, datasetName, aggLevel, aggUnitData, analysisName, mapType, measures, params, dataFolder)	#; print(aggUnitData)
 
@@ -60,8 +70,7 @@ markerMap.execute <- function(ctx, datasetName, analysisName, mapType, aggregati
             # If we need to show aggregation unit names, we need to compute the label positioning and plot before the markers
             showMarkerNames <- analysis.getParam ("map.markerNames", params)
             if (showMarkerNames) {
-                aggColName <- c("Country","AdmDiv1","AdmDiv2")[aggLevelIdx]
-                lp <- map.computeLabelParams (selAggUnitData, aggColName, baseMapInfo)
+                lp <- map.computeLabelParams (selAggUnitData, baseMapInfo)
                 mapPlot <- mapPlot + 
                     ggrepel::geom_label_repel(data=lp, ggplot2::aes(x=lon, y=lat, label=label), 
                                               size=4.5, fontface="bold", color="darkgray",
@@ -94,9 +103,10 @@ markerMap.execute <- function(ctx, datasetName, analysisName, mapType, aggregati
             } else if (mapType=="sampleCount") {
                 #print(admDivColumn)
                 mapPlot <- mapPlot +
-	              ggplot2::geom_point(data=selAggUnitData, aes_string2(x="Longitude", y="Latitude", fill=admDivColumn), 
+	              ggplot2::geom_point(data=selAggUnitData, aes_string2(x="Longitude", y="Latitude", fill=colourAdmDivCol),
 	                                  size=pointSizes, shape=21, stroke=2) +
-                      ggplot2::scale_fill_manual(values=admDivPalette, guide=ggplot2::guide_legend(override.aes=list(size=3,stroke=0.5)))
+                      ggplot2::scale_fill_manual(values=admDivPalette, labels=admDivPaletteLabels, name=colourAdmDivTitle,
+                                                 guide=ggplot2::guide_legend(override.aes=list(size=3,stroke=0.5)))
                       
             } else if (mapType=="drug") {
                 mapPlot <- mapPlot +
@@ -121,12 +131,13 @@ markerMap.execute <- function(ctx, datasetName, analysisName, mapType, aggregati
             valueLabels <- round(mValues, digits=2)
             if (mapType=="sampleCount") {
                 mapPlot <- mapPlot +
-                           ggplot2::geom_text(data=selAggUnitData, ggplot2::aes_string(x="Longitude", y="Latitude", colour=admDivColumn), 
+                           ggplot2::geom_text(data=selAggUnitData, ggplot2::aes_string(x="Longitude", y="Latitude", colour=colourAdmDivCol),
                                               label=valueLabels, hjust=0.5, vjust=0.5, size=4.5, fontface="bold", show.legend=FALSE) +
                            ggplot2::scale_colour_manual(values=admDivTextPalette)
             } else {
                 mapPlot <- mapPlot +
-                           ggplot2::geom_text(data=selAggUnitData, ggplot2::aes_string(x="Longitude", y="Latitude"), label=valueLabels, hjust=0.5, vjust=0.5, size=4.5, fontface="bold")
+                           ggplot2::geom_text(data=selAggUnitData, ggplot2::aes_string(x="Longitude", y="Latitude"), 
+                                              label=valueLabels, hjust=0.5, vjust=0.5, size=4.5, fontface="bold")
             }
             mapPlot <- mapPlot +
                        ggplot2::theme(plot.title = ggplot2::element_text(face = "bold",size = ggplot2::rel(1.2), hjust = 0.5),
@@ -204,18 +215,18 @@ markerMap.estimateMeasures <- function(ctx, datasetName, aggLevel, aggUnitData, 
     distData     <- dataset$distance
 
     # Create aggregation index for each sample (the id of the aggregation unit where the sample originates)
-    aggIndex <- map.getAggregationUnitIds (aggLevel, sampleMeta, params)
+    aggIndex <- map.getAggregationUnitIds (aggLevel, sampleMeta)
     
     # Get all aggregation units
-    aggUnits <- rownames(aggUnitData)					#; print(aggUnits)
+    aggUnitGids <- rownames(aggUnitData)					#; print(aggUnitGids)
     
     # Get the data for all aggregation units
     measureData <- matrix(nrow=0, ncol=length(measures), dimnames=list(c(),measures))
-    for (aIdx in 1:length(aggUnits)) {
+    for (aIdx in 1:length(aggUnitGids)) {
 
         # Get the sample data to be aggregated for this unit
-        aggUnit <- aggUnits[aIdx]					#; print(aggUnit)
-        aggSamplesMeta <- sampleMeta[which(aggIndex == aggUnit),]	#; print(nrow(aggSamplesMeta))
+        aggUnitGid <- aggUnitGids[aIdx]					#; print(aggUnitGid)
+        aggSamplesMeta <- sampleMeta[which(aggIndex == aggUnitGid),]	#; print(nrow(aggSamplesMeta))
         aggSamples <- rownames(aggSamplesMeta)
         aggBarcodes <- barcodeData[aggSamples,]
         aggDist <- distData[aggSamples,aggSamples]
