@@ -47,7 +47,7 @@ map.buildBaseMap <- function(ctx, datasetName, analysisName, sampleMeta, dataFol
     }
     
     # Read the country borders for the countries involved
-    gadmFolder <- getDataFolder(ctx, c("map", "gadm"))
+    gadmFolder <- getCacheFolder(ctx, c("map", "gadm"))
     gadmFolder <- paste(gadmFolder, "/", sep="")
     cIso3 <- map.iso2ToIso3 (countries)
     gadm0 <- GADMTools::gadm_sp_loadCountries(cIso3, level=0, basefile=gadmFolder)

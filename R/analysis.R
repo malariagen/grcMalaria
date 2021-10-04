@@ -4,6 +4,7 @@
 #
 analysis.createContext <- function (grcData, config) {
     ctx <- list(
+        id         = digest::digest(grcData, algo="md5"),
         config     = config,
         sampleSets = list()
     )

@@ -2,7 +2,7 @@
 # Declarations: sample data and metadata
 ################################################################################
 geno.getGenoFile <- function (ctx, datasetName) {
-    genoFile  <- getDataFile(ctx, datasetName, "genotypes", "sampleGenotypes.tab")
+    genoFile  <- getContextCacheFile(ctx, datasetName, "genotypes", "sampleGenotypes.tab")
     genoFile
 }
 

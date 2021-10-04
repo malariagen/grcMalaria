@@ -11,7 +11,7 @@ License: MIT + file LICENSE
 LazyData: true
 Imports: 
     Rcpp (>= 1.0.5),
-    utils, stats, graphics, grDevices, stringi,
+    utils, stats, graphics, grDevices, stringi, digest,
     readxl, openxlsx,
     ape, pegas, pcaMethods,
     igraph,

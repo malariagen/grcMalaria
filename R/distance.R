@@ -2,7 +2,7 @@
 # Caching data files
 ################################################################################
 distance.getDistanceDataFile <- function (ctx, datasetName) {
-    dataFile <- getDataFile(ctx, datasetName, "distance", "sampleDistance.tab")
+    dataFile <- getContextCacheFile(ctx, datasetName, "distance", "sampleDistance.tab")
     dataFile
 }
 

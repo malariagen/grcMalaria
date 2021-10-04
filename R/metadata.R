@@ -13,7 +13,7 @@ meta.setDatasetMeta <- function (ctx, datasetName, meta, store=TRUE) {
 }
 
 meta.getMetaDataFile <- function (ctx, datasetName) {
-    metaFile <- getDataFile(ctx, datasetName, "meta", "sampleMeta.tab")
+    metaFile <- getContextCacheFile(ctx, datasetName, "meta", "sampleMeta.tab")
     metaFile
 }
 

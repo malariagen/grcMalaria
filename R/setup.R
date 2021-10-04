@@ -9,7 +9,6 @@ setup.getConfig <- function (grc, dir, minSnpTypability, minSampleTypability) {
     config <- list (
         version=grc$version,
         folder.root=dir,
-        #folder.config=getSubFolder (dir, "config", create=FALSE),
         folder.data=getSubFolder (dir, "data"),
         folder.out=getSubFolder (dir, "out"),
         minSnpTypability=minSnpTypability,

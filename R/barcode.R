@@ -2,11 +2,11 @@
 # Caching data files
 ################################################################################
 barcode.getBarcodeDataFile <- function (ctx, datasetName) {
-    dataFile <- getDataFile(ctx, datasetName, "barcode", "barcodeAlleles.tab")
+    dataFile <- getContextCacheFile(ctx, datasetName, "barcode", "barcodeAlleles.tab")
     dataFile
 }
 barcode.getBarcodeSeqFile <- function (ctx, datasetName) {
-    seqFile  <- getDataFile(ctx, datasetName, "barcode", "barcodeSeqs.tab")
+    seqFile  <- getContextCacheFile(ctx, datasetName, "barcode", "barcodeSeqs.tab")
     seqFile
 }
 
@@ -184,12 +184,12 @@ barcode.writeBarcodeStats <- function(ctx, datasetName, barcodeData, suffix="") 
     }
     stats <- barcode.computeBarcodeStats (barcodeData, bySnp=TRUE)
     statsFilename <- paste("stats-snps", suffix, ".tab",  sep="")
-    statsFile  <- getDataFile(ctx, datasetName, "barcode", statsFilename)
+    statsFile  <- getContextCacheFile(ctx, datasetName, "barcode", statsFilename)
     writeLabelledData (stats, "Snp", statsFile)
 
     stats <- barcode.computeBarcodeStats (barcodeData, bySnp=FALSE)
     statsFilename  <- paste("stats-samples", suffix, ".tab",  sep="")
-    statsFile  <- getDataFile(ctx, datasetName, "barcode", statsFilename)
+    statsFile  <- getContextCacheFile(ctx, datasetName, "barcode", statsFilename)
     writeLabelledData (stats, "Sample", statsFile)
 }
 
