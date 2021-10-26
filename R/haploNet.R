@@ -5,11 +5,14 @@
 #
 ################################################################################
 #
-haploNet.execute <- function(ctx, datasetName, analysisName, plotList, params) {
-    dataset <- ctx[[datasetName]]
+haploNet.execute <- function(userCtx, sampleSetName, plotList, params) {
+    sampleSet <- userCtx$sampleSets[[sampleSetName]]
+    ctx <- sampleSet$ctx
+    dataset <- ctx$imputed
+
     # Set up output folders
-    dataFolder <- getOutFolder(ctx, analysisName, c("haploNet", "data"))
-    plotsFolder <- getOutFolder(ctx, analysisName, c("haploNet", "plots"))
+    dataFolder <- getOutFolder(ctx, sampleSetName, c("haploNet", "data"))
+    plotsFolder <- getOutFolder(ctx, sampleSetName, c("haploNet", "plots"))
     
     sampleMeta <- dataset$meta
     sampleNames <- rownames(sampleMeta)
@@ -29,7 +32,7 @@ haploNet.execute <- function(ctx, datasetName, analysisName, plotList, params) {
     #print(plotList)
     for (pIdx in 1:length(plotList)) {
         plotDef <- plotList[[pIdx]]
-        haploNet.plotNet (net, h, analysisName, sampleMeta, plotDef, plotsFolder)
+        haploNet.plotNet (net, h, sampleSetName, sampleMeta, plotDef, plotsFolder)
     }
 }
 #maxRecords <- 100

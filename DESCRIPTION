@@ -19,7 +19,7 @@ Imports:
     RColorBrewer,
     ggmap, ggplot2, ggrepel, ggforce
 Depends: 
-    R (>= 2.10)
+    R (>= 3.5.0)
 LinkingTo: Rcpp
 RoxygenNote: 7.1.1
 Encoding: UTF-8

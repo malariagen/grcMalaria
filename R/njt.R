@@ -14,24 +14,30 @@ nj.sampleLabels     <- FALSE
 # Multiple analyses, based on different subsets of samples, can be performed in a single run.
 ###############################################################################
 #
-njt.execute <- function(ctx, sampleSetName, analysisName) {
-    dataset <- ctx[[datasetName]]
-    dataFolder <- getOutFolder(ctx, analysisName, c("njt", "data"))
+njt.execute <- function(userCtx, sampleSetName) {
+    sampleSet <- userCtx$sampleSets[[sampleSetName]]
+    ctx <- sampleSet$ctx
+    dataset <- ctx$imputed
+    dataFolder <- getOutFolder(ctx, sampleSetName, c("njt", "data"))
+
     distData  <- dataset$distance
 
     # Build a NJ Tree
     tree <- nj(as.matrix(distData));
-    treeFilename  <- paste(dataFolder, "/njt-", analysisName, ".newick", sep="")
+    treeFilename  <- paste(dataFolder, "/njt-", sampleSetName, ".newick", sep="")
     ape::write.tree(tree, file=treeFilename)
 }
 
-njt.executePlots <- function(ctx, sampleSetName, analysisName, plotList) {
-    dataset <- ctx[[datasetName]]
+njt.executePlots <- function(userCtx, sampleSetName, plotList) {
+    sampleSet <- userCtx$sampleSets[[sampleSetName]]
+    ctx <- sampleSet$ctx
+    dataset <- ctx$imputed
+    dataFolder <- getOutFolder(ctx, sampleSetName, c("njt", "data"))
+
     sampleMeta <- dataset$meta
-    dataFolder <- getOutFolder(ctx, analysisName, c("njt", "data"))
 
     # Retrieve a NJ Tree
-    treeFilename  <- paste(dataFolder, "/njt-", analysisName, ".newick", sep="")
+    treeFilename  <- paste(dataFolder, "/njt-", sampleSetName, ".newick", sep="")
     tree <- ape::read.tree(file=treeFilename)
     sampleNames <- tree$tip.label
     sampleMeta <- sampleMeta[sampleNames,]
@@ -40,11 +46,11 @@ njt.executePlots <- function(ctx, sampleSetName, analysisName, plotList) {
     #print(plotList)
     for (pIdx in 1:length(plotList)) {
         plotDef <- plotList[[pIdx]]
-        njt.plotNjt (ctx, analysisName, tree, sampleMeta, plotDef)
+        njt.plotNjt (ctx, sampleSetName, tree, sampleMeta, plotDef)
     }
 }
 
-njt.plotNjt <- function(ctx, analysisName, tree, sampleMeta, plotDef) {
+njt.plotNjt <- function(ctx, sampleSetName, tree, sampleMeta, plotDef) {
     plotName <- plotDef$name;
     print (paste("Plot: ",plotName))
   
@@ -55,7 +61,7 @@ njt.plotNjt <- function(ctx, analysisName, tree, sampleMeta, plotDef) {
     sampleCount <- nrow(plotMetadata)
   
     # Do the plots
-    plotsFolder <- getOutFolder(ctx, analysisName, c("njt", "plots"))
+    plotsFolder <- getOutFolder(ctx, sampleSetName, c("njt", "plots"))
     
     # Graphics elements
     tipLabels <- NULL
@@ -84,7 +90,7 @@ njt.plotNjt <- function(ctx, analysisName, tree, sampleMeta, plotDef) {
     edgeColours <- njt.colourEdges (tree, plotMetadata)
     
     # Plot tree
-    treeName  <- paste("njt", analysisName, plotName, sep="-")
+    treeName  <- paste("njt", sampleSetName, plotName, sep="-")
     graphicFilenameRoot  <- paste(plotsFolder, treeName, sep="/")
     initializeGraphics (getGraphicsFilename (graphicFilenameRoot), widthInch=24, heightInch=24)
     graphics::par(mar=c(3.1, 3.1, 3.1, 3.1))

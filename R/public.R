@@ -130,7 +130,7 @@ selectSampleSet <- function (ctx, sampleSetName, select) {
 #
 mapSampleCounts <- function (ctx, sampleSet,
                    aggregate="Province", minAggregateCount=1,
-                   markerSize=c(4,40), colourBy="Province", showNames=TRUE,
+                   markerSize=c(4,40), showNames=TRUE, colourBy="Province",
                    width=15, height=15) {
 
     if (length(colourBy) > 1) {
@@ -140,16 +140,16 @@ mapSampleCounts <- function (ctx, sampleSet,
     if (colourAggLevel > 1) {
         die ("colourBy parameter can only accet values \"Country\" or \"Province\"")
     }
+    aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
     params <- list(
+        aggegation.levels=aggLevels,
         map.aggregateCountMin=minAggregateCount,
         map.markerColourAggLevel=colourAggLevel,
         map.markerSize=markerSize,
         map.markerNames=showNames,
         map.size=c(width=width,height=height)
     )
-    aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
-    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/sampleCount", plotList=NULL,
-                                 aggregation=aggLevels, measures=NULL, params=params)
+    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/sampleCount", params=params)
 }
 #
 #############################################################
@@ -183,16 +183,17 @@ mapDrugResistancePrevalence <- function (ctx, sampleSet,
                    showNames=TRUE, markerSize=16,
                    width=15, height=15) {
 
+    aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
     params <- list(
+        analysis.measures=drugs,
+        aggegation.levels=aggLevels,
         map.aggregateCountMin=minAggregateCount,
         map.markerSize=markerSize,			# Use this for constant marker size
         #map.markerSize=c(4,40),			# Use this for count-proportional marker size
         map.markerNames=showNames,
         map.size=c(width=width,height=height)
     )
-    aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
-    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/drug", plotList=NULL,
-                                 aggregation=aggLevels, measures=drugs, params=params)
+    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/drug", params=params)
 }
 #
 #############################################################
@@ -220,16 +221,17 @@ mapMutationPrevalence <- function (ctx, sampleSet,
                    showNames=TRUE, markerSize=16,
                    width=15, height=15) {
 
+    aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
     params <- list(
+        analysis.measures=mutations,
+        aggegation.levels=aggLevels,
         map.aggregateCountMin=minAggregateCount,
         map.markerSize=markerSize,			# Use this for constant marker size
         #map.markerSize=c(4,40),			# Use this for count-proportional marker size
         map.markerNames=showNames,
         map.size=c(width=width,height=height)
     )
-    aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
-    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/mutation", plotList=NULL,
-                                 aggregation=aggLevels, measures=mutations, params=params)
+    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/mutation", params=params)
 }
                    
 #############################################################
@@ -255,11 +257,13 @@ mapMutationPrevalence <- function (ctx, sampleSet,
 mapDiversity <- function (ctx, sampleSet,
                    measures="ALL",
                    aggregate="Province", minAggregateCount=10,
-                   showNames=TRUE, markerSize=16,
-                   markerColours="red3",
+                   showNames=TRUE, markerSize=16, markerColours="red3",
                    width=15, height=15) {
-    
+
+    aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
     params <- list(
+        analysis.measures=measures,
+        aggegation.levels=aggLevels,
         map.aggregateCountMin=minAggregateCount,
         map.markerSize=markerSize,			# Use this for constant marker size
         #map.markerSize=c(4,40),			# Use this for count-proportional marker size
@@ -267,9 +271,7 @@ mapDiversity <- function (ctx, sampleSet,
         map.diversity.markerColours=markerColours,
         map.size=c(width=width,height=height)
     )
-    aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
-    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/diversity", plotList=NULL,
-                                 aggregation=aggLevels, measures=measures, params=params)
+    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/diversity", params=params)
 }
 
 #############################################################
@@ -279,7 +281,7 @@ mapDiversity <- function (ctx, sampleSet,
 #' @param ctx TBD
 #' @param sampleSet TBD
 #' @param measures TBD
-#' @param similarityLevels TBD 
+#' @param minIdentity TBD 
 #' @param meanDistanceLevels TBD
 #' @param aggregate TBD
 #' @param minAggregateCount TBD
@@ -295,25 +297,26 @@ mapDiversity <- function (ctx, sampleSet,
 #'  #TBD
 mapConnections <- function (ctx, sampleSet,
                    measures="ALL",
-                   similarityLevels=1.0,
+                   minIdentity=1.0,
                    meanDistanceLevels=0.5,
                    aggregate="Province", minAggregateCount=10,
-                   showNames=TRUE,
-                   markerSize=16,
+                   showNames=TRUE, markerSize=16,
                    width=15, height=15) {
                    
+    aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
     params <- list(
+        analysis.measures=measures,
+        aggegation.levels=aggLevels,
         map.aggregateCountMin=minAggregateCount,
         map.markerSize=markerSize,			# Use this for constant marker size
         #map.markerSize=c(4,40),			# Use this for count-proportional marker size
         map.markerNames=showNames,
-	map.connect.similarity.min=similarityLevels,
+	map.connect.identity.min=minIdentity,
 	map.connect.meanDistance.min=meanDistanceLevels,
         map.size=c(width=width,height=height)
     )
     aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
-    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/connect", plotList=NULL,
-                                 aggregation=aggLevels, measures=measures, params=params)
+    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/connect", params=params)
 }
 
 #############################################################
@@ -337,35 +340,62 @@ mapConnections <- function (ctx, sampleSet,
 #'  #TBD
 mapBarcodeFrequencies <- function (ctx, sampleSet,
                    type=c("bar","pie"),
-                   aggregate="Province", minAggregateCount=10, showNames=TRUE,
-                   markerScale=0.8,
+                   aggregate="Province", minAggregateCount=10, 
+                   showNames=TRUE, markerScale=0.8,
                    width=15, height=15) {
 
+    aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
     mapParams <- list(
+        aggegation.levels=aggLevels,
         map.aggregateCountMin=minAggregateCount,
         map.markerNames=showNames,
-        map.haplo.visualizations=type,        
-        map.haplo.markerScale=markerScale,
+        map.cluster.visualizations=type,        
+        map.cluster.markerScale=markerScale,
         map.size=c(width=width,height=height)
     )
-    aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
-    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/haploFreq", plotList=NULL,
-                                 aggregation=aggLevels, measures=measures, params=mapParams)
+    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/barcodeFrequency", params=mapParams)
 }
+
 #############################################################
 #
-#' Map barcode sharing
+#' Clustering
 #'
 #' @param ctx TBD
 #' @param sampleSet TBD
-#' @param type TBD
-#' @param similarityLevels TBD
-#' @param aggregate TBD
-#' @param minAggregateCount TBD
-#' @param showNames TBD TBD
-#' @param markerScale TBD
+#' @param clusterSet TBD
+#' @param minIdentity TBD
 #' @param clusteringMethod TBD
-#' @param minGroupSize TBD
+#' @param minClusterSize TBD
+#'
+#' @return TBD
+#' @export
+#'
+#' @examples
+#'  #TBD
+findClusters <- function (ctx, sampleSet, clusterSet,
+                   minIdentity=1.0,
+                   clusteringMethod="allNeighbours", 
+                   minClusterSize=10) {
+
+    mapParams <- list(
+        cluster.clusterSet.name=clusterSet,
+        cluster.identity.min=minIdentity,
+        cluster.method=clusteringMethod,
+        cluster.minSize=minClusterSize
+    )
+    ctx <- cluster.findClusters (ctx, sampleSetName=sampleSet, params=mapParams)
+    ctx
+}
+
+#############################################################
+#
+#' Plot graphs of bracode identity, using cluster
+#'
+#' @param ctx TBD
+#' @param sampleSet TBD
+#' @param clusterSet TBD
+#' @param graphLayout TBD
+#' @param weightPower TBD
 #' @param width TBD
 #' @param height TBD
 #'
@@ -374,41 +404,29 @@ mapBarcodeFrequencies <- function (ctx, sampleSet,
 #'
 #' @examples
 #'  #TBD
-mapGroupSharing <- function (ctx, sampleSet,
-                   type=c("bar","pie"),
-                   aggregate="Province", 
-                   minAggregateCount=5, showNames=TRUE, markerScale=0.8,
-                   similarityLevels=1.0, clusteringMethod="allNeighbours", minGroupSize=10,
+plotClusterGraph <- function (ctx, sampleSet, clusterSet,
+                   graphLayout="fr", weightPower=2,
                    width=15, height=15) {
-                   
     mapParams <- list(
-        cluster.identity.thresholds=similarityLevels,
-        cluster.method=clusteringMethod,
-        cluster.identity.minCount=minGroupSize,
-        map.aggregateCountMin=minAggregateCount,
-        map.markerNames=showNames,
-        map.haplo.visualizations=type,        
-        map.haplo.markerScale=markerScale,
+        cluster.clusterSet.name=clusterSet,
+        graph.layoutAlgorithm=graphLayout,
+        graph.weightPower=weightPower,
         map.size=c(width=width,height=height)
     )
-    aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
-    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/haploShare", plotList=NULL,
-                                 aggregation=aggLevels, measures=measures, params=mapParams)
-                   
+    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="graph", params=mapParams)
 }
 
 #############################################################
 #
-#' Map Barcode Group prevalence
+#' Map cluster sharing
 #'
 #' @param ctx TBD
 #' @param sampleSet TBD
-#' @param similarityLevels TBD
+#' @param clusterSet TBD
+#' @param type TBD
 #' @param aggregate TBD
 #' @param minAggregateCount TBD
 #' @param showNames TBD
-#' @param clusteringMethod TBD
-#' @param minGroupSize TBD
 #' @param markerScale TBD
 #' @param width TBD
 #' @param height TBD
@@ -418,26 +436,71 @@ mapGroupSharing <- function (ctx, sampleSet,
 #'
 #' @examples
 #'  #TBD
-mapGroupPrevalence <- function (ctx, sampleSet,
-                   aggregate="Province", 
-                   minAggregateCount=5, showNames=TRUE, markerScale=0.8,
-                   similarityLevels=1.0, clusteringMethod="allNeighbours", minGroupSize=10,
+mapClusterSharing <- function (ctx, sampleSet, clusterSet,
+                   type=c("bar","pie"),
+                   aggregate="Province", minAggregateCount=5, 
+                   showNames=TRUE, markerScale=0.8,
                    width=15, height=15) {
-
+                   
+    aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
     mapParams <- list(
-        cluster.identity.thresholds=similarityLevels,
-        cluster.method=clusteringMethod,
-        cluster.identity.minCount=minGroupSize,
+        cluster.clusterSet.name=clusterSet,
+        aggegation.levels=aggLevels,
         map.aggregateCountMin=minAggregateCount,
         map.markerNames=showNames,
-        map.haplo.visualizations="group",        
-        map.haplo.markerScale=markerScale,
+        map.cluster.visualizations=type,        
+        map.cluster.markerScale=markerScale,
         map.size=c(width=width,height=height)
     )
-    aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
-    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/haploShare", plotList=NULL,
-                                 aggregation=aggLevels, measures=measures, params=mapParams)
+    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/clusterSharing", params=mapParams)
 }
+
+#############################################################
+#
+#' Map Cluster prevalence at different sites, connecting these sites
+#'
+#' @param ctx TBD
+#' @param sampleSet TBD
+#' @param clusterSet TBD
+#' @param aggregate TBD
+#' @param minAggregateCount TBD
+#' @param showNames TBD
+#' @param markerScale TBD
+#' @param width TBD
+#' @param height TBD
+#'
+#' @return TBD
+#' @export
+#'
+#' @examples
+#'  #TBD
+mapClusterPrevalence <- function (ctx, sampleSet, clusterSet,
+                   aggregate="Province", minAggregateCount=5, 
+                   showNames=TRUE, markerScale=0.8,
+                   width=15, height=15) {
+
+    aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
+    mapParams <- list(
+        cluster.clusterSet.name=clusterSet,
+        aggegation.levels=aggLevels,
+        map.aggregateCountMin=minAggregateCount,
+        map.markerNames=showNames,
+        map.cluster.visualizations="cluster",        
+        map.cluster.markerScale=markerScale,
+        map.size=c(width=width,height=height)
+    )
+    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/clusterPrevalence", params=mapParams)
+}
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -556,7 +619,7 @@ plotBarcodeNetwork <- function (ctx, sampleSet,
 #' @param ctx TBD
 #' @param sampleSet TBD
 #' @param attributes TBD
-#' @param similarityLevels TBD
+#' @param minIdentity TBD
 #' @param minGroupSize TBD
 #' @param minConnectionSimilarity TBD
 #' @param graphLayout TBD
@@ -571,7 +634,7 @@ plotBarcodeNetwork <- function (ctx, sampleSet,
 #'  #TBD
 mapGroupGraph <- function (ctx, sampleSet,
                    attributes=NULL,
-                   similarityLevels=1.0,
+                   minIdentity=1.0,
                    minGroupSize=5,
                    minConnectionSimilarity=0.7,
                    graphLayout="fr",
@@ -583,8 +646,8 @@ mapGroupGraph <- function (ctx, sampleSet,
 
 #         ############## PREV ##########################
 #graphParams <- list(
-#    cluster.identity.thresholds=c(1.0,0.95,0.9,0.85,0.8,0.75),
-#    cluster.identity.minCount=5,
+#    cluster.identity.min=1.0,
+#    cluster.minSize=5,
 #    graph.connectIdentityMin=0.7,
 #    graph.layoutAlgorithm="fr",			#"drl", "fr","kk","lgl","mds","graphopt"
 #    graph.weightFunction="identitySquared"

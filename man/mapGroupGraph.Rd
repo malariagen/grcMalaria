@@ -8,7 +8,7 @@ mapGroupGraph(
   ctx,
   sampleSet,
   attributes = NULL,
-  similarityLevels = 1,
+  minIdentity = 1,
   minGroupSize = 5,
   minConnectionSimilarity = 0.7,
   graphLayout = "fr",
@@ -24,7 +24,7 @@ mapGroupGraph(
 
 \item{attributes}{TBD}
 
-\item{similarityLevels}{TBD}
+\item{minIdentity}{TBD}
 
 \item{minGroupSize}{TBD}
 

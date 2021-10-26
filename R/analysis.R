@@ -61,30 +61,27 @@ analysis.createFilteredDataset <- function (ctx, loadFromCache=TRUE) {
 # Create a new context, consisting of the same data as the source context, but filtered to a given sample list
 ###################################################################
 #
-analysis.selectSamplesInContext <- function (ctx, sampleNames) {
+analysis.trimContext <- function (ctx, sampleNames) {
     trimCtx <- list()
-    trimCtx <- analysis.addTrimmedDataset (ctx, "unfiltered", sampleNames, trimCtx)
+    trimCtx <- analysis.addTrimmedDatasetToContext (ctx, "unfiltered", sampleNames, trimCtx)
     if (!is.null(ctx$filtered)) {
-        trimCtx <- analysis.addTrimmedDataset (ctx, "filtered", sampleNames, trimCtx)
+        trimCtx <- analysis.addTrimmedDatasetToContext (ctx, "filtered", sampleNames, trimCtx)
     }
     if (!is.null(ctx$imputed)) {
-        trimCtx <- analysis.addTrimmedDataset (ctx, "imputed", sampleNames, trimCtx)
+        trimCtx <- analysis.addTrimmedDatasetToContext (ctx, "imputed", sampleNames, trimCtx)
     }
     trimCtx$config     <- ctx$config
     trimCtx
 }
 #
-analysis.addTrimmedDataset <- function (ctx, datasetName, sampleNames, trimCtx) {
+analysis.addTrimmedDatasetToContext <- function (ctx, datasetName, sampleNames, trimCtx) {
     # Use only samples that are shared with the original context
     dataset <- ctx[[datasetName]]
     dsSampleNames <- rownames(dataset$meta)
     sampleNames <- sampleNames[which(sampleNames %in% dsSampleNames)]
     #
     trimCtx[[datasetName]] <- list(name=dataset$name)
-    #
-    trimMeta <- dataset$meta[sampleNames,]
-    trimCtx <- meta.setDatasetMeta (trimCtx, datasetName, trimMeta, store=FALSE)
-    #
+    trimCtx <- meta.setDatasetMeta (trimCtx, datasetName, dataset$meta[sampleNames,], store=FALSE)
     if (!is.null(dataset$barcodes)) {
         trimCtx <- barcode.setDatasetBarcodes (trimCtx, datasetName, dataset$barcodes[sampleNames,], store=FALSE)
     }
@@ -109,16 +106,23 @@ analysis.selectSampleSet <- function (ctx, sampleSetName, select) {
 
     # Create a trimmed analysis context containing only data pertaining to the selected samples
     sampleNames <- rownames(sampleMeta)
-    trimCtx <- analysis.selectSamplesInContext (ctx, sampleNames)
+    trimCtx <- analysis.trimContext (ctx, sampleNames)
     
     sampleSet <- list(
         name=sampleSetName,
         select=select,
         samples=sampleNames,
-        ctx=trimCtx
+        ctx=trimCtx,
+        clusters=c()
     )
     ctx$sampleSets[[sampleSetName]] <- sampleSet
     
+    metaOutFolder <- getOutFolder(ctx, c(sampleSetName, "metadata"))
+    metaFilename  <- paste(metaOutFolder, "/meta-", sampleSetName, "-unfiltered.tab", sep="")
+    utils::write.table(trimCtx$unfiltered$meta, file=metaFilename, sep="\t", quote=FALSE, row.names=FALSE)
+    metaFilename  <- paste(metaOutFolder, "/meta-", sampleSetName, "-filtered.tab", sep="")
+    utils::write.table(trimCtx$filtered$meta, file=metaFilename, sep="\t", quote=FALSE, row.names=FALSE)
+
     unfilteredCount <- length(sampleNames)
     filteredCount <- nrow(trimCtx$filtered$meta)
     print(paste0("Selected ", unfilteredCount, " samples for dataset '", sampleSetName, "', including ", filteredCount, " quality filtered samples"))
@@ -129,67 +133,54 @@ analysis.selectSampleSet <- function (ctx, sampleSetName, select) {
 # Execute
 ###################################################################
 #
-analysis.executeOnSampleSet <- function(ctx, sampleSetName, tasks, plotList, aggregation, measures, params) {
+analysis.executeOnSampleSet <- function(ctx, sampleSetName, tasks, params) {
     if (!sampleSetName %in% names(ctx$sampleSets)) {
         stop(paste("Sample set not initialized:", sampleSetName))
     }
-    sampleSet <- ctx$sampleSets[[sampleSetName]]
-    analysisName <- sampleSet$name
-    print(paste("Analysis:", analysisName))
-    
-    # Get the trimmed analysis context containing only data pertaining to the selected samples
-    sampleNames <- sampleSet$samples
-    trimCtx <- sampleSet$ctx
+    print(paste("Analyzing sample set:", sampleSetName))
+    measures    <- analysis.getParamIfDefined ("analysis.measures", params)
+    aggregation <- analysis.getParamIfDefined ("aggegation.levels", params)
 
     # Resolve all the automatic rendering in the plots
-    if (!is.null(plotList)) {
-        plotList <- resolveAutomaticRenderingInPlots (trimCtx$meta, plotList)
-    }
-
-    metaFilename  <- paste(getOutFolder(ctx, analysisName), "/meta-", analysisName, "-unfiltered.tab", sep="")
-    utils::write.table(trimCtx$unfiltered$meta, file=metaFilename, sep="\t", quote=FALSE, row.names=FALSE)
-    metaFilename  <- paste(getOutFolder(ctx, analysisName), "/meta-", analysisName, "-filtered.tab", sep="")
-    utils::write.table(trimCtx$filtered$meta, file=metaFilename, sep="\t", quote=FALSE, row.names=FALSE)
+    plotList <- NULL	# TODO - plots are not yet implemented, will pass them through the params
+    #if (!is.null(plotList)) {
+    #    # Get the trimmed analysis context containing only data pertaining to the selected samples
+    #    sampleSet <- ctx$sampleSets[[sampleSetName]]
+    #    plotList <- resolveAutomaticRenderingInPlots (sampleSet$ctx$meta, plotList)
+    #}
 
     # Execute computations and plots with different tasks
     for (tIdx in 1:length(tasks)) {
+        # Split the task if there is a method part in it
         tParts <- unlist(strsplit(tasks[tIdx], "/"))
         task <- tParts[1]
         method <- NULL
         if (length(tParts)>1) {
             method <- tParts[2]
         }
-        print(paste(analysisName, "-", task, ifelse(is.null(method), "", method)))
+        print(paste(sampleSetName, "-", ifelse(is.null(method), task, paste(task, method, sep="/"))))
 
         # Execute the task
-        datasetName <- "imputed"
         if (task == "njt") {
-            njt.execute (trimCtx, "imputed", analysisName)
-            njt.executePlots (trimCtx, analysisName, plotList)
+            njt.execute (ctx, sampleSetName)
+            njt.executePlots (ctx, sampleSetName, plotList)
 
         } else if (task == "pca") {
-            pca.execute (trimCtx, "imputed", analysisName, method)
-            pca.executePlots (trimCtx, analysisName, method, plotList)
+            pca.execute (ctx, sampleSetName, method)
+            pca.executePlots (ctx, sampleSetName, method, plotList)
 
         } else if (task == "graph") {
-            graph.execute (trimCtx, "imputed", analysisName, params)
-            graph.executePlots (trimCtx, "imputed", analysisName, plotList, params)
+            clusterGraph.execute (ctx, sampleSetName, plotList, params)
 
         } else if (task == "haploNet") {
-            haploNet.execute (trimCtx, "imputed", analysisName, plotList, params)
+            haploNet.execute (ctx, sampleSetName, plotList, params)
 
         } else if (task == "map") {
-            if (method == "drug") {
-                map.execute(trimCtx, "unfiltered", analysisName, method, aggregation, measures, params)
-            } else if (method == "sampleCount") {
-                map.execute(trimCtx, "unfiltered", analysisName, method, aggregation, measures, params)
-                map.execute(trimCtx, "filtered", analysisName, method, aggregation, measures, params)
-            } else {
-                map.execute(trimCtx, "imputed", analysisName, method, aggregation, measures, params)
-            }
+            map.execute(ctx, sampleSetName, method, aggregation, measures, params)
+
         } else {
             stop(paste("Invalid analysis task:", task))
         }
     }
-    print(paste("Analysis", analysisName, "completed"))
+    print(paste("Analysis", sampleSetName, "completed"))
 }

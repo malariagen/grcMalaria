@@ -1,102 +1,111 @@
-
 ###############################################################################
 # Cluster Analysis 
 ###############################################################################
 #
 # Main entry point- load stored clusters, or identify them from scratch if they are not stored
 #
-cluster.findbyIdentity <- function (ctx, datasetName, analysisName, thresholdValue, params) {
-    dataset <- ctx[[datasetName]]    			#; print(thresholdValue)
-    clustersData <- cluster.getClustersData (ctx, analysisName, thresholdValue)
-    if (!is.null(clustersData)) {
-        return (clustersData)
+cluster.findClusters <- function (userCtx, sampleSetName, params) {
+    if (!sampleSetName %in% names(userCtx$sampleSets)) {
+        stop(paste("Sample set not initialized:", sampleSetName))
     }
-    thresholdLabel <- cluster.getIdentityLevelLabel (thresholdValue)
+    sampleSet <- userCtx$sampleSets[[sampleSetName]]
+    ctx <- sampleSet$ctx
+    config <- ctx$config
 
-    # Create graph from connectivity data
-    distData <- dataset$distance			#; print(nrow(distData))
-    edgeData <- graph.getWeightedEdgeData (distData, thresholdValue, params)	#; print(nrow(edgeData))
-    nodeNames <- unique(c(as.character(edgeData$Sample1),as.character(edgeData$Sample2)))
-    nodeCount <- length(nodeNames)			#; print (paste(length(nodeNames),length(unique(edgeData$Sample1)),length(unique(edgeData$Sample2))))
-    nodeData <- data.frame(NodeName=nodeNames, Count=rep(1,nodeCount), NodeType=rep("sample",nodeCount))
-    gr <- igraph::graph_from_data_frame(edgeData, directed=FALSE, vertices=nodeData)	#; print(paste("processClusters",thresholdValue))
+    clusterSetName    <- analysis.getParam ("cluster.clusterSet.name", params)	#; print(clusterSetName)
+    minIdentityLevels <- analysis.getParam ("cluster.identity.min", params) 	#; print(minIdentityLevels)
+    method            <- analysis.getParam ("cluster.method", params)		#; print(method)
+    print(paste("Clustering Method:",method))
+    
+    clusterSetInfos <- list()
+    for (idIdx in 1:length(minIdentityLevels)) {
+        minIdentity <- minIdentityLevels[idIdx]
+        minIdentityLabel <- getMinIdentityLabel (minIdentity)
 
-    # Identify all clusters of sufficient size
-    communityMethods <- c("louvain")
-    method <- analysis.getParam ("cluster.method", params)
-    if (method == "allNeighbours") {
-        clustersList <- cluster.findAllNeighbourClusters (gr, params)
-    } else if (method %in% communityMethods) {
-        clustersList <- cluster.findGraphCommunities (gr, method, params)
-    } else {
-        stop (paste("Invalid method specified in parameter 'cluster.method':", method))
-    }
+        # Determine what clustering approach must be used.
+        # TODO - At the moment, only graph-based clustering methods are implemented, but this may be extended later.
+        clustersData <- NULL
+        if (method %in% cluster.graphMethods) {
+            clustersData <- cluster.findClustersFromGraph (ctx, clusterSetName, method, minIdentity, params)
+        } else {
+            stop (paste("Invalid method specified in parameter 'cluster.method':", method))
+        }
+    
+        # Sort clusters by descending size, and label them in order, appending the sequence number to the cluster set name
+        clustersData <- clustersData[rev(order(clustersData$Count)),]		#; print(head(clustersData))
+        clusterSetName <- analysis.getParam ("cluster.clusterSet.name", params)	#; print(clusterSetName)
+        clustersData$ClusterId <- paste(clusterSetName, 
+                                        formatC(seq(1,nrow(clustersData)), width=3, format="d", flag="0"), sep="-")
+        rownames(clustersData) <- clustersData$ClusterId			#; print(head(clustersData))
+        clustersData <- as.data.frame(clustersData[,c("ClusterId","Count","SampleList")])
 
-    clCount <- length(clustersList)					#; print(clCount)
-    if (clCount == 0) {
-        print(paste("No clusters of desired minimum side were found at identity threshold", thresholdValue))
-        return (NULL)
+        # Write out result files
+        dataFileSuffix <- paste("", sampleSetName, clusterSetName, minIdentityLabel, sep="-")
+        dataFolder  <- getOutFolder(ctx, sampleSetName, 
+                                    c("cluster", "data", clusterSetName, minIdentityLabel))
+    
+        # Write out cluster definitions
+        clustersDataFile <- paste0(dataFolder, "/clusters", dataFileSuffix, ".tab")
+        utils::write.table(clustersData, file=clustersDataFile, quote=TRUE, sep="\t", row.names=FALSE, col.names=TRUE)
+
+        # Write out sample/cluster association
+        memberData <- cluster.getMemberData (clustersData)
+        memberDataFile <- paste0(dataFolder, "/clusterMembers", dataFileSuffix, ".tab")
+        writeSampleData(memberData, memberDataFile)
+
+        # Write out cluster stats
+        statsData <- cluster.getClusterStats (ctx, clustersData, memberData)
+        statsDataFile <- paste0(dataFolder, "/clusterStats", dataFileSuffix, ".tab")
+        writeSampleData(statsData, statsDataFile)
+        
+        # Keep the cluster info for storing in the context
+        clusterSetInfo <- list(clusterSetName=clusterSetName,
+                               sampleSetName=sampleSetName,
+                               minIdentity=minIdentity,
+                               clusters=clustersData, 
+                               members=memberData, 
+                               stats=statsData)
+        clusterSetInfos[[minIdentityLabel]] <- clusterSetInfo
     }
     
-    # Turn the list of clusters into a data frame    
-    sampleCounts <- integer(clCount)
-    sampleLists <- character(clCount)
-    for (clIdx in 1 : clCount) {
-        clSampleNames <- clustersList[[clIdx]]
-        sampleCounts[clIdx] <- length(clSampleNames)
-        sampleLists[clIdx] <- paste(clSampleNames, collapse=",")
+    # Reference the cluster data from the context
+    userCtx <- cluster.addClustersSetInContext (userCtx, sampleSetName, clusterSetName, clusterSetInfos)
+    userCtx
+}
+# 
+# Reference the cluster data in the context
+#
+cluster.addClustersSetInContext <- function(userCtx, sampleSetName, clusterSetName, clusterSetInfos) {
+    sampleSetInfo <- userCtx$sampleSets[[sampleSetName]]
+    sampleSetClusters <- sampleSetInfo$clusters
+    if (is.null(sampleSetClusters)) {
+        sampleSetClusters <- list()
+    }								#; print(names(sampleSetClusters))
+    sampleSetClusters[[clusterSetName]] <- clusterSetInfos	#; print(names(sampleSetClusters))
+    sampleSetInfo$clusters <- sampleSetClusters			#; print(names(sampleSetInfo))
+    userCtx$sampleSets[[sampleSetName]] <- sampleSetInfo	#; print(names(userCtx$sampleSets))
+    userCtx
+}
+#
+# Retrieve the cluster data from the context
+#
+cluster.getClustersSetFromContext <- function(userCtx, sampleSetName, clusterSetName) {
+    sampleSetInfo <- userCtx$sampleSets[[sampleSetName]]	#; print(names(userCtx)); print(names(userCtx$sampleSets))
+    if (is.null(sampleSetInfo)) {
+        stop(paste("Sample set not found:", sampleSetName))        
+    }								#; print(names(sampleSetInfo));    
+    sampleSetClusters <- sampleSetInfo$clusters			#; print(names(sampleSetClusters))
+    if (is.null(sampleSetClusters)) {
+        stop(paste("No clusters found for", sampleSetName))        
     }
-    clustersData <- data.frame(Count=sampleCounts, SampleList=sampleLists, stringsAsFactors=FALSE)	#; print(head(clustersData))
-    
-    # Sort clusters by descending size, and label them in order
-    clustersData <- clustersData[rev(order(clustersData$Count)),]	#; print(head(clustersData))
-    clustersData$ClusterId <- paste0("HG",formatC(seq(1,clCount), width=3, format="d", flag="0"))
-    rownames(clustersData) <- clustersData$ClusterId			#; print(head(clustersData))
-
-    # Write out sample/cluster association
-    clusterMembers <- cluster.getMemberData (clustersData)
-    clMembersFile <- cluster.getClustersDataFile(ctx, analysisName, "clusterMembers", thresholdValue)
-    writeSampleData(clusterMembers, clMembersFile)
-
-    # Write out cluster definitions
-    clustersData <- cluster.estimateClusterStats (ctx, clustersData, clusterMembers, dataset$meta)
-    clustersDataFile <- cluster.getClustersDataFile(ctx, analysisName, "clusters", thresholdValue)
-    utils::write.table(clustersData, file=clustersDataFile, quote=TRUE, sep="\t", row.names=FALSE, col.names=TRUE)
-
-    clustersData
-}
-#
-# Get the connectivity thresholds, sorted from highest to lowest
-#
-cluster.getIdentityLevels <- function (params) {
-    identityLevels <- analysis.getParam ("cluster.identity.thresholds", params)
-    identityLevels <- identityLevels[order(identityLevels, decreasing=TRUE)]	#; print(identityLevels)
-    identityLevels
-}
-#
-cluster.getIdentityLevelLabel <- function (thresholdValue) {
-    label <- paste("ge", format(thresholdValue, digits=2, nsmall=2), sep="")
-    label
-}
-#
-# Retrieve clusters from file storage
-#
-cluster.getClustersData <- function(ctx, analysisName, thresholdValue) {
-    clustersDataFile <- cluster.getClustersDataFile(ctx, analysisName, "clusters", thresholdValue, createFolder=FALSE)
-    if (!file.exists(clustersDataFile)) {
-        return(NULL)
+    clusterSetInfos <- sampleSetClusters[[clusterSetName]]
+    if (is.null(clusterSetInfos)) {
+       stop(paste("Invalid cluster set specified:", clusterSetName))        
     }
-    clustersData <- utils::read.table(clustersDataFile, as.is=TRUE, header=TRUE, sep="\t", quote="\"", check.names=FALSE)
-    rownames(clustersData) <- clustersData$ClusterId
-    clustersData
+    clusterSetInfos
 }
 #
-cluster.getClustersDataFile <- function(ctx, analysisName, filePrefix, thresholdValue, createFolder=TRUE) {
-    thresholdLabel <- cluster.getIdentityLevelLabel (thresholdValue)
-    dataFolder  <- getOutFolder(ctx, analysisName, c("cluster", "data", thresholdLabel), createFolder)
-    clustersDataFile <- paste(dataFolder, "/", filePrefix, "-", analysisName, "-", thresholdLabel, ".tab", sep="")
-    clustersDataFile
-}
+#
 #
 cluster.getMemberData <- function(clustersData) {
     cIds <- c()
@@ -114,75 +123,138 @@ cluster.getMemberData <- function(clustersData) {
     rownames(clusterMembers) <- sIds
     clusterMembers
 }
+
+#
+#
+#
+cluster.getClusterPalette <- function(ctx, clusterIds) {
+    # Get the name of all the clusters and sort them 
+    clusterIds <- sort(clusterIds)
+    # Put "Other" at the end if it is there
+    if ("Other" %in% clusterIds) {
+        clusterIds <- c(clusterIds[which(clusterIds != "Other")], "Other")
+    }									#; print(clusterIds)
+    # Construct a palette using the default palette, recycling it if there are too many clusters
+    # and adding white as the last colour for class "Other" (samples not belionging to a cluster)
+    clusterPalette <- rep_len(ctx$config$defaultPalette, length.out=(length(clusterIds)-1))
+    clusterPalette <- c(clusterPalette,"white")
+    names(clusterPalette) <- clusterIds					#; print(clusterPalette)
+    clusterPalette
+}
 #
 # #######################################################################################
+#
 # Descriptive data about the clusters (e.g. prevalence of mutations, etc.)
 #
-cluster.estimateClusterStats <- function(ctx, clustersData, clusterMembers, sampleMeta) {
+cluster.getClusterStats <- function(ctx, clustersData, clusterMembers) {
+    dataset <- ctx$imputed
     config <- ctx$config
+
     clNames <- rownames(clustersData)			#; print(head(clustersData))	#; print(clNames)
     
     # Create a table of stats data
     statsData <- NULL
-    
-    # Get the prevalence/counts columns to be reported- if nothing, don't bother doing calculations
-    prevCols  <- c()
-    if(!is.null(config$cluster.prevalenceColumns)) { 
-        prevCols  <- config$cluster.prevalenceColumns
-    }
-
-    countCols  <- c()
-    if(!is.null(config$cluster.countColumns)) {
-        countCols <- config$cluster.countColumns
-    }
-    cNames <- c(prevCols, countCols)
-
-    if (length(cNames) == 0) {
-        return(clustersData)
-    }
-
+    statsCols <- NULL
     for (clIdx in 1 : length(clNames)) {
         clName <- clNames[clIdx]
-        clSampleNames <- clusterMembers$Sample[which(clusterMembers$Cluster==clName)]
-        clSampleMeta <- sampleMeta[clSampleNames,]
         
-        statValues <- c()
-        # Get the prevalence of drug resistances for this cluster- result is a vector of numeric
-        if (length(prevCols) > 0) {
-            clPrevalence <- meta.getResistancePrevalence (ctx, clSampleMeta, prevCols)
-            clPrevalence <- round(as.numeric(clPrevalence), digits=2)
-            statValues <- c(statValues, clPrevalence)
-	}
+        # Get the metadata for this cluster
+        clSampleNames <- clusterMembers$Sample[which(clusterMembers$Cluster==clName)]
+        clSampleMeta <- dataset$meta[clSampleNames,]
+        
+        # Get the sample count first
+        statsCols <- "Count"
+        statValues <- length(clSampleNames)
 
-        # Get the allele counts for this cluster- result is a vector of integers
-        if (length(countCols) > 0) {			#; print (countCols)
-            clCounts <- meta.getValueCounts (clSampleMeta, countCols)
+        # Get the drug resistance prevalences for this cluster
+        resistanceColumns  <- config$cluster.stats.drugs
+        if (!is.null(resistanceColumns)) { 
+            clPrevalence <- meta.getResistancePrevalence (ctx, clSampleMeta, resistanceColumns)
+            clPrevalence <- format(as.numeric(clPrevalence), digits=2, nsmall=2)
+            statsCols <- c(statsCols, resistanceColumns)
+            statValues <- c(statValues, clPrevalence)
+        }
+
+        # Get the counts for this cluster
+        countColumns  <- config$cluster.stats.alleleCounts
+        if (!is.null(countColumns)) { 
+            clCounts <- meta.getValueCounts (clSampleMeta, countColumns)
+            statsCols <- c(statsCols, countColumns)
             statValues <- c(statValues, clCounts)
         }
+
+        # Get the mutation prevalences for this cluster
+        mutationColumns  <- config$cluster.stats.mutations
+        if (!is.null(mutationColumns)) { 
+            clPrevalence <- meta.getMutationPrevalence (ctx, clSampleMeta, mutationColumns)
+            clPrevalence <- format(as.numeric(clPrevalence), digits=2, nsmall=2)
+            statsCols <- c(statsCols, mutationColumns)
+            statValues <- c(statValues, clPrevalence)
+        }
+
         # Stick the joined row data to the Stats table
+        names(statValues) <- statsCols
         statsData <- rbind(statsData, statValues)
     }
-    colnames(statsData) <- cNames
-    clustersData <- cbind(clustersData, statsData)
-    clustersData
+    statsData <- data.frame(statsData)
+    colnames(statsData) <- statsCols
+    rownames(statsData) <- clNames
+    statsData
 }
 #
-cluster.getClusterStatsText <- function(ctx, clusterName, clustersData) {
+cluster.getClusterStatsText <- function(clusterStats, clustersName) {
+    statsNames  <- colnames(clusterStats)
+    statsValues <- clusterStats[clustersName,]
+    clusterInfoTextLines <- paste(statsNames, statsValues, sep=": ")
+    clusterInfoText <- paste(clusterInfoTextLines, collapse = "\n")		#; print(clusterInfoText)
+    clusterInfoText
+}
+#
+###############################################################################
+# Graph-based Clustering
+###############################################################################
+cluster.graphCommunityMethods <- c("louvain")
+cluster.graphMethods          <- c("allNeighbours", cluster.graphCommunityMethods)
+
+cluster.findClustersFromGraph <- function (ctx, clusterSetName, method, minIdentity, params) {
+    dataset <- ctx$imputed
     config <- ctx$config
-    # Get the prevalence/counts columns to be reported- if nothing, don't bother doing calculations
-    prevCols  <- c()
-    if(!is.null(config$cluster.prevalenceColumns)) {
-        prevCols  <- config$cluster.prevalenceColumns
+
+    # Get a table of pairwise distance/identity values for all pairs of samples that meet the threshold
+    distData  <- dataset$distance						#; print(nrow(distData))
+    edgeData <- clusterGraph.getPairwiseIdentityData (distData, minIdentity, params)
+    edgeData$weight <- (edgeData$Identity * edgeData$Identity)			#; print(nrow(edgeData))
+    
+    nodeNames <- unique(c(as.character(edgeData$Sample1),as.character(edgeData$Sample2)))
+    nodeCount <- length(nodeNames)						#; print (paste(length(nodeNames),length(unique(edgeData$Sample1)),length(unique(edgeData$Sample2))))
+    nodeData  <- data.frame(NodeName=nodeNames, Count=rep(1,nodeCount), NodeType=rep("sample",nodeCount))
+    gr <- igraph::graph_from_data_frame(edgeData, directed=FALSE, vertices=nodeData)	#; print(paste("processClusters",minIdentity))
+
+    # Perform clustering from the graph, identifying all clusters of sufficient size
+    if (method == "allNeighbours") {
+        clustersList <- cluster.findAllNeighbourClusters (gr, params)
+    } else if (method %in% cluster.graphCommunityMethods) {
+        clustersList <- cluster.findGraphCommunities (gr, method, params)
     }
-    countCols  <- c()
-    if(!is.null(config$cluster.countColumns)) { 
-        countCols <- config$cluster.countColumns
+    
+    # Check if we actually found any clusters
+    clCount <- length(clustersList)						#; print(clCount)
+    if (clCount == 0) {
+        print(paste("No clusters of desired minimum side were found at identity threshold", minIdentity))
+        return (NULL)
     }
-    inclCols <- c("Count", prevCols, countCols)
-    inclVals <- clustersData[clusterName,inclCols]
-    statTextLines <- paste(inclCols, inclVals, sep=": ")
-    statText <- paste(unlist(statTextLines), collapse = "\n")
-    statText
+    
+    # Turn the list of clusters into a data frame    
+    sampleCounts <- integer(clCount)
+    sampleLists <- character(clCount)
+    for (clIdx in 1 : clCount) {
+        clSampleNames <- clustersList[[clIdx]]
+        sampleCounts[clIdx] <- length(clSampleNames)
+        sampleLists[clIdx] <- paste(clSampleNames, collapse=",")
+    }
+    clustersData <- data.frame(Count=sampleCounts, SampleList=sampleLists, 
+                               stringsAsFactors=FALSE)				#; print(head(clustersData))
+    clustersData
 }
 #
 # #######################################################################################
@@ -197,7 +269,7 @@ cluster.findAllNeighbourClusters <- function (gr, params) {
     nodeCnt <- length(igraph::V(wg))    		#; print(paste("nodeCnt",nodeCnt))
 
     # Identify all clusters with >= minCount samples
-    minCount <- analysis.getParam ("cluster.identity.minCount", params)
+    minCount <- analysis.getParam ("cluster.minSize", params)
     clList <- list()
     while (nodeCnt > 0) {				#; print(nodeCnt)
         #
@@ -242,14 +314,13 @@ cluster.findAllNeighbourConnectedNodes <- function (gr, curr, nodes) {
 # Clustering Method: Community Analysis.
 #
 cluster.findGraphCommunities <- function (gr, method, params) {
-
     partition <- igraph::cluster_louvain(gr, weights=igraph::E(gr)$weight) 
     nodeComms <- partition$membership
     commIds <- sort(as.integer(unique(nodeComms)))
     sampleNames <- names(igraph::V(gr))
     #names(nodeComms) <- sampleNames
     
-    minCount <- analysis.getParam ("cluster.identity.minCount", params)
+    minCount <- analysis.getParam ("cluster.minSize", params)
     clList <- list()
     for (clIdx in 1:length(commIds)) {
         commId <- commIds[clIdx]

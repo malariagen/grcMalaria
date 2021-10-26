@@ -8,7 +8,7 @@ mapConnections(
   ctx,
   sampleSet,
   measures = "ALL",
-  similarityLevels = 1,
+  minIdentity = 1,
   meanDistanceLevels = 0.5,
   aggregate = "Province",
   minAggregateCount = 10,
@@ -25,7 +25,7 @@ mapConnections(
 
 \item{measures}{TBD}
 
-\item{similarityLevels}{TBD}
+\item{minIdentity}{TBD}
 
 \item{meanDistanceLevels}{TBD}
 

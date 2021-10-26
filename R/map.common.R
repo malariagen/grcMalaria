@@ -7,16 +7,29 @@ GID_COLUMNS     <- c("Country", "AdmDiv1_GID", "AdmDiv2_GID")
 # Common Routines for Map Generation.
 ################################################################################
 #
-map.execute <- function(ctx, datasetName, analysisName, mapType, aggregation, measures, params) {
+map.execute <- function(userCtx, sampleSetName, mapType, aggregation, measures, params) {
 
-    if (mapType %in% c("sampleCount", "diversity", "drug", "mutation")) {
-        markerMap.execute (ctx, datasetName, analysisName, mapType, aggregation, measures, params)
+    if (mapType %in% c("drug", "mutation")) {
+        markerMap.execute (userCtx, "unfiltered", sampleSetName, mapType, aggregation, measures, params)
+        
+    } else if (mapType == "diversity") {
+        markerMap.execute (userCtx, "imputed",    sampleSetName, mapType, aggregation, measures, params)
+        
+    } else if (mapType == "sampleCount") {
+        markerMap.execute (userCtx, "unfiltered", sampleSetName, mapType, aggregation, measures, params)
+        markerMap.execute (userCtx, "filtered",   sampleSetName, mapType, aggregation, measures,   params)
         
     } else if (mapType == "connect") {
-        connectMap.execute (ctx, datasetName, analysisName, mapType, aggregation, measures, params)
+        connectMap.execute (userCtx, "imputed",   sampleSetName, mapType, aggregation, measures, params)
         
-    } else if (mapType %in% c("haploFreq","haploShare")) {
-        haploMap.execute (ctx, datasetName, analysisName, mapType, aggregation, measures, params)
+    } else if (mapType == "barcodeFrequency") {
+        clusterMap.execute (userCtx, "imputed",   sampleSetName, mapType, aggregation, measures, params)
+
+    } else if (mapType == "clusterSharing") {
+        clusterMap.execute (userCtx, "imputed",   sampleSetName, mapType, aggregation, measures, params)
+
+    } else if (mapType == "clusterPrevalence") {
+        clusterMap.execute (userCtx, "imputed",   sampleSetName, mapType, aggregation, measures, params)
 
     } else {
         stop(paste("Invalid map type:", mapType))

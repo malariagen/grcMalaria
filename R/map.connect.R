@@ -11,15 +11,18 @@ connectMap.getConnectednessMeasures <- function() {
 # Map Aggregated Measure Analysis
 ################################################################################
 #
-connectMap.execute <- function(ctx, datasetName, analysisName, mapType, aggregation, measures, params) {
+connectMap.execute <- function(userCtx, datasetName, sampleSetName, mapType, aggregation, measures, params) {
+    sampleSet <- userCtx$sampleSets[[sampleSetName]]
+    ctx <- sampleSet$ctx
     dataset <- ctx[[datasetName]]
+    
     # Get the output folders
-    dataOutFolder <- getOutFolder(ctx, analysisName, c(paste("map", mapType, sep="-"), "data"))
+    dataOutFolder <- getOutFolder(ctx, sampleSetName, c(paste("map", mapType, sep="-"), "data"))
     # Get the sample metadata
     sampleMeta <- dataset$meta
     # Build the map necessary to display these samples
     # Construct a base plot for completing subsequent maps
-    baseMapInfo <- map.buildBaseMap (ctx, datasetName, analysisName, sampleMeta, dataOutFolder, params)
+    baseMapInfo <- map.buildBaseMap (ctx, datasetName, sampleSetName, sampleMeta, dataOutFolder, params)
     
     # If "similarity" is one of the measures, remove it and add one measure for each similarity threshold (e.g. "similarity-ge0.80")
     measures <- connectMap.expandMeasures(measures, params)
@@ -30,8 +33,8 @@ connectMap.execute <- function(ctx, datasetName, analysisName, mapType, aggregat
         aggLevelIdx <- aggLevel + 1
 
         # Get the aggregated data for the aggregation units
-        aggUnitData <- map.getAggregationUnitData (ctx, datasetName, aggLevel, analysisName, mapType, params, dataOutFolder)	#; print(aggUnitData)
-        aggUnitPairData <- connectMap.estimateMeasures (ctx, datasetName, analysisName, aggLevel, aggUnitData, mapType, measures, params, dataOutFolder)	#; print(aggUnitPairData)
+        aggUnitData <- map.getAggregationUnitData (ctx, datasetName, aggLevel, sampleSetName, mapType, params, dataOutFolder)	#; print(aggUnitData)
+        aggUnitPairData <- connectMap.estimateMeasures (ctx, datasetName, sampleSetName, aggLevel, aggUnitData, mapType, measures, params, dataOutFolder)	#; print(aggUnitPairData)
 
         for (mIdx in 1:length(measures)) {
             measure <- measures[mIdx]						#; print(measure)
@@ -95,9 +98,9 @@ connectMap.execute <- function(ctx, datasetName, analysisName, mapType, aggregat
     	    
     	        # Save to file. the size in inches is given in the config.
     	        mapSize  <- analysis.getParam ("map.size", params)
-    	        plotFolder <- getOutFolder(ctx, analysisName, c(paste("map", mapType, sep="-"), "plots"))
+    	        plotFolder <- getOutFolder(ctx, sampleSetName, c(paste("map", mapType, sep="-"), "plots"))
                 aggLabel <- map.getAggregationLabels(aggLevel)
-                graphicFilenameRoot  <- paste(plotFolder, paste("map", analysisName, aggLabel, measure, sep="-"), sep="/")
+                graphicFilenameRoot  <- paste(plotFolder, paste("map", sampleSetName, aggLabel, measure, sep="-"), sep="/")
                 if (connectMap.filterThreshold (measure)) {
     	            graphicFilenameRoot  <- paste(graphicFilenameRoot, paste("ge", format(minValue, digits=2, nsmall=2), sep=""), sep="-")
                 }
@@ -120,7 +123,7 @@ connectMap.expandMeasures <- function(measures, params) {
     for (mIdx in 1:length(measures)) {
         measure <- measures[mIdx]
         if (measure == "similarity") {
-            levels <- as.numeric(analysis.getParam("map.connect.similarity.min", params))
+            levels <- as.numeric(analysis.getParam("map.connect.identity.min", params))
             for (lIdx in 1 : length(levels)) {
                 measureStr <- paste("similarity-ge", format(levels[lIdx], digits=2, nsmall=2), sep="")
                 result <- c(result, measureStr)
@@ -140,7 +143,7 @@ connectMap.getMeasureLevel <- function(measure, prefix) {
     as.numeric(level)
 }
 
-connectMap.estimateMeasures <- function (ctx, datasetName, analysisName, aggLevel, aggUnitData, mapType, measures, params, dataFolder)	{
+connectMap.estimateMeasures <- function (ctx, datasetName, sampleSetName, aggLevel, aggUnitData, mapType, measures, params, dataFolder)	{
     dataset <- ctx[[datasetName]]
     sampleMeta   <- dataset$meta
     barcodeData  <- dataset$barcodes
@@ -184,7 +187,7 @@ connectMap.estimateMeasures <- function (ctx, datasetName, analysisName, aggLeve
     colnames(aggUnitPairData) <- c("Unit1", "Unit2", "UnitName1", "UnitName2", "Lat1", "Lon1", "Lat2", "Lon2", measures)
     
     # Write out the aggregation unit data to file
-    aggDataFilename  <- paste(dataFolder, "/AggregatedPairData-", analysisName, "-", aggLevel, ".tab", sep="")
+    aggDataFilename  <- paste(dataFolder, "/AggregatedPairData-", sampleSetName, "-", aggLevel, ".tab", sep="")
     utils::write.table(aggUnitPairData, file=aggDataFilename, sep="\t", quote=FALSE, row.names=FALSE)
 
     aggUnitPairData

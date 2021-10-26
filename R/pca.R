@@ -11,10 +11,12 @@ phylo.pcCount <- 10
 #     pca/ppca		Analyzes each barcode variant as a variable
 ################################################################################
 #
-pca.execute <- function(ctx, sampleSetName, analysisName, pcaMethod) {
-    dataset <- ctx[[datasetName]]
+pca.execute <- function(userCtx, sampleSetName, pcaMethod) {
+    sampleSet <- userCtx$sampleSets[[sampleSetName]]
+    ctx <- sampleSet$ctx
+    dataset <- ctx$imputed
 
-    dataFolder <- getOutFolder(ctx, analysisName, c(pcaMethod, "data"))
+    dataFolder <- getOutFolder(ctx, sampleSetName, c(pcaMethod, "data"))
     sampleMeta <- dataset$meta
     distData  <- dataset$distance
     genosData <- dataset$genos
@@ -53,29 +55,32 @@ pca.execute <- function(ctx, sampleSetName, analysisName, pcaMethod) {
         
     rownames(pcScores) <- sampleNames
     colnames(pcScores) <- pcNames
-    pcaScoresFilename  <- paste(dataFolder, pca.getDataFileName("", analysisName, pcaMethod), sep="/")
+    pcaScoresFilename  <- paste(dataFolder, pca.getDataFileName("", sampleSetName, pcaMethod), sep="/")
     writeSampleData(pcScores, pcaScoresFilename)
 
     pcaVarData <- data.frame(pcNames, varExplained[1:length(pcNames)])
     colnames(pcaVarData) <- c("PC","VarianceExplained")
-    pcaVarFilename  <- paste(dataFolder, pca.getDataFileName("-varExplained", analysisName, pcaMethod), sep="/")
+    pcaVarFilename  <- paste(dataFolder, pca.getDataFileName("-varExplained", sampleSetName, pcaMethod), sep="/")
     utils::write.table(pcaVarData, file=pcaVarFilename, sep="\t", quote=FALSE, row.names=FALSE)
 }
 
-pca.getDataFileName <- function(suffix, analysisName, pcaMethod) {
-    fn <- paste("pca", suffix, "-", analysisName, "-", pcaMethod, ".tab", sep="")
+pca.getDataFileName <- function(suffix, sampleSetName, pcaMethod) {
+    fn <- paste("pca", suffix, "-", sampleSetName, "-", pcaMethod, ".tab", sep="")
     fn
 }
 
-pca.executePlots <- function(ctx, sampleSetName, analysisName, pcaMethod, plotList) {
-    dataset <- ctx[[datasetName]]
+pca.executePlots <- function(userCtx, sampleSetName, pcaMethod, plotList) {
+    sampleSet <- userCtx$sampleSets[[sampleSetName]]
+    ctx <- sampleSet$ctx
+    dataset <- ctx$imputed
+
     sampleMeta <- dataset$meta
 
-    dataFolder <- getOutFolder(ctx, analysisName, c(pcaMethod, "data"))
-    plotsRootFolder <- getOutFolder(ctx, analysisName, c(pcaMethod, "plots"))
+    dataFolder      <- getOutFolder(ctx, sampleSetName, c(pcaMethod, "data"))
+    plotsRootFolder <- getOutFolder(ctx, sampleSetName, c(pcaMethod, "plots"))
 
     # Read in the PCA results and attach them to the metadata
-    pcaScoresFilename  <- paste(dataFolder, pca.getDataFileName("", analysisName, pcaMethod), sep="/")
+    pcaScoresFilename  <- paste(dataFolder, pca.getDataFileName("", sampleSetName, pcaMethod), sep="/")
     pcaData <- readSampleData(pcaScoresFilename)
     sampleMeta <- cbind(sampleMeta, pcaData)
     
@@ -84,7 +89,7 @@ pca.executePlots <- function(ctx, sampleSetName, analysisName, pcaMethod, plotLi
     for (plotIdx in 1:length(plotList)) {
         plotDef <- plotList[[plotIdx]]
         plotDefName <- plotDef$name
-        plotName <- paste(analysisName, plotDefName, pcaMethod, sep="-")
+        plotName <- paste(sampleSetName, plotDefName, pcaMethod, sep="-")
         print (paste("PCA Plot: ",plotName))
   
         # Set up the graphical attributes for rendering

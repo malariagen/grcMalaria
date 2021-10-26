@@ -10,8 +10,8 @@ mapSampleCounts(
   aggregate = "Province",
   minAggregateCount = 1,
   markerSize = c(4, 40),
-  colourBy = "Province",
   showNames = TRUE,
+  colourBy = "Province",
   width = 15,
   height = 15
 )
@@ -29,9 +29,9 @@ mapSampleCounts(
 all markers will be that size; if two values are passed, they will be used as the min 
 and max sizeof the marker, whose size will reflect the number of samples.}
 
-\item{colourBy}{Shows the aggregation level to be used to colour the markers (Country or Province)}
-
 \item{showNames}{If TRUE, labels are shown with the name of the aggregation unit (Province or District)}
+
+\item{colourBy}{Shows the aggregation level to be used to colour the markers (Country or Province)}
 
 \item{width}{The width (in inches) of the map image.}
 

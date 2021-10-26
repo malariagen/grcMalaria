@@ -1,3 +1,11 @@
+#
+# Utility to make a label corresponding to a minimum identity level (e.g. 0.55 -> "ge0.55")
+#
+getMinIdentityLabel <- function (minIdentity) {
+    minIdentityLabel <- paste("ge", format(minIdentity, digits=2, nsmall=2), sep="")
+    minIdentityLabel
+}
+
 # #####################################################################################
 # Folder utilities
 # #####################################################################################

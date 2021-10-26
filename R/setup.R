@@ -165,8 +165,9 @@ setup.buildSpeciesConfig <- function (species, version, chrLengths, drugs,
         drugs = drugs,
         drugResistancePositions = drugResistancePositions,
         drugResistanceMutations = drugResistanceMutations,
-        cluster.prevalenceColumns = drugs,
-        cluster.countColumns = countColumns
+        cluster.stats.drugs = drugs,
+        cluster.stats.mutations = drugResistanceMutations,
+        cluster.stats.alleleCounts = countColumns
     )
     config
 }

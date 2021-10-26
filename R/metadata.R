@@ -88,7 +88,21 @@ meta.getAllelePrevalence <- function (ctx, sampleMeta, positionNames, alleles, p
     result
 }
 #
-meta.getValueCounts <- function (sampleMeta, colNames, params=NULL) {
+meta.getMutationPrevalence <- function (ctx, sampleMeta, mutationNames, params) {
+    positionNames <- c()
+    alleles <- c()
+    for (mIdx in 1:length(mutationNames)) {
+        mut <- mutationNames[mIdx]
+        pos <- substring(mut, 1, nchar(mut)-1)
+        all <- substring(mut, nchar(mut), nchar(mut))
+        positionNames <- c(positionNames, pos)
+        alleles <- c(alleles, all)
+    }											#; print(positionNames); print(alleles)
+    prevData <- meta.getAllelePrevalence (ctx, sampleMeta, positionNames, alleles)	#; print(prevData)
+    prevData
+}
+#
+meta.getValueCounts <- function (sampleMeta, colNames, params=NULL, excludeMultiValues=TRUE) {
     if (is.null(colNames) || (length(colNames) == 0)) {
         return (c());
     }
@@ -100,11 +114,16 @@ meta.getValueCounts <- function (sampleMeta, colNames, params=NULL) {
     for (mIdx in 1:length(colNames)) {
         colName <- colNames[mIdx]			#; print(colName)
         vals <- sampleMeta[,colName]			#; print(vals)
-        vals <- table(vals[which(vals!="-")])		#; print(vals)
-        vals <- sort(vals, decreasing=TRUE)
-        nVals <- names(vals)
-        valPairs <- paste(nVals, vals, sep=":")
-        valPairStr <- paste(valPairs, collapse = "\n")
+        vals <- vals[which(!(vals %in% c("-","<NA>")))]	#; print(vals)
+        if (excludeMultiValues) {
+            multi <- which(grepl(",", vals))		#; print(multi)
+            vals <- vals[-multi]			#; print(vals)
+        }
+        counts <- table(vals)				#; print(counts)
+        counts <- sort(counts, decreasing=TRUE)
+        nVals <- names(counts)
+        valPairs <- paste(nVals, counts, sep=":")
+        valPairStr <- paste(valPairs, collapse="; ")
         result <- c(result, valPairStr)			#; print(valPairStr)
     }
     result <- as.character(result)
