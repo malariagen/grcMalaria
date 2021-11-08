@@ -200,7 +200,7 @@ clusterMap.plotMap <- function (ctx, info, params) {
     }
     plotFolder <- getOutFolder(ctx, info$sampleSetName, plotSubFolders)
     graphicFilename  <- paste(plotFolder, paste(plotFilename,"png",sep="."), sep="/")
-    ggplot2::ggsave(plot=mapPlot, filename=graphicFilename, device="png", width=mapSize[1], height=mapSize[2], units="in", dpi=300)
+    ggplot2::ggsave(plot=mapPlot, filename=graphicFilename, device="png", width=mapSize$width, height=mapSize$height, units="in", dpi=300)
 }
 
 ###############################################################################

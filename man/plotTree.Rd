@@ -2,53 +2,28 @@
 % Please edit documentation in R/public.R
 \name{plotTree}
 \alias{plotTree}
-\title{Plot a tree (e.g. neighbour joining tree, NJT)}
+\title{Plot Trees}
 \usage{
-plotTree(
-  ctx,
-  sampleSet,
-  method = "njt",
-  attributes = NULL,
-  width = 15,
-  height = 15,
-  colouredBranches = TRUE,
-  showLeaves = TRUE,
-  nonLeafColour = "darkgrey",
-  branchThickness = 3,
-  popLabels = FALSE,
-  sampleLabels = FALSE
-)
+plotTree(ctx, sampleSet, type = "njt", plots, width = 15, height = 15)
 }
 \arguments{
 \item{ctx}{TBD}
 
 \item{sampleSet}{TBD TBD}
 
-\item{method}{TBD}
+\item{type}{TBD}
 
-\item{attributes}{TBD}
+\item{plots}{TBD}
 
 \item{width}{TBD}
 
 \item{height}{TBD}
-
-\item{colouredBranches}{TBD}
-
-\item{showLeaves}{TBD}
-
-\item{nonLeafColour}{TBD}
-
-\item{branchThickness}{TBD}
-
-\item{popLabels}{TBD}
-
-\item{sampleLabels}{TBD}
 }
 \value{
 TBD
 }
 \description{
-Plot a tree (e.g. neighbour joining tree, NJT)
+Plot Trees
 }
 \examples{
  #TBD

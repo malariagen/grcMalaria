@@ -105,7 +105,7 @@ connectMap.execute <- function(userCtx, datasetName, sampleSetName, mapType, agg
     	            graphicFilenameRoot  <- paste(graphicFilenameRoot, paste("ge", format(minValue, digits=2, nsmall=2), sep=""), sep="-")
                 }
                 ggplot2::ggsave(plot=mapPlot, filename=paste(graphicFilenameRoot,"png",sep="."), device="png", 
-                                width=mapSize[1], height=mapSize[2], units="in", dpi=300)
+                                width=mapSize$width, height=mapSize$height, units="in", dpi=300)
             }
         }
     }

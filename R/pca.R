@@ -12,15 +12,15 @@ phylo.pcCount <- 10
 #     pca/ppca		Analyzes each barcode variant as a variable
 ################################################################################
 #
-pca.execute <- function(userCtx, sampleSetName, pcaMethod, params) {
+pca.execute <- function(userCtx, sampleSetName, method, params) {
     sampleSet <- userCtx$sampleSets[[sampleSetName]]
     ctx <- sampleSet$ctx
     dataset <- ctx$imputed
     #
     # Get the output folders
     #
-    dataFolder      <- getOutFolder(ctx, sampleSetName, c(pcaMethod, "data"))
-    plotsRootFolder <- getOutFolder(ctx, sampleSetName, c(pcaMethod, "plots"))
+    dataFolder      <- getOutFolder(ctx, sampleSetName, c(method, "data"))
+    plotsRootFolder <- getOutFolder(ctx, sampleSetName, c(method, "plots"))
     #
     # Get the metadata, distance and genotypes
     #
@@ -35,17 +35,17 @@ pca.execute <- function(userCtx, sampleSetName, pcaMethod, params) {
     #
     pcScores <- NULL
     varExplained <- NULL
-    if (pcaMethod == "PCoA") {
+    if (method == "PCoA") {
         pcaResults <- stats::cmdscale(as.matrix(distData), eig=TRUE, k=phylo.pcCount)
         pcScores <- pcaResults$points
         varExplained <- pcaResults$eig / sum(abs(pcaResults$eig))
     } else  {
         genos <- as.matrix(genosData)
         pcaResults <- NULL
-        if (pcaMethod == "bpca") {
-            pcaResults <- pcaMethods::pca(genos, method=pcaMethod, center=TRUE, scale="uv", nPcs=phylo.pcCount, maxSteps=500)
+        if (method == "bpca") {
+            pcaResults <- pcaMethods::pca(genos, method=method, center=TRUE, scale="uv", nPcs=phylo.pcCount, maxSteps=500)
         } else {
-            pcaResults <- pcaMethods::pca(genos, method=pcaMethod, center=TRUE, scale="uv", nPcs=phylo.pcCount)
+            pcaResults <- pcaMethods::pca(genos, method=method, center=TRUE, scale="uv", nPcs=phylo.pcCount)
         }
         pcScores <- pcaResults@scores
         varExplained <- pcaResults@R2
@@ -55,12 +55,12 @@ pca.execute <- function(userCtx, sampleSetName, pcaMethod, params) {
     #
     rownames(pcScores) <- sampleNames
     colnames(pcScores) <- pcNames
-    pcaScoresFilename  <- paste(dataFolder, pca.getDataFileName("", sampleSetName, pcaMethod), sep="/")
+    pcaScoresFilename  <- paste(dataFolder, pca.getDataFileName("", sampleSetName, method), sep="/")
     writeSampleData(pcScores, pcaScoresFilename)
     #
     pcaVarData <- data.frame(pcNames, varExplained[1:length(pcNames)])
     colnames(pcaVarData) <- c("PC","VarianceExplained")
-    pcaVarFilename  <- paste(dataFolder, pca.getDataFileName("-varExplained", sampleSetName, pcaMethod), sep="/")
+    pcaVarFilename  <- paste(dataFolder, pca.getDataFileName("-varExplained", sampleSetName, method), sep="/")
     utils::write.table(pcaVarData, file=pcaVarFilename, sep="\t", quote=FALSE, row.names=FALSE)
     #
     # Attach the PCA results to the metadata
@@ -73,7 +73,7 @@ pca.execute <- function(userCtx, sampleSetName, pcaMethod, params) {
     for (plotIdx in 1:length(plotList)) {
         plotDef <- plotList[[plotIdx]]
         plotDefName <- plotDef$name
-        plotName <- paste(sampleSetName, plotDefName, pcaMethod, sep="-")
+        plotName <- paste(sampleSetName, plotDefName, method, sep="-")
         print (paste("PCA Plot: ",plotName))
         #
         # Set up the graphical attributes for rendering
@@ -102,15 +102,15 @@ pca.execute <- function(userCtx, sampleSetName, pcaMethod, params) {
 
         # Do the plots
         plotsFolder  <- getSubFolder (plotsRootFolder, plotDefName)
-        pca.plotThreeComponents (plotName, plotMetadata, legendData, "PC1", "PC2", "PC3", plotsFolder);
-        pca.plotThreeComponents (plotName, plotMetadata, legendData, "PC1", "PC4", "PC5", plotsFolder);
-        pca.plotThreeComponents (plotName, plotMetadata, legendData, "PC1", "PC6", "PC7", plotsFolder);
-        pca.plotThreeComponents (plotName, plotMetadata, legendData, "PC1", "PC8", "PC9", plotsFolder);
+        pca.plotPrincipalComponents (plotName, plotMetadata, legendData, "PC1", "PC2", "PC3", plotsFolder, params);
+        pca.plotPrincipalComponents (plotName, plotMetadata, legendData, "PC1", "PC4", "PC5", plotsFolder, params);
+        pca.plotPrincipalComponents (plotName, plotMetadata, legendData, "PC1", "PC6", "PC7", plotsFolder, params);
+        pca.plotPrincipalComponents (plotName, plotMetadata, legendData, "PC1", "PC8", "PC9", plotsFolder, params);
     }
 }
 
-pca.getDataFileName <- function(suffix, sampleSetName, pcaMethod) {
-    fn <- paste("pca", suffix, "-", sampleSetName, "-", pcaMethod, ".tab", sep="")
+pca.getDataFileName <- function(suffix, sampleSetName, method) {
+    fn <- paste("pca", suffix, "-", sampleSetName, "-", method, ".tab", sep="")
     fn
 }
 
@@ -118,9 +118,8 @@ pca.getDataFileName <- function(suffix, sampleSetName, pcaMethod) {
 ###############################################################################
 # Principal Component plotting
 ###############################################################################
-
 pca.plotPrincipalComponents <- function(plotName, sampleMeta, legendData, 
-                                    pcAIdx, pcBIdx, pcCIdx=NULL, plotsFolder) {
+                                    pcAIdx, pcBIdx, pcCIdx=NULL, plotsFolder, params) {
     plotThree <- !is.null(pcCIdx)
     sampleCount <- nrow(sampleMeta)
   
@@ -137,10 +136,10 @@ pca.plotPrincipalComponents <- function(plotName, sampleMeta, legendData,
         plotFilename  <- paste(plotFilename, pcCIdx, sep="_")
     }
     print(paste("Plotting ", plotFilename))
+    plotSize <- analysis.getParam ("plot.size", params)		#; print(plotSize)
     graphicFilenameRoot  <- paste(plotsFolder, plotFilename, sep="/")
-    initializeGraphics (getGraphicsFilename (graphicFilenameRoot), widthInch=12, heightInch=8, resolution=300)
-    #print(colnames(sampleMeta))
-  
+    initializeGraphics (getGraphicsFilename (graphicFilenameRoot), 
+                        widthInch=plotSize$width, heightInch=plotSize$height, resolution=300)
     if (plotThree) {
         graphics::par(mfrow=c(2,2))
     } else {
@@ -171,7 +170,7 @@ pca.plotPrincipalComponents <- function(plotName, sampleMeta, legendData,
             grDevices::dev.off()
             plotFilename  <- paste("pca-",plotName,"-legend", sep="")
             graphicFilenameRoot  <- paste(plotsFolder, plotFilename, sep="/")
-            initializeGraphics (getGraphicsFilename (graphicFilenameRoot), widthInch=8, heightInch=12, resolution=300)
+            initializeGraphics (getGraphicsFilename (graphicFilenameRoot), widthInch=plotSize$width, heightInch=plotSize$height, resolution=300)
             graphics::plot.new()
             graphics::par(mar=c(0,0,0,0))
             graphics::legend("topleft", ncol=1, inset=0.05, cex=1.0, 
@@ -181,13 +180,5 @@ pca.plotPrincipalComponents <- function(plotName, sampleMeta, legendData,
         }
     }
     grDevices::dev.off()
-}
-
-pca.plotThreeComponents <- function(plotName, sampleMeta, legendData, pcAIdx, pcBIdx, pcCIdx, plotsFolder) {
-    pca.plotPrincipalComponents (plotName, sampleMeta, legendData, pcAIdx, pcBIdx, pcCIdx, plotsFolder)
-}
-
-pca.plotTwoComponents <- function(plotName, sampleMeta, legendData, pcAIdx, pcBIdx, plotsFolder) {
-    pca.plotPrincipalComponents (plotName, sampleMeta, legendData, pcAIdx, pcBIdx, NULL, plotsFolder)
 }
 

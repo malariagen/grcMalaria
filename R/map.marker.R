@@ -157,7 +157,7 @@ markerMap.execute <- function(userCtx, datasetName, sampleSetName, mapType, aggr
                 aggLabel <- paste(aggLabel, datasetName, sep="-")
             }												#;print(aggLabel)
             graphicFilenameRoot  <- paste(plotFolder, paste("map", sampleSetName, aggLabel, measure, sep="-"), sep="/")	#;print(graphicFilenameRoot)
-            ggplot2::ggsave(plot=mapPlot, filename=paste(graphicFilenameRoot,"png",sep="."), device="png", width=mapSize[1], height=mapSize[2], units="in", dpi=300)
+            ggplot2::ggsave(plot=mapPlot, filename=paste(graphicFilenameRoot,"png",sep="."), device="png", width=mapSize$width, height=mapSize$height, units="in", dpi=300)
         }
     }
 }

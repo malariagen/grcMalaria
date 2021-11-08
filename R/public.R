@@ -147,7 +147,7 @@ mapSampleCounts <- function (ctx, sampleSet,
         map.markerColourAggLevel=colourAggLevel,
         map.markerSize=markerSize,
         map.markerNames=showNames,
-        plot.size=c(width=width,height=height)
+        plot.size=list(width=width,height=height)
     )
     analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/sampleCount", params=params)
 }
@@ -191,7 +191,7 @@ mapDrugResistancePrevalence <- function (ctx, sampleSet,
         map.markerSize=markerSize,			# Use this for constant marker size
         #map.markerSize=c(4,40),			# Use this for count-proportional marker size
         map.markerNames=showNames,
-        plot.size=c(width=width,height=height)
+        plot.size=list(width=width,height=height)
     )
     analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/drug", params=params)
 }
@@ -229,7 +229,7 @@ mapMutationPrevalence <- function (ctx, sampleSet,
         map.markerSize=markerSize,			# Use this for constant marker size
         #map.markerSize=c(4,40),			# Use this for count-proportional marker size
         map.markerNames=showNames,
-        plot.size=c(width=width,height=height)
+        plot.size=list(width=width,height=height)
     )
     analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/mutation", params=params)
 }
@@ -269,7 +269,7 @@ mapDiversity <- function (ctx, sampleSet,
         #map.markerSize=c(4,40),			# Use this for count-proportional marker size
         map.markerNames=showNames,
         map.diversity.markerColours=markerColours,
-        plot.size=c(width=width,height=height)
+        plot.size=list(width=width,height=height)
     )
     analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/diversity", params=params)
 }
@@ -313,7 +313,7 @@ mapConnections <- function (ctx, sampleSet,
         map.markerNames=showNames,
 	map.connect.identity.min=minIdentity,
 	map.connect.meanDistance.min=meanDistanceLevels,
-        plot.size=c(width=width,height=height)
+        plot.size=list(width=width,height=height)
     )
     aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
     analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/connect", params=params)
@@ -351,7 +351,7 @@ mapBarcodeFrequencies <- function (ctx, sampleSet,
         map.markerNames=showNames,
         map.cluster.visualizations=type,        
         map.cluster.markerScale=markerScale,
-        plot.size=c(width=width,height=height)
+        plot.size=list(width=width,height=height)
     )
     analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/barcodeFrequency", params=mapParams)
 }
@@ -411,7 +411,7 @@ plotClusterGraph <- function (ctx, sampleSet, clusterSet,
         cluster.clusterSet.name=clusterSet,
         graph.layoutAlgorithm=graphLayout,
         graph.weightPower=weightPower,
-        plot.size=c(width=width,height=height)
+        plot.size=list(width=width,height=height)
     )
     analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="graph", params=mapParams)
 }
@@ -450,7 +450,7 @@ mapClusterSharing <- function (ctx, sampleSet, clusterSet,
         map.markerNames=showNames,
         map.cluster.visualizations=type,        
         map.cluster.markerScale=markerScale,
-        plot.size=c(width=width,height=height)
+        plot.size=list(width=width,height=height)
     )
     analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/clusterSharing", params=mapParams)
 }
@@ -487,7 +487,7 @@ mapClusterPrevalence <- function (ctx, sampleSet, clusterSet,
         map.markerNames=showNames,
         map.cluster.visualizations="cluster",        
         map.cluster.markerScale=markerScale,
-        plot.size=c(width=width,height=height)
+        plot.size=list(width=width,height=height)
     )
     analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/clusterPrevalence", params=mapParams)
 }
@@ -533,84 +533,20 @@ plotPrincipalComponents <- function (ctx, sampleSet,
                                      width=15, height=15) {
     plotParams <- list(
         plot.plotList=plots,
-        plot.size=c(width=width,height=height)
+        plot.size=list(width=width,height=height)
     )
     task <- paste("pca", type, sep="/")
     analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks=task, params=plotParams)
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-##############################################################
-#
-#                 T O   B E   D O N E
-#
-##############################################################
-# 
 #############################################################
 #
-#' Plot a tree (e.g. neighbour joining tree, NJT)
+#' Plot Trees
 #'
 #' @param ctx TBD
 #' @param sampleSet TBD TBD
-#' @param method TBD
-#' @param attributes TBD
-#' @param width TBD
-#' @param height TBD
-#' @param colouredBranches TBD
-#' @param showLeaves TBD
-#' @param nonLeafColour TBD
-#' @param branchThickness TBD
-#' @param popLabels TBD
-#' @param sampleLabels TBD
-#'
-#' @return TBD
-#' @export
-#'
-#' @examples
-#'  #TBD
-plotTree <- function (ctx, sampleSet, method="njt",
-                   attributes=NULL,
-                   width=15,
-                   height=15,
-                   colouredBranches=TRUE,
-                   showLeaves=TRUE,
-                   nonLeafColour="darkgrey",
-                   branchThickness=3,
-                   popLabels=FALSE,
-                   sampleLabels=FALSE) {}
-
-# Q: DEFINE A DEFAULT SET OF ATTRIBUTES
-
-#         ############## PREV ##########################
-#analysis.execute(ctx=ctx, datasetList=list(dataset.Laos), tasks=c("njt"), 
-#                plotList=list(plot.def$byProvince, plot.def$byProvinceK1P1, plot.def$byK13, plot.def$byPm23))
-#
-#analysis.execute(ctx=ctx, datasetList=list(dataset.Laos), tasks=c("pca/PCoA"), 
-#                plotList=list(plot.def$byProvince, plot.def$byProvinceK1P1, plot.def$byK13, plot.def$byPm23))
-#         ############## PREV ##########################
-
-
-#############################################################
-#
-#' Plot Population structure (barcode networks)
-#'
-#' @param ctx TBD
-#' @param sampleSet TBD
-#' @param attributes TBD
-#' @param aggregateCountMin TBD
+#' @param type TBD
+#' @param plots TBD
 #' @param width TBD
 #' @param height TBD
 #'
@@ -619,50 +555,13 @@ plotTree <- function (ctx, sampleSet, method="njt",
 #'
 #' @examples
 #'  #TBD
-plotBarcodeNetwork <- function (ctx, sampleSet,
-                   attributes=NULL,
-                   aggregateCountMin=10,
-                   width=15,
-                   height=15) {}
-
-
-#         ############## PREV ##########################
-#haploNetParams <- list(
-#    haploNet.minHaploCount=3
-#)
-#
-#analysis.execute(ctx=ctx, datasetList=list(dataset.Laos), tasks="haploNet", params=haploNetParams, 
-#		plotList=list(plot.def$byProvince, plot.def$byK13, plot.def$byPm23))
-#         ############## PREV ##########################
-
-#############################################################
-#
-#' Plot barcode similarity graphs
-#'
-#' @param ctx TBD
-#' @param sampleSet TBD
-#' @param attributes TBD
-#' @param minIdentity TBD
-#' @param minGroupSize TBD
-#' @param minConnectionSimilarity TBD
-#' @param graphLayout TBD
-#' @param weighting TBD
-#' @param width TBD
-#' @param height TBD
-#'
-#' @return TBD
-#' @export
-#'
-#' @examples
-#'  #TBD
-mapGroupGraph <- function (ctx, sampleSet,
-                   attributes=NULL,
-                   minIdentity=1.0,
-                   minGroupSize=5,
-                   minConnectionSimilarity=0.7,
-                   graphLayout="fr",
-                   weighting="identitySquared",
-                   width=15,
-                   height=15) {}
-
-# Q: No min aggregation count?
+plotTree <- function (ctx, sampleSet, 
+                      type="njt", plots, 
+                      width=15, height=15) {
+    plotParams <- list(
+        plot.plotList=plots,
+        plot.size=list(width=width,height=height)
+    )
+    task <- paste("tree", type, sep="/")
+    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks=task, params=plotParams)
+}

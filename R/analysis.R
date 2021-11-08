@@ -163,9 +163,9 @@ analysis.executeOnSampleSet <- function(ctx, sampleSetName, tasks, params) {
         # Execute the task
         if (task == "pca") {
             pca.execute (ctx, sampleSetName, method, params)
-        #    pca.executePlots (ctx, sampleSetName, method, plotList)
 
-        #} else if (task == "njt") {
+        } else if (task == "tree") {
+            tree.execute (ctx, sampleSetName, method, params)
         #    njt.execute (ctx, sampleSetName)
         #    njt.executePlots (ctx, sampleSetName, plotList)
         #

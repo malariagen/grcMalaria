@@ -44,7 +44,7 @@ analysis.defaultParams <- list (
     
     map.markerNames=FALSE,
     map.markerSize=16,
-    plot.size=c(12,12)
+    plot.size=list(width=12,height=12)
 )
 
 
