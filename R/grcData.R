@@ -94,12 +94,9 @@ grcData.standardize <- function (grcSampleData, species, version) {
 # Read sample metadata file
 #
 grcData.readExcel <- function (grcDataFile, grcDataSheet) {
-    GRC_SAMPLE_ID_COL  <- "SampleId"				# TODO  This may need to be configured globally
-    grcData <- data.frame(readxl::read_excel(grcDataFile, sheet=grcDataSheet, col_names=FALSE, col_types="text", .name_repair="minimal"))
-    colnames(grcData) <- grcData[1,]				#; print(str(sampleMeta))
-    grcData <- grcData[-1,]
+    GRC_SAMPLE_ID_COL  <- "SampleId"	# TODO  This may need to be configured globally
+    grcData <- readExcelData(grcDataFile, grcDataSheet)
     sampleNames <- grcData[, GRC_SAMPLE_ID_COL]			#; print (sampleNames)
     rownames(grcData) <- sampleNames				#; print(str(sampleMeta))
     grcData
 }
-

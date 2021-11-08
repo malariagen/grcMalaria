@@ -150,7 +150,7 @@ markerMap.execute <- function(userCtx, datasetName, sampleSetName, mapType, aggr
                        axis.title.x = ggplot2::element_text(vjust = -0.2))
 	    
             # Save to file. the size in inches is given in the config.
-            mapSize  <- analysis.getParam ("map.size", params)
+            mapSize  <- analysis.getParam ("plot.size", params)
             plotFolder <- getOutFolder(ctx, sampleSetName, c(paste("map", mapType, sep="-"), "plots"))
             aggLabel <- map.getAggregationLabels(aggLevel)
             if (mapType=="sampleCount") {

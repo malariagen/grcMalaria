@@ -1,4 +1,5 @@
 phylo.pcCount <- 10
+#
 ###############################################################################
 # PCA Analysis.
 # Computes and plots PCA, using a pairwise distance matrix as an input.
@@ -11,33 +12,30 @@ phylo.pcCount <- 10
 #     pca/ppca		Analyzes each barcode variant as a variable
 ################################################################################
 #
-pca.execute <- function(userCtx, sampleSetName, pcaMethod) {
+pca.execute <- function(userCtx, sampleSetName, pcaMethod, params) {
     sampleSet <- userCtx$sampleSets[[sampleSetName]]
     ctx <- sampleSet$ctx
     dataset <- ctx$imputed
-
-    dataFolder <- getOutFolder(ctx, sampleSetName, c(pcaMethod, "data"))
+    #
+    # Get the output folders
+    #
+    dataFolder      <- getOutFolder(ctx, sampleSetName, c(pcaMethod, "data"))
+    plotsRootFolder <- getOutFolder(ctx, sampleSetName, c(pcaMethod, "plots"))
+    #
+    # Get the metadata, distance and genotypes
+    #
     sampleMeta <- dataset$meta
     distData  <- dataset$distance
     genosData <- dataset$genos
-    
-    # Compute the Principal components, and join them to the metadata
+    #
+    # Compute the Principal components
+    #
     pcNames <- paste("PC", seq(1:phylo.pcCount), sep="")
     sampleNames <- rownames(sampleMeta)
-    
+    #
     pcScores <- NULL
     varExplained <- NULL
-        
-    if (pcaMethod == "umap") {
-        #genos <- as.matrix(genosData)
-        #pcaResults <- umap(genos)
-        #pcScores <- pcaResults$layout
-        
-        
-        
-        #pcScores <- pcaResults@scores
-        #varExplained <- pcaResults@R2
-    } else if (pcaMethod == "PCoA") {
+    if (pcaMethod == "PCoA") {
         pcaResults <- stats::cmdscale(as.matrix(distData), eig=TRUE, k=phylo.pcCount)
         pcScores <- pcaResults$points
         varExplained <- pcaResults$eig / sum(abs(pcaResults$eig))
@@ -52,56 +50,50 @@ pca.execute <- function(userCtx, sampleSetName, pcaMethod) {
         pcScores <- pcaResults@scores
         varExplained <- pcaResults@R2
     }
-        
+    #
+    # Write out the data to file
+    #
     rownames(pcScores) <- sampleNames
     colnames(pcScores) <- pcNames
     pcaScoresFilename  <- paste(dataFolder, pca.getDataFileName("", sampleSetName, pcaMethod), sep="/")
     writeSampleData(pcScores, pcaScoresFilename)
-
+    #
     pcaVarData <- data.frame(pcNames, varExplained[1:length(pcNames)])
     colnames(pcaVarData) <- c("PC","VarianceExplained")
     pcaVarFilename  <- paste(dataFolder, pca.getDataFileName("-varExplained", sampleSetName, pcaMethod), sep="/")
     utils::write.table(pcaVarData, file=pcaVarFilename, sep="\t", quote=FALSE, row.names=FALSE)
-}
-
-pca.getDataFileName <- function(suffix, sampleSetName, pcaMethod) {
-    fn <- paste("pca", suffix, "-", sampleSetName, "-", pcaMethod, ".tab", sep="")
-    fn
-}
-
-pca.executePlots <- function(userCtx, sampleSetName, pcaMethod, plotList) {
-    sampleSet <- userCtx$sampleSets[[sampleSetName]]
-    ctx <- sampleSet$ctx
-    dataset <- ctx$imputed
-
-    sampleMeta <- dataset$meta
-
-    dataFolder      <- getOutFolder(ctx, sampleSetName, c(pcaMethod, "data"))
-    plotsRootFolder <- getOutFolder(ctx, sampleSetName, c(pcaMethod, "plots"))
-
-    # Read in the PCA results and attach them to the metadata
-    pcaScoresFilename  <- paste(dataFolder, pca.getDataFileName("", sampleSetName, pcaMethod), sep="/")
-    pcaData <- readSampleData(pcaScoresFilename)
-    sampleMeta <- cbind(sampleMeta, pcaData)
-    
-    # Execute the plots
-    #print(plotList)
+    #
+    # Attach the PCA results to the metadata
+    #
+    sampleMeta <- cbind(sampleMeta, pcScores)
+    #
+    # Get the plot definitions and execute them
+    #
+    plotList <- analysis.getParam ("plot.plotList", params)		#; print(plotList)
     for (plotIdx in 1:length(plotList)) {
         plotDef <- plotList[[plotIdx]]
         plotDefName <- plotDef$name
         plotName <- paste(sampleSetName, plotDefName, pcaMethod, sep="-")
         print (paste("PCA Plot: ",plotName))
-  
+        #
         # Set up the graphical attributes for rendering
-        #print(colnames(sampleMeta))
-        #print(plotDef$render)
-        dataList <- applyGraphicalAttributes(sampleMeta, plotDef$render)
-        plotMetadata <- dataList$meta
-        legendData <- dataList$legend
-        
+        #
+        ga <- graphics.getGraphicalAttributes(sampleMeta, plotDef$attributes)
+        gaData <- ga$sampleAttrData
+        legendData <- ga$legendData
+        #
+        # Merge graphics attributes and metadata
+        #
+        plotMetadata <- cbind(sampleMeta, gaData)
+        #
+        # Write out the plot data (facilitate debug)
+        #
+        plotMetadataFilename  <- paste0(dataFolder, "/", "plotData-", plotName, ".tab")
+        writeSampleData(plotMetadata, plotMetadataFilename)
+        #
         # Order the samples so they are plotted in the correct stack order
-        #print(plotMetadata$plot__order)
-        excludedIdx <- which(as.numeric(plotMetadata$plot__order) < 0)
+        #
+        excludedIdx <- which(plotMetadata$plot__order <= 0)        	#; print(plotMetadata$plot__order)
         if (length(excludedIdx) > 0) {
             print(paste("Excluded samples:", length(excludedIdx)))
             plotMetadata <- plotMetadata[-excludedIdx,]
@@ -117,20 +109,27 @@ pca.executePlots <- function(userCtx, sampleSetName, pcaMethod, plotList) {
     }
 }
 
+pca.getDataFileName <- function(suffix, sampleSetName, pcaMethod) {
+    fn <- paste("pca", suffix, "-", sampleSetName, "-", pcaMethod, ".tab", sep="")
+    fn
+}
+
+
 ###############################################################################
 # Principal Component plotting
 ###############################################################################
+
 pca.plotPrincipalComponents <- function(plotName, sampleMeta, legendData, 
                                     pcAIdx, pcBIdx, pcCIdx=NULL, plotsFolder) {
     plotThree <- !is.null(pcCIdx)
     sampleCount <- nrow(sampleMeta)
   
     #Get the graphical parameters for each sample
-    sampleColours <- sampleMeta$plot__colour
-    samplePch     <- sampleMeta$plot__pch
-    sampleSize    <- sampleMeta$plot__size
-    sampleLwd     <- sampleMeta$plot__lwd
-    sampleLcolours<- sampleMeta$plot__lcolour
+    sampleColours <- sampleMeta$plot__colour		#; print(sampleColours)
+    samplePch     <- sampleMeta$plot__pch		#; print(samplePch)
+    sampleSize    <- sampleMeta$plot__size		#; print(sampleSize)
+    sampleLwd     <- sampleMeta$plot__lwd		#; print(sampleLwd)
+    sampleLcolours<- sampleMeta$plot__lcolour		#; print(sampleLcolours)
   
     # Plot
     plotFilename  <- paste("pca-",plotName,"-",pcAIdx,"_",pcBIdx, sep="")
@@ -159,21 +158,28 @@ pca.plotPrincipalComponents <- function(plotName, sampleMeta, legendData,
         y <- sampleMeta[,pcCIdx]
         plot(x,y, xlab=pcAIdx, ylab=pcCIdx, cex.lab=0.8, cex.axis=0.8, bg=sampleColours, col=sampleLcolours, pch=samplePch, lwd=sampleLwd, cex=sampleSize)
         plot(x,y,xaxt="n",xlab="", ylab="",yaxt="n",type="n",bty="n")
+
+        graphics::legend("topleft", ncol=1, inset=0.05, cex=1.0, 
+                         legendData$label, pt.bg=legendData$colour, col=legendData$lcolour, 
+                         pch=as.numeric(legendData$pch), pt.lwd=as.numeric(legendData$lwd), 
+                         pt.cex=as.numeric(legendData$size))
+    } else {
+        #
+        # Do a separate legend- useful if the names are long
+        #
+        if (!is.null(legendData)) {
+            grDevices::dev.off()
+            plotFilename  <- paste("pca-",plotName,"-legend", sep="")
+            graphicFilenameRoot  <- paste(plotsFolder, plotFilename, sep="/")
+            initializeGraphics (getGraphicsFilename (graphicFilenameRoot), widthInch=8, heightInch=12, resolution=300)
+            graphics::plot.new()
+            graphics::par(mar=c(0,0,0,0))
+            graphics::legend("topleft", ncol=1, inset=0.05, cex=1.0, 
+                         legendData$label, pt.bg=legendData$colour, col=legendData$lcolour, 
+                         pch=as.numeric(legendData$pch), pt.lwd=as.numeric(legendData$lwd), 
+                         pt.cex=as.numeric(legendData$size))
+        }
     }
-    grDevices::dev.off()
-    
-    # Do a separate legend- useful if the names are long
-    plotFilename  <- paste("pca-",plotName,"-legend", sep="")
-    graphicFilenameRoot  <- paste(plotsFolder, plotFilename, sep="/")
-    initializeGraphics (getGraphicsFilename (graphicFilenameRoot), widthInch=8, heightInch=12, resolution=300)
-    #graphics::par(mar=c(1,1,1,1) + 0.1)
-    #plot(x,y,xaxt="n",xlab="", ylab="",yaxt="n",type="n",bty="n")
-    graphics::plot.new()
-    graphics::par(mar=c(0,0,0,0))
-    graphics::legend("topleft", ncol=1, inset=0.05, cex=1.0, 
-             legendData$label, pt.bg=legendData$colour, col=legendData$lcolour, 
-             pch=as.numeric(legendData$pch), pt.lwd=as.numeric(legendData$lwd), 
-             pt.cex=as.numeric(legendData$size))
     grDevices::dev.off()
 }
 

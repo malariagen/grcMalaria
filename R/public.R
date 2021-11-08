@@ -147,7 +147,7 @@ mapSampleCounts <- function (ctx, sampleSet,
         map.markerColourAggLevel=colourAggLevel,
         map.markerSize=markerSize,
         map.markerNames=showNames,
-        map.size=c(width=width,height=height)
+        plot.size=c(width=width,height=height)
     )
     analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/sampleCount", params=params)
 }
@@ -191,7 +191,7 @@ mapDrugResistancePrevalence <- function (ctx, sampleSet,
         map.markerSize=markerSize,			# Use this for constant marker size
         #map.markerSize=c(4,40),			# Use this for count-proportional marker size
         map.markerNames=showNames,
-        map.size=c(width=width,height=height)
+        plot.size=c(width=width,height=height)
     )
     analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/drug", params=params)
 }
@@ -229,7 +229,7 @@ mapMutationPrevalence <- function (ctx, sampleSet,
         map.markerSize=markerSize,			# Use this for constant marker size
         #map.markerSize=c(4,40),			# Use this for count-proportional marker size
         map.markerNames=showNames,
-        map.size=c(width=width,height=height)
+        plot.size=c(width=width,height=height)
     )
     analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/mutation", params=params)
 }
@@ -269,7 +269,7 @@ mapDiversity <- function (ctx, sampleSet,
         #map.markerSize=c(4,40),			# Use this for count-proportional marker size
         map.markerNames=showNames,
         map.diversity.markerColours=markerColours,
-        map.size=c(width=width,height=height)
+        plot.size=c(width=width,height=height)
     )
     analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/diversity", params=params)
 }
@@ -313,7 +313,7 @@ mapConnections <- function (ctx, sampleSet,
         map.markerNames=showNames,
 	map.connect.identity.min=minIdentity,
 	map.connect.meanDistance.min=meanDistanceLevels,
-        map.size=c(width=width,height=height)
+        plot.size=c(width=width,height=height)
     )
     aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
     analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/connect", params=params)
@@ -351,7 +351,7 @@ mapBarcodeFrequencies <- function (ctx, sampleSet,
         map.markerNames=showNames,
         map.cluster.visualizations=type,        
         map.cluster.markerScale=markerScale,
-        map.size=c(width=width,height=height)
+        plot.size=c(width=width,height=height)
     )
     analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/barcodeFrequency", params=mapParams)
 }
@@ -411,7 +411,7 @@ plotClusterGraph <- function (ctx, sampleSet, clusterSet,
         cluster.clusterSet.name=clusterSet,
         graph.layoutAlgorithm=graphLayout,
         graph.weightPower=weightPower,
-        map.size=c(width=width,height=height)
+        plot.size=c(width=width,height=height)
     )
     analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="graph", params=mapParams)
 }
@@ -450,7 +450,7 @@ mapClusterSharing <- function (ctx, sampleSet, clusterSet,
         map.markerNames=showNames,
         map.cluster.visualizations=type,        
         map.cluster.markerScale=markerScale,
-        map.size=c(width=width,height=height)
+        plot.size=c(width=width,height=height)
     )
     analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/clusterSharing", params=mapParams)
 }
@@ -487,9 +487,56 @@ mapClusterPrevalence <- function (ctx, sampleSet, clusterSet,
         map.markerNames=showNames,
         map.cluster.visualizations="cluster",        
         map.cluster.markerScale=markerScale,
-        map.size=c(width=width,height=height)
+        plot.size=c(width=width,height=height)
     )
     analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/clusterPrevalence", params=mapParams)
+}
+
+#############################################################
+#
+#' Graphical Attributes
+#'
+#' @param ctx TBD
+#' @param name TBD
+#' @param field TBD
+#' @param file TBD
+#' @param sheet TBD
+#'
+#' @return TBD
+#' @export
+#'
+#' @examples
+#'  #TBD
+loadGraphicAttributes <- function (ctx, name, field, file, sheet) {
+    ctx <- graphics.loadAttributes (ctx, name, field, file, sheet)
+    ctx
+}
+
+#############################################################
+#
+#' Plot Population structure (PCA)
+#'
+#' @param ctx TBD
+#' @param sampleSet TBD TBD
+#' @param type TBD
+#' @param plots TBD
+#' @param width TBD
+#' @param height TBD
+#'
+#' @return TBD
+#' @export
+#'
+#' @examples
+#'  #TBD
+plotPrincipalComponents <- function (ctx, sampleSet, 
+                                     type="PCoA", plots, 
+                                     width=15, height=15) {
+    plotParams <- list(
+        plot.plotList=plots,
+        plot.size=c(width=width,height=height)
+    )
+    task <- paste("pca", type, sep="/")
+    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks=task, params=plotParams)
 }
 
 
@@ -556,30 +603,6 @@ plotTree <- function (ctx, sampleSet, method="njt",
 #         ############## PREV ##########################
 
 
-
-#############################################################
-#
-#' Plot Population structure (PCA)
-#'
-#' @param ctx TBD
-#' @param sampleSet TBD TBD
-#' @param method TBD
-#' @param attributes TBD
-#' @param width TBD
-#' @param height TBD
-#'
-#' @return TBD
-#' @export
-#'
-#' @examples
-#'  #TBD
-plotPCA <- function (ctx, sampleSet, method="PCoA",
-                   attributes=NULL,
-                   width=15,
-                   height=15) {}
-
-# Q: DEFINE A DEFAULT SET OF ATTRIBUTES
-
 #############################################################
 #
 #' Plot Population structure (barcode networks)
@@ -643,17 +666,3 @@ mapGroupGraph <- function (ctx, sampleSet,
                    height=15) {}
 
 # Q: No min aggregation count?
-
-#         ############## PREV ##########################
-#graphParams <- list(
-#    cluster.identity.min=1.0,
-#    cluster.minSize=5,
-#    graph.connectIdentityMin=0.7,
-#    graph.layoutAlgorithm="fr",			#"drl", "fr","kk","lgl","mds","graphopt"
-#    graph.weightFunction="identitySquared"
-#)
-#
-#analysis.execute(ctx=ctx, datasetList=list(dataset.Laos), tasks="graph", params=graphParams, 
-#                plotList=list(plot.def$byProvince, plot.def$byK13, plot.def$byPm23))
-#         ############## PREV ##########################
-

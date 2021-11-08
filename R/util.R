@@ -77,6 +77,17 @@ convertUnicodeNames <- function (names) {
 }
 #
 # #####################################################################################
+#  Data I/O Utilities - read Excel sheet as data frame
+# #####################################################################################
+#
+readExcelData <- function (xFile, xSheet) {
+    xData <- data.frame(readxl::read_excel(xFile, sheet=xSheet, col_names=FALSE, col_types="text", .name_repair="minimal"))
+    colnames(xData) <- xData[1,]
+    xData <- xData[-1,]
+    xData
+}
+#
+# #####################################################################################
 #  Data I/O Utilities - read/write/filter samples tables data
 # #####################################################################################
 #

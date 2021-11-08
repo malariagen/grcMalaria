@@ -161,14 +161,14 @@ analysis.executeOnSampleSet <- function(ctx, sampleSetName, tasks, params) {
         print(paste(sampleSetName, "-", ifelse(is.null(method), task, paste(task, method, sep="/"))))
 
         # Execute the task
-        if (task == "njt") {
-            njt.execute (ctx, sampleSetName)
-            njt.executePlots (ctx, sampleSetName, plotList)
+        if (task == "pca") {
+            pca.execute (ctx, sampleSetName, method, params)
+        #    pca.executePlots (ctx, sampleSetName, method, plotList)
 
-        } else if (task == "pca") {
-            pca.execute (ctx, sampleSetName, method)
-            pca.executePlots (ctx, sampleSetName, method, plotList)
-
+        #} else if (task == "njt") {
+        #    njt.execute (ctx, sampleSetName)
+        #    njt.executePlots (ctx, sampleSetName, plotList)
+        #
         } else if (task == "graph") {
             clusterGraph.execute (ctx, sampleSetName, plotList, params)
 

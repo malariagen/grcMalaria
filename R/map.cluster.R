@@ -183,7 +183,7 @@ clusterMap.plotMap <- function (ctx, info, params) {
                      axis.title.x=ggplot2::element_text(vjust=-0.2))
      
     # Save to file. the size in inches is given in the params.
-    mapSize  <- analysis.getParam ("map.size", params)
+    mapSize  <- analysis.getParam ("plot.size", params)
 
     clusterSetLabel <- clusterSetInfo$clusterSetName
     aggLabel <- map.getAggregationLabels(aggLevel)
