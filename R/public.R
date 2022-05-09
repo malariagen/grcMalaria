@@ -240,7 +240,7 @@ mapMutationPrevalence <- function (ctx, sampleSet,
 #'
 #' @param ctx TBD
 #' @param sampleSet TBD
-#' @param measures TBD
+#' @param measures can be "ALL", or any vector containing one or more of ("maxHaploFreq","haploHet", "meanSnpHet","medianDistance")
 #' @param aggregate TBD
 #' @param minAggregateCount TBD
 #' @param showNames TBD

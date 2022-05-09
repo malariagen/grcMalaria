@@ -4,9 +4,7 @@
 #
 markerMap.getDiversityMeasures <- function() {
     c("maxHaploFreq",
-      "haploHet1",
-      "haploHet2",
-      "haploHet3",
+      "haploHet",
       "meanSnpHet",
       "medianDistance")
 }
@@ -259,6 +257,10 @@ markerMap.estimateMeasures <- function(ctx, datasetName, aggLevel, aggUnitData, 
     aggUnitData
 }
 
+#
+# Diversity measure estimates from genetic barcodes.
+# Note that this is executed over imputed barcodes, and therefore there is not missingness or het genotypes in the barcodes.
+#
 markerMap.estimateDiversityMeasures <- function (ctx, barcodeData, distData, measures) {
     result <- c()
     for (mIdx in 1:length(measures)) {
@@ -266,19 +268,19 @@ markerMap.estimateDiversityMeasures <- function (ctx, barcodeData, distData, mea
         if (measure == "maxHaploFreq") {
             haplos <- apply(barcodeData,1,paste,collapse="")
             value <- max(table(haplos)) / length(haplos)
-        } else if (measure == "haploHet1") {
+        } else if (measure == "haploHet") {
             haplos <- apply(barcodeData,1,paste,collapse="")
             value <- pegas::heterozygosity(haplos)
-        } else if (measure == "haploHet2") {
-            haplos <- apply(barcodeData,1,paste,collapse="")
-            hets <- sapply(1:1000, function(i) pegas::heterozygosity(haplos[sample(1:length(haplos), 10)]))
-            value <- mean(hets)
-        } else if (measure == "haploHet3") {
-            sCount <- ncol(barcodeData)
-            hets <- sapply(1:100, function(i) pegas::heterozygosity(apply(barcodeData[,sample(1:sCount,10)], 1, paste, collapse="")))
-            #hets <- sapply(1:100, computeHaploHet3, barcodeData)
-            value <- mean(hets)
-        } else if (measure == "meanSnpHet") {	# Mean SNP Het == Mean Distance
+        #} else if (measure == "haploHet2") {
+        #    haplos <- apply(barcodeData,1,paste,collapse="")
+        #    hets <- sapply(1:1000, function(i) pegas::heterozygosity(haplos[sample(1:length(haplos), 10)]))
+        #    value <- mean(hets)
+        #} else if (measure == "haploHet3") {
+        #    sCount <- ncol(barcodeData)
+        #    hets <- sapply(1:100, function(i) pegas::heterozygosity(apply(barcodeData[,sample(1:sCount,10)], 1, paste, collapse="")))
+        #    #hets <- sapply(1:100, computeHaploHet3, barcodeData)
+        #    value <- mean(hets)
+        } else if (measure == "meanSnpHet") {
             hets <- apply(barcodeData, 2, pegas::heterozygosity)
             value <- mean(hets)
         } else if (measure == "medianDistance") {

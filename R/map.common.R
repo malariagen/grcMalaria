@@ -1,4 +1,10 @@
 
+map.colour.border.country <- "black"
+map.colour.border.admdiv1 <- "#B4B4B4"
+map.colour.land  <- "#F1F1F1"
+map.colour.sea   <- "#CDDBDB"
+map.colour.river <- "#CDDBDB"
+
 ADM_DIV_COLUMNS <- c("Country", "AdmDiv1", "AdmDiv2")
 ADM_DIV_LABELS  <- c("Country", "Province", "District")
 GID_COLUMNS     <- c("Country", "AdmDiv1_GID", "AdmDiv2_GID")
@@ -35,91 +41,122 @@ map.execute <- function(userCtx, sampleSetName, mapType, aggregation, measures, 
         stop(paste("Invalid map type:", mapType))
     }
 }
-
 #
 ###############################################################################
 # Creation of the physical/political background map
 ################################################################################
 #
 map.buildBaseMap <- function(ctx, datasetName, analysisName, sampleMeta, dataFolder, params) {
-
-    # Get relevant column names
-    cCountry  <- map.getAggregationColumns(0)
-
-    # Now read the countries and provinces so we can get the contours from GADM
+    #
+    # Read the countries needed in this analysis, so we can get the boundary contours
+    #
     unitList <- list()
+    cCountry  <- map.getAggregationColumns(0)
     countryValues <- sampleMeta[,cCountry]
     countries <- unique(countryValues)
     for (cIdx in 1:length(countries)) {
         country <- countries[cIdx]					#; print(country)
         countryData <- map.getCountryData (country)			#; print(countryData)
         cMeta <- sampleMeta[which(countryValues == country),]
+        #
+        # Get a list of provinces (AdmDiv1) in this country (references by GID)
+        #
         adm1GIDValues <- as.character(cMeta$AdmDiv1_GID)
-        adm1GIDs <- unique(adm1GIDValues)				#; print(provIds)
-        unitList[[country]] <- list(name=countryData$name, iso2=countryData$iso2, iso3=countryData$iso3, adm1GIDs=adm1GIDs) 
+        adm1GIDs <- unique(adm1GIDValues)
+        unitList[[cIdx]] <- list(name=countryData$CountryName, iso2=countryData$IsoCode2, iso3=countryData$IsoCode3, adm1GIDs=adm1GIDs) 
     }
-    
-    # Read the country borders for the countries involved
-    gadmFolder <- getCacheFolder(ctx, c("map", "gadm"))
-    gadmFolder <- paste(gadmFolder, "/", sep="")
-    cIso3 <- map.iso2ToIso3 (countries)
-    gadm0 <- GADMTools::gadm_sp_loadCountries(cIso3, level=0, basefile=gadmFolder)
-    
-    # Read the province borders for the countries involved
-    gadm1Spdf <- NULL
-    gadmBB <- list(xMin=1000, xMax=-1000, yMin=1000, yMax=-1000)
-
+    #
+    # Get the boundaries for all provinces (AdmDiv1) needed for this map, and calculate the bounding box
+    #
+    library(sp)
+    geo <- map.getGeoTables()
+    adm1Spdf <- NULL
+    xMin <- 1000; xMax <- -1000; yMin <- 1000; yMax <- -1000
     for (cIdx in 1:length(countries)) {
-        country <- countries[cIdx]								#; print(country)
-        cl <- unitList[[country]]								#; print(cl)
-        cGadm1 <- GADMTools::gadm_sp_loadCountries(cl$iso3, level=1, basefile=gadmFolder)
-
-        # Select the provinces we need
-        adm1GIDs <- cl$adm1GIDs									#; print(adm1GIDs)
-        cGadm1 <- GADMTools::gadm_subset(cGadm1, level=1, regions=adm1GIDs, usevar="GID_1")	#; print(cGadm1)
-
-        # Append the data to that of other countries
-        cl$gadmAdm1Data <- cGadm1
-        if (is.null(gadm1Spdf)) {
-            gadm1Spdf <- cGadm1$spdf
-        } else {
-            gadm1Spdf <- rbind(gadm1Spdf, cGadm1$spdf)
+        cl <- unitList[[cIdx]]					#; print(cl);
+        #
+        # Filter to get the provinces for this country (used for drawing province boundaries)
+        #
+        cAdm1Lines <- geo$admDiv1.lines[[cl$iso2]]
+        #
+        # Filter to select the provinces we need in the present analysis (used to define a bounding box)
+        #
+        anAdm1GIDs <- cl$adm1GIDs						#; print(adm1GIDs)
+        anAdm1Lines <- cAdm1Lines[cAdm1Lines@data$GADM_GID_1 %in% anAdm1GIDs,]
+        for (idx in 1:nrow(anAdm1Lines)) {
+            #
+            # Get the bounding box for the province
+            # (a 2-column matrix; the first column has the minimum, the second the maximum values; rows represent the spatial dimensions)
+            #
+            #print(class(anAdm1Lines@polygons))
+            #print(class(anAdm1Lines@polygons[[idx]]))
+            bbx <- sp::bbox(anAdm1Lines@polygons[[idx]])	#; print(bbx) 
+            xMin <- min(xMin,bbx[1,1]); xMax <- max(xMax,bbx[1,2]); yMin <- min(yMin,bbx[2,1]); yMax <- max(yMax,bbx[2,2])	#; print(c(xMin,xMax,yMin,yMax)) 
         }
-        # Get the bounding box and merge with the other countries
-        bb <- GADMTools::gadm_getBbox (cGadm1)
-        gadmBB <- list(xMin=min(gadmBB$xMin,bb[1]), xMax=max(gadmBB$xMax,bb[3]), 
-                       yMin=min(gadmBB$yMin,bb[2]), yMax=max(gadmBB$yMax,bb[4]))		#; print(gadmBB)
+        #
+        # Append the data to those of other countries
+        #
+        cl$gadmAdm1Data <- anAdm1Lines
+        if (is.null(adm1Spdf)) {
+            adm1Spdf <- anAdm1Lines
+        } else {
+            adm1Spdf <- rbind(adm1Spdf, anAdm1Lines)
+        }
     }
-    
+    adm1_df <- ggplot2::fortify(adm1Spdf)		#; print(colnames(adm1Spdf))
+    #
+    # Construct the bounding box for this analysis
     # Adjust the bounding box to give some margin
-    xMar <- (gadmBB$xMax-gadmBB$xMin)/20
-    yMar <- (gadmBB$yMax-gadmBB$yMin)/20
-    gadmBB <- list(xMin=(gadmBB$xMin-xMar), xMax=(gadmBB$xMax+xMar), yMin=(gadmBB$yMin-yMar), yMax=(gadmBB$yMax+yMar))
-    gadmBB$tl <- c(gadmBB$yMax,gadmBB$xMin);    gadmBB$br <- c(gadmBB$yMin,gadmBB$xMax)
-    gadmBB$bl <- c(gadmBB$yMin,gadmBB$xMin);    gadmBB$tr <- c(gadmBB$yMax,gadmBB$xMax)
-    
-    # Crop the country boundaries
-    gadm0 <- GADMTools::gadm_crop(gadm0, xmin=gadmBB$xMin, ymin=gadmBB$yMin, xmax=gadmBB$xMax, ymax=gadmBB$yMax)
-
-    # Prepare the GADM polygons for plotting
-    gadm0_df <- ggplot2::fortify(gadm0$spdf)    	#; print(colnames(gadm0$spdf)); print(colnames(gadm0_df))
-    gadm1_df <- ggplot2::fortify(gadm1Spdf)		#; print(colnames(gadm1Spdf))print(colnames(gadm1_df))
-
-    # Get the background map, and adjust coordinates
-    bgMap <- OpenStreetMap::openmap(gadmBB$tl, gadmBB$br, zoom=NULL, type=c("nps"), minNumTiles=4, mergeTiles=TRUE)
-    ## OSM CRS :: "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +no_defs"
-    bgMap <- OpenStreetMap::openproj(bgMap, projection="+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs")
-
+    #
+    xMar <- (xMax-xMin)/20;    yMar <- (yMax-yMin)/20
+    anBB <- list(xMin=(xMin-xMar), xMax=(xMax+xMar), yMin=(yMin-yMar), yMax=(yMax+yMar))
+    anBB$tl <- c(anBB$yMax, anBB$xMin);    anBB$br <- c(anBB$yMin, anBB$xMax)
+    anBB$bl <- c(anBB$yMin, anBB$xMin);    anBB$tr <- c(anBB$yMax, anBB$xMax)
+    #
+    # Get and Crop the country boundaries
+    #
+    adm0 <- geo$country.lines 
+    adm0 <- raster::crop(adm0, raster::extent(anBB$xMin, anBB$xMax, anBB$yMin, anBB$yMax))
+    adm0_df <- ggplot2::fortify(adm0)    		#; print(colnames(adm0$spdf))
+    #
+    rivers <- geo$river.lines 
+    rivers <- raster::crop(rivers, raster::extent(anBB$xMin, anBB$xMax, anBB$yMin, anBB$yMax))
+    river_df <- NULL
+    if (!is.null(rivers)) {
+        river_df <- ggplot2::fortify(rivers)		#; print(colnames(rivers))
+    }
+    #
+    lakes <- geo$lake.lines				#; print(lakes)
+    lakes <- raster::crop(lakes, raster::extent(anBB$xMin, anBB$xMax, anBB$yMin, anBB$yMax))
+    lakes_df <- NULL
+    if (!is.null(lakes)) {
+        lakes_df <- ggplot2::fortify(lakes)		#; print(colnames(lakes))
+    }
+    #
     # Construct a base plot for completing subsequent maps
-    baseMapPlot <- OpenStreetMap::autoplot.OpenStreetMap(bgMap)  +
-            ggplot2::annotate("rect", xmin=gadmBB$xMin, ymin=gadmBB$yMin, xmax=gadmBB$xMax, ymax=gadmBB$yMa, fill="white", alpha=0.3) +
-    	    #ggplot2::labs(title=analysisName, subtitle="", x="Longitude", y="Latitude")+
-    	    ggplot2::labs(x="Longitude", y="Latitude")+
-    	    ggplot2::geom_polygon(data=gadm1_df, ggplot2::aes(x=long, y=lat, group=group), bg=NA, col="black", size=1) +
-    	    ggplot2::geom_polygon(data=gadm0_df, ggplot2::aes(x=long, y=lat, group=group), bg=NA, col="black", size=1.5)
-
+    #
+    baseMapPlot <- ggplot2::ggplot(bg=map.colour.sea) +
+    	    ggplot2::coord_quickmap(xlim=c(anBB$xMin, anBB$xMax), ylim=c(anBB$yMin, anBB$yMax), expand=FALSE) +
+            ggplot2::geom_polygon(data=adm0_df, ggplot2::aes(x=long, y=lat, group=group), 
+                                  fill=map.colour.land, col=map.colour.border.country, size=1.5) +
+    	    ggplot2::labs(x="Longitude", y="Latitude") +
+    	    ggplot2::geom_polygon(data=adm1_df, ggplot2::aes(x=long, y=lat, group=group),
+    	                          fill=NA, col=map.colour.border.admdiv1, size=1)
+    if (!is.null(river_df)) {	                         
+        baseMapPlot <- baseMapPlot +
+    	    ggplot2::geom_path(data=river_df, ggplot2::aes(x=long, y=lat, group=group), 
+    	                       col=map.colour.river, size=1)
+    }
+    if (!is.null(lakes_df)) {	                         
+        baseMapPlot <- baseMapPlot +
+    	    ggplot2::geom_polygon(data=lakes_df, ggplot2::aes(x=long, y=lat, group=group), 
+    	                          fill=map.colour.river, col=map.colour.river, size=1)
+    }
+    baseMapPlot <- baseMapPlot +
+    	    ggplot2::theme(panel.background=ggplot2::element_rect(fill=map.colour.sea))
+    	                         
     # Return all the elements
-    list(baseMap=baseMapPlot, bgMap=bgMap, gadmBB=gadmBB, gadm0_df=gadm0_df, gadm1_df=gadm1_df)
+    list(baseMap=baseMapPlot, anBB=anBB, adm0_df=adm0_df, adm1_df=adm1_df)
 }
 #
 ###############################################################################
@@ -156,9 +193,9 @@ map.getAggregationLevelsFromLabels <- function(aggLabels) {
     result 
 }
 #
-map.getAdmDivNames <- function(gids) {
+map.getAdmDivNames <- function(gids) {		; print(gids)
     geo <- map.getGeoTables()
-    admDivs <- geo$admDivs
+    admDivs <- geo$admDivs			; print(admDivs)
     admDivs <- admDivs[gids,]
     admDivNames <- admDivs$AdmDivName
     admDivNames
@@ -248,13 +285,13 @@ map.getGeoTables <- function () {
 }
 map.iso2ToIso3 <- function (iso2Countries) {
     geo <- map.getGeoTables()
-    countryTable <- geo$countries
-    iso3 <- countryTable[iso2Countries,"iso3"]
+    countryTable <- geo$country.codes
+    iso3 <- countryTable[iso2Countries,"IsoCode3"]
     iso3
 }
 map.getCountryData <- function (iso2Country) {
     geo <- map.getGeoTables()
-    countryTable <- geo$countries
+    countryTable <- geo$country.codes
     countryData <- countryTable[iso2Country,]
     countryData
 }
@@ -264,7 +301,7 @@ map.getCountryData <- function (iso2Country) {
 ################################################################################
 #
 map.computeLabelParams <- function (aggUnitData, baseMapInfo) {
-    bbox <- baseMapInfo$gadmBB
+    bbox <- baseMapInfo$anBB
     xNudge <- (bbox$xMax - bbox$xMin)/15
     yNudge <- (bbox$yMax - bbox$yMin)/15
     

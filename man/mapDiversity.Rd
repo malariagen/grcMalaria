@@ -22,7 +22,7 @@ mapDiversity(
 
 \item{sampleSet}{TBD}
 
-\item{measures}{TBD}
+\item{measures}{can be "ALL", or any vector containing one or more of ("maxHaploFreq","haploHet", "meanSnpHet","medianDistance")}
 
 \item{aggregate}{TBD}
 
