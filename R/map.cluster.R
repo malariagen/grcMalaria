@@ -40,7 +40,7 @@ clusterMap.executeVisualization <- function(userCtx, datasetName, sampleSetName,
 
         # Work out a "standard" marker size (1/25 of the shortest side) and apply a scaling factor
         scalingFactor <- analysis.getParam ("map.cluster.markerScale", params)			#; print(scalingFactor)
-        bbox <- baseMapInfo$gadmBB;
+        bbox <- baseMapInfo$anBB;
         minSide <- min(abs(bbox$yMax-bbox$yMin),abs(bbox$xMax-bbox$xMin))
         stdMarkerSize <- info$stdMarkerSize <- scalingFactor * minSide / 25			#; print(info$stdMarkerSize)
         
@@ -160,7 +160,7 @@ clusterMap.plotMap <- function (ctx, info, params) {
             
         # Dirty trick so we can show an annotation with cluster info above the legends.
         # We "plot" a couple of points, and create a ficticious alpha legend containing the cluster info text.
-        bb <- baseMapInfo$gadmBB
+        bb <- baseMapInfo$anBB
         dummydf <- data.frame(x=c(bb$xMin,bb$xMin), y=c(bb$yMax,bb$yMax), alpha=c(0.1, 0.11))
         mapPlot <- mapPlot +
                    ggplot2::geom_point(ggplot2::aes(x=x, y=y, alpha=as.numeric(alpha), size=0.01), data=dummydf) +
@@ -223,13 +223,15 @@ clusterMap.addFreqPies <- function (mapPlot, countData, aggUnitData, stdMarkerCo
                    ggforce::geom_arc_bar(ggplot2::aes(x0=Longitude, y0=Latitude, r0=0, r=stdMarkerSize, 
                                          fill=Haplo, amount=ClusterCount),
                              data=countData, stat="pie", inherit.aes=FALSE,
-                             colour="gray25", stroke=0.5, fill="white", show.legend=FALSE)
+                             #colour="gray25", stroke=0.5, fill="white", show.legend=FALSE)
+                             colour="gray25", fill="white", show.legend=FALSE)
     } else {
         mapPlot <- mapPlot +
                    ggforce::geom_arc_bar(ggplot2::aes(x0=Longitude, y0=Latitude, r0=0, r=stdMarkerSize*sqrt(SampleCount/stdMarkerCount), 
                                          fill=Haplo, amount=ClusterCount),
                              data=countData, stat="pie", inherit.aes=FALSE,
-                             colour="gray25", stroke=0.5, fill="white", show.legend=FALSE)
+                             #colour="gray25", stroke=0.5, fill="white", show.legend=FALSE)
+                             colour="gray25", fill="white", show.legend=FALSE)
     }
     mapPlot
 }
@@ -344,14 +346,16 @@ clusterMap.addSharePies <- function (mapPlot, clusterShareData, clusterPalette, 
                    ggforce::geom_arc_bar(ggplot2::aes(x0=Longitude, y0=Latitude, r0=0, r=stdMarkerSize, 
                                          fill=Cluster, amount=ClusterCount),
                                 data=clusterShareData, stat="pie", inherit.aes=FALSE,
-                                colour="gray25", stroke=0.5, show.legend=FALSE) +
+                                #colour="gray25", stroke=0.5, show.legend=FALSE) +
+                                colour="gray25", show.legend=FALSE) +
                    ggplot2::scale_fill_manual(values=clusterPalette)
     } else {
         mapPlot <- mapPlot +
                    ggforce::geom_arc_bar(ggplot2::aes(x0=Longitude, y0=Latitude, r0=0, r=stdMarkerSize*sqrt(SampleCount/stdMarkerCount), 
                                          fill=Cluster, amount=ClusterCount),
                                 data=clusterShareData, stat="pie", inherit.aes=FALSE,
-                                colour="gray25", stroke=0.5, show.legend=FALSE) +
+                                #colour="gray25", stroke=0.5, show.legend=FALSE) +
+                                colour="gray25", show.legend=FALSE) +
                    ggplot2::scale_fill_manual(values=clusterPalette)
     }
     mapPlot
