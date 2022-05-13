@@ -11,7 +11,7 @@ connectMap.getConnectednessMeasures <- function() {
 # Map Aggregated Measure Analysis
 ################################################################################
 #
-connectMap.execute <- function(userCtx, datasetName, sampleSetName, mapType, aggregation, measures, params) {
+connectMap.execute <- function(userCtx, datasetName, sampleSetName, mapType, baseMapInfo, aggregation, measures, params) {
     sampleSet <- userCtx$sampleSets[[sampleSetName]]
     ctx <- sampleSet$ctx
     dataset <- ctx[[datasetName]]
@@ -22,7 +22,7 @@ connectMap.execute <- function(userCtx, datasetName, sampleSetName, mapType, agg
     sampleMeta <- dataset$meta
     # Build the map necessary to display these samples
     # Construct a base plot for completing subsequent maps
-    baseMapInfo <- map.buildBaseMap (ctx, datasetName, sampleSetName, sampleMeta, dataOutFolder, params)
+    #baseMapInfo <- map.buildBaseMap (ctx, datasetName, sampleSetName, sampleMeta, dataOutFolder, params)
     
     # If "similarity" is one of the measures, remove it and add one measure for each similarity threshold (e.g. "similarity-ge0.80")
     measures <- connectMap.expandMeasures(measures, params)

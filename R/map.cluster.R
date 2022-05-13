@@ -6,14 +6,14 @@
 # barcodeFrequency has visualization types "pie" and "bar" (pie and bar markers)
 # clusterPrevalence has visualization type "cluster" to show the prevalence of the different clusters
 #
-clusterMap.execute <- function(userCtx, datasetName, sampleSetName, mapType, aggregation, measures, params) {
+clusterMap.execute <- function(userCtx, datasetName, sampleSetName, mapType, baseMapInfo, aggregation, measures, params) {
     visTypes <- analysis.getParam ("map.cluster.visualizations", params)			#; print(visTypes)
     for (vIdx in 1:length(visTypes)) {
-        clusterMap.executeVisualization (userCtx, datasetName, sampleSetName, mapType, visTypes[vIdx], aggregation, measures, params)
+        clusterMap.executeVisualization (userCtx, datasetName, sampleSetName, mapType, baseMapInfo, visTypes[vIdx], aggregation, measures, params)
     }
 }
 #
-clusterMap.executeVisualization <- function(userCtx, datasetName, sampleSetName, mapType, visType, aggregation, measures, params) {
+clusterMap.executeVisualization <- function(userCtx, datasetName, sampleSetName, mapType, baseMapInfo, visType, aggregation, measures, params) {
     sampleSet <- userCtx$sampleSets[[sampleSetName]]
     ctx <- sampleSet$ctx
     dataset <- ctx[[datasetName]]
@@ -24,11 +24,11 @@ clusterMap.executeVisualization <- function(userCtx, datasetName, sampleSetName,
     info <- list(dataFolder=dataFolder)
 
     info$sampleSetName <- sampleSetName;    info$mapType <- mapType;    info$visType <- visType
-    info$plotTitle <- sampleSetName;
-
+    info$plotTitle <- sampleSetName
+    info$baseMapInfo <- baseMapInfo
     # Build the map necessary to display these samples
     # Construct a base plot for completing subsequent maps
-    baseMapInfo <- info$baseMapInfo <- map.buildBaseMap (ctx, datasetName, sampleSetName, dataset$meta, dataFolder, params)
+    #baseMapInfo <- info$baseMapInfo <- map.buildBaseMap (ctx, datasetName, sampleSetName, dataset$meta, dataFolder, params)
 
     # Now compute the aggregation units, the values to be plotted, and make the map
     for (aggIdx in 1:length(aggregation)) {

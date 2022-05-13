@@ -9,7 +9,7 @@ markerMap.getDiversityMeasures <- function() {
       "medianDistance")
 }
 
-markerMap.execute <- function(userCtx, datasetName, sampleSetName, mapType, aggregation, measures, params) {
+markerMap.execute <- function(userCtx, datasetName, sampleSetName, mapType, baseMapInfo, aggregation, measures, params) {
     sampleSet <- userCtx$sampleSets[[sampleSetName]]
     ctx <- sampleSet$ctx
     dataset <- ctx[[datasetName]]
@@ -27,7 +27,7 @@ markerMap.execute <- function(userCtx, datasetName, sampleSetName, mapType, aggr
     
     # Build the map necessary to display these samples
     # Construct a base plot for completing subsequent maps
-    baseMapInfo <- map.buildBaseMap (ctx, datasetName, sampleSetName, sampleMeta, dataFolder, params)
+    #baseMapInfo <- map.buildBaseMap (ctx, datasetName, sampleSetName, sampleMeta, dataFolder, params)
 
     # Now compute the aggregation units, the values to be plotted, and make the map
     for (aggIdx in 1:length(aggregation)) {

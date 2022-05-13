@@ -14,28 +14,30 @@ GID_COLUMNS     <- c("Country", "AdmDiv1_GID", "AdmDiv2_GID")
 ################################################################################
 #
 map.execute <- function(userCtx, sampleSetName, mapType, aggregation, measures, params) {
-
     if (mapType %in% c("drug", "mutation")) {
-        markerMap.execute (userCtx, "unfiltered", sampleSetName, mapType, aggregation, measures, params)
-        
-    } else if (mapType == "diversity") {
-        markerMap.execute (userCtx, "imputed",    sampleSetName, mapType, aggregation, measures, params)
-        
+        map.executeOnDataset (userCtx, "unfiltered", sampleSetName, mapType, aggregation, measures, params)
+    } else if (mapType  %in% c("diversity", "connect", "barcodeFrequency", "clusterSharing", "clusterPrevalence")) {
+        map.executeOnDataset (userCtx, "imputed",    sampleSetName, mapType, aggregation, measures, params)
     } else if (mapType == "sampleCount") {
-        markerMap.execute (userCtx, "unfiltered", sampleSetName, mapType, aggregation, measures, params)
-        markerMap.execute (userCtx, "filtered",   sampleSetName, mapType, aggregation, measures,   params)
-        
-    } else if (mapType == "connect") {
-        connectMap.execute (userCtx, "imputed",   sampleSetName, mapType, aggregation, measures, params)
-        
-    } else if (mapType == "barcodeFrequency") {
-        clusterMap.execute (userCtx, "imputed",   sampleSetName, mapType, aggregation, measures, params)
+        map.executeOnDataset (userCtx, "unfiltered", sampleSetName, mapType, aggregation, measures, params)
+        map.executeOnDataset (userCtx, "filtered",   sampleSetName, mapType, aggregation, measures,   params)
+    } else {
+        stop(paste("Invalid map type:", mapType))
+    }
+}
 
-    } else if (mapType == "clusterSharing") {
-        clusterMap.execute (userCtx, "imputed",   sampleSetName, mapType, aggregation, measures, params)
+map.executeOnDataset <- function(userCtx, datasetName, sampleSetName, mapType, aggregation, measures, params) {
 
-    } else if (mapType == "clusterPrevalence") {
-        clusterMap.execute (userCtx, "imputed",   sampleSetName, mapType, aggregation, measures, params)
+    baseMapInfo <- map.buildBaseMap (userCtx, datasetName, sampleSetName, sampleMeta, params)
+
+    if (mapType %in% c("drug", "mutation", "diversity", "sampleCount")) {
+        markerMap.execute (userCtx, datasetName, sampleSetName, mapType, baseMapInfo, aggregation, measures, params)
+        
+    } else if (mapType %in% c("connect")) {
+        connectMap.execute (userCtx, datasetName, sampleSetName, mapType, baseMapInfo, aggregation, measures, params)
+        
+    } else if (mapType %in% c("barcodeFrequency", "clusterSharing", "clusterPrevalence")) {
+        clusterMap.execute (userCtx, datasetName, sampleSetName, mapType, baseMapInfo, aggregation, measures, params)
 
     } else {
         stop(paste("Invalid map type:", mapType))
@@ -46,7 +48,134 @@ map.execute <- function(userCtx, sampleSetName, mapType, aggregation, measures, 
 # Creation of the physical/political background map
 ################################################################################
 #
-map.buildBaseMap <- function(ctx, datasetName, analysisName, sampleMeta, dataFolder, params) {
+#
+map.buildBaseMap <- function(userCtx, datasetName, analysisName, sampleMeta, params) {
+
+    # Get the sample metadata
+    sampleSet <- userCtx$sampleSets[[analysisName]]
+    ctx <- sampleSet$ctx
+    dataset <- ctx[[datasetName]]
+    config <- ctx$config
+    sampleMeta <- dataset$meta
+    #
+    # Read the countries needed in this analysis, so we can get the boundary contours
+    #
+    unitList <- list()
+    cCountry  <- map.getAggregationColumns(0)
+    countryValues <- sampleMeta[,cCountry]
+    countries <- unique(countryValues)
+    for (cIdx in 1:length(countries)) {
+        country <- countries[cIdx]					#; print(country)
+        countryData <- map.getCountryData (country)			#; print(countryData)
+        cMeta <- sampleMeta[which(countryValues == country),]
+        #
+        # Get a list of provinces (AdmDiv1) in this country (references by GID)
+        #
+        adm1GIDValues <- as.character(cMeta$AdmDiv1_GID)
+        adm1GIDs <- unique(adm1GIDValues)
+        unitList[[cIdx]] <- list(name=countryData$CountryName, iso2=countryData$IsoCode2, iso3=countryData$IsoCode3, adm1GIDs=adm1GIDs) 
+    }
+    #
+    # Get the boundaries for all provinces (AdmDiv1) needed for this map, and calculate the bounding box
+    #
+    library(sp)
+    geo <- map.getGeoTables()
+    adm1Spdf <- NULL
+    xMin <- 1000; xMax <- -1000; yMin <- 1000; yMax <- -1000
+    for (cIdx in 1:length(countries)) {
+        cl <- unitList[[cIdx]]					#; print(cl);
+        #
+        # Filter to get the provinces for this country (used for drawing province boundaries)
+        #
+        cAdm1Lines <- geo$admDiv1.lines[[cl$iso2]]
+        #
+        # Filter to select the provinces we need in the present analysis (used to define a bounding box)
+        #
+        anAdm1GIDs <- cl$adm1GIDs						#; print(adm1GIDs)
+        anAdm1Lines <- cAdm1Lines[cAdm1Lines@data$GADM_GID_1 %in% anAdm1GIDs,]
+        for (idx in 1:nrow(anAdm1Lines)) {
+            #
+            # Get the bounding box for the province
+            # (a 2-column matrix; the first column has the minimum, the second the maximum values; rows represent the spatial dimensions)
+            #
+            #print(class(anAdm1Lines@polygons))
+            #print(class(anAdm1Lines@polygons[[idx]]))
+            bbx <- sp::bbox(anAdm1Lines@polygons[[idx]])	#; print(bbx) 
+            xMin <- min(xMin,bbx[1,1]); xMax <- max(xMax,bbx[1,2]); yMin <- min(yMin,bbx[2,1]); yMax <- max(yMax,bbx[2,2])	#; print(c(xMin,xMax,yMin,yMax)) 
+        }
+        #
+        # Append the data to those of other countries
+        #
+        cl$gadmAdm1Data <- anAdm1Lines
+        if (is.null(adm1Spdf)) {
+            adm1Spdf <- anAdm1Lines
+        } else {
+            adm1Spdf <- rbind(adm1Spdf, anAdm1Lines)
+        }
+    }
+    adm1_df <- ggplot2::fortify(adm1Spdf)		#; print(colnames(adm1Spdf))
+    #
+    # Construct the bounding box for this analysis
+    # Adjust the bounding box to give some margin
+    #
+    xMar <- (xMax-xMin)/20;    yMar <- (yMax-yMin)/20
+    anBB <- list(xMin=(xMin-xMar), xMax=(xMax+xMar), yMin=(yMin-yMar), yMax=(yMax+yMar))
+    anBB$tl <- c(anBB$yMax, anBB$xMin);    anBB$br <- c(anBB$yMin, anBB$xMax)
+    anBB$bl <- c(anBB$yMin, anBB$xMin);    anBB$tr <- c(anBB$yMax, anBB$xMax)
+    #
+    # Get and Crop the country boundaries
+    #
+    adm0 <- geo$country.lines 
+    adm0 <- raster::crop(adm0, raster::extent(anBB$xMin, anBB$xMax, anBB$yMin, anBB$yMax))
+    adm0_df <- ggplot2::fortify(adm0)    		#; print(colnames(adm0$spdf))
+    #
+    rivers <- geo$river.lines 
+    rivers <- raster::crop(rivers, raster::extent(anBB$xMin, anBB$xMax, anBB$yMin, anBB$yMax))
+    river_df <- NULL
+    if (!is.null(rivers)) {
+        river_df <- ggplot2::fortify(rivers)		#; print(colnames(rivers))
+    }
+    #
+    lakes <- geo$lake.lines				#; print(lakes)
+    lakes <- raster::crop(lakes, raster::extent(anBB$xMin, anBB$xMax, anBB$yMin, anBB$yMax))
+    lakes_df <- NULL
+    if (!is.null(lakes)) {
+        lakes_df <- ggplot2::fortify(lakes)		#; print(colnames(lakes))
+    }
+    #
+    # Construct a base plot for completing subsequent maps
+    #
+    baseMapPlot <- ggplot2::ggplot(bg=map.colour.sea) +
+    	    ggplot2::coord_quickmap(xlim=c(anBB$xMin, anBB$xMax), ylim=c(anBB$yMin, anBB$yMax), expand=FALSE) +
+            ggplot2::geom_polygon(data=adm0_df, ggplot2::aes(x=long, y=lat, group=group), 
+                                  fill=map.colour.land, col=map.colour.border.country, size=1.5) +
+    	    ggplot2::labs(x="Longitude", y="Latitude") +
+    	    ggplot2::geom_polygon(data=adm1_df, ggplot2::aes(x=long, y=lat, group=group),
+    	                          fill=NA, col=map.colour.border.admdiv1, size=1)
+    if (!is.null(river_df)) {	                         
+        baseMapPlot <- baseMapPlot +
+    	    ggplot2::geom_path(data=river_df, ggplot2::aes(x=long, y=lat, group=group), 
+    	                       col=map.colour.river, size=1)
+    }
+    if (!is.null(lakes_df)) {	                         
+        baseMapPlot <- baseMapPlot +
+    	    ggplot2::geom_polygon(data=lakes_df, ggplot2::aes(x=long, y=lat, group=group), 
+    	                          fill=map.colour.river, col=map.colour.river, size=1)
+    }
+    baseMapPlot <- baseMapPlot +
+    	    ggplot2::theme(panel.background=ggplot2::element_rect(fill=map.colour.sea))
+    	                         
+    # Return all the elements
+    list(baseMap=baseMapPlot, anBB=anBB, adm0_df=adm0_df, adm1_df=adm1_df)
+}
+#
+###############################################################################
+# Creation of the physical/political background map
+################################################################################
+#
+# Unused: ctx, datasetName, analysisName, dataFolder, params
+#
+map.buildBaseMap.old <- function(ctx, datasetName, analysisName, sampleMeta, dataFolder, params) {
     #
     # Read the countries needed in this analysis, so we can get the boundary contours
     #
@@ -193,9 +322,9 @@ map.getAggregationLevelsFromLabels <- function(aggLabels) {
     result 
 }
 #
-map.getAdmDivNames <- function(gids) {		; print(gids)
+map.getAdmDivNames <- function(gids) {		#; print(gids)
     geo <- map.getGeoTables()
-    admDivs <- geo$admDivs			; print(admDivs)
+    admDivs <- geo$admDivs			#; print(admDivs)
     admDivs <- admDivs[gids,]
     admDivNames <- admDivs$AdmDivName
     admDivNames

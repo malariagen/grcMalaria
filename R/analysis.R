@@ -166,9 +166,7 @@ analysis.executeOnSampleSet <- function(ctx, sampleSetName, tasks, params) {
 
         } else if (task == "tree") {
             tree.execute (ctx, sampleSetName, method, params)
-        #    njt.execute (ctx, sampleSetName)
-        #    njt.executePlots (ctx, sampleSetName, plotList)
-        #
+
         } else if (task == "graph") {
             clusterGraph.execute (ctx, sampleSetName, plotList, params)
 
