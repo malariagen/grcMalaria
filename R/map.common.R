@@ -28,7 +28,7 @@ map.execute <- function(userCtx, sampleSetName, interval, mapType, aggregation, 
 
 map.executeOnDataset <- function(userCtx, datasetName, sampleSetName, interval, mapType, aggregation, measures, params) {
 
-    baseMapInfo <- map.buildBaseMap (userCtx, datasetName, sampleSetName, sampleMeta, params)
+    baseMapInfo <- map.buildBaseMap (userCtx, datasetName, sampleSetName)
 
     if (mapType %in% c("drug", "mutation", "diversity", "sampleCount")) {
         markerMap.execute (userCtx, datasetName, sampleSetName, interval, mapType, baseMapInfo, aggregation, measures, params)
@@ -49,7 +49,7 @@ map.executeOnDataset <- function(userCtx, datasetName, sampleSetName, interval, 
 ################################################################################
 #
 #
-map.buildBaseMap <- function(userCtx, datasetName, analysisName, sampleMeta, params) {
+map.buildBaseMap <- function(userCtx, datasetName, analysisName) {
 
     # Get the sample metadata
     sampleSet <- userCtx$sampleSets[[analysisName]]
@@ -140,6 +140,10 @@ map.buildBaseMap <- function(userCtx, datasetName, analysisName, sampleMeta, par
     if (!is.null(lakes)) {
         lakes_df <- suppressMessages(ggplot2::fortify(lakes))		#; print(colnames(lakes))
     }
+    
+    # Silly trick to make the package checker happy... :-(
+    long <- lat <- group <- NULL
+
     #
     # Construct a base plot for completing subsequent maps
     #

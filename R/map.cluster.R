@@ -26,9 +26,6 @@ clusterMap.executeVisualization <- function(userCtx, datasetName, sampleSetName,
     info$sampleSetName <- sampleSetName;    info$mapType <- mapType;    info$visType <- visType
     info$plotTitle <- sampleSetName
     info$baseMapInfo <- baseMapInfo
-    # Build the map necessary to display these samples
-    # Construct a base plot for completing subsequent maps
-    #baseMapInfo <- info$baseMapInfo <- map.buildBaseMap (ctx, datasetName, sampleSetName, dataset$meta, dataFolder, params)
 
     # Now compute the aggregation units, the values to be plotted, and make the map
     for (aggIdx in 1:length(aggregation)) {
@@ -123,7 +120,10 @@ clusterMap.plotMap <- function (ctx, info, params) {
     # Start with the background map
     baseMapInfo <- info$baseMapInfo
     mapPlot <- baseMapInfo$baseMap
-
+    
+    # Silly trick to make the package checker happy... :-(
+    lon <- lat <- label <- x <- y <- alpha <- NULL
+    
     # If we need to show aggregation unit names, we need to compute the label positioning and plot before the markers
     aggUnitData <- info$aggUnitData
     aggLevel <- info$aggLevel
@@ -217,6 +217,9 @@ clusterMap.addFreqMarkers <- function (mapPlot, visType, countData, aggUnitData,
 }
 
 clusterMap.addFreqPies <- function (mapPlot, countData, aggUnitData, stdMarkerCount, stdMarkerSize) {
+    # Silly trick to make the package checker happy... :-(
+    Longitude <- Latitude <- Haplo <- ClusterCount <- SampleCount <-NULL
+
     # Now add the pie chart markers
     if (stdMarkerCount==0) {
         mapPlot <- mapPlot +
@@ -340,6 +343,9 @@ clusterMap.addShareMarkers <- function (mapPlot, visType, clusterShareData, clus
 }
 
 clusterMap.addSharePies <- function (mapPlot, clusterShareData, clusterPalette, aggUnitData, stdMarkerCount, stdMarkerSize) {
+    # Silly trick to make the package checker happy... :-(
+    Longitude <- Latitude <- Cluster <- ClusterCount <- SampleCount <-NULL
+
     # Now add the pie chart markers
     if (stdMarkerCount==0) {
         mapPlot <- mapPlot +
@@ -409,6 +415,9 @@ clusterMap.addShareBars <- function (mapPlot, clusterShareData, clusterPalette, 
         freqBarData <- rbind(freqBarData, unitBarData)
     }												#; print(freqBarData)
     
+    # Silly trick to make the package checker happy... :-(
+    Cluster <- NULL
+
     # Got the dataframe for drawing all the rectangles, now do the drawing and colouring
     mapPlot <- mapPlot +
                ggplot2::geom_rect(ggplot2::aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2, fill=Cluster), 
@@ -519,6 +528,9 @@ clusterMap.addConnections <- function (mapPlot, visType, cluster, clusterShareDa
         
         hc <- grDevices::rgb2hsv(grDevices::col2rgb(clusterColour))
         weakHaploColour <- grDevices::hsv(h=hc[1,1],s=hc[2,1]*0.2,v=hc[3,1])
+        
+        # Silly trick to make the package checker happy... :-(
+        Lon1 <- Lat1 <- Lon2 <- Lat2 <- Weight <- NULL
 	
         # Now plot the connections
         mapPlot <- mapPlot +
@@ -527,7 +539,10 @@ clusterMap.addConnections <- function (mapPlot, visType, cluster, clusterShareDa
                    ggplot2::scale_size_continuous(guide=FALSE, range=c(0.25, 4)) +          			# scale for edge widths
                    ggplot2::scale_colour_gradientn(name="Sharing", colours=c(weakHaploColour,clusterColour))
     }
-     
+    
+    # Silly trick to make the package checker happy... :-(
+    Longitude <- Latitude <- ClusterProp <- NULL
+
     # Plot the Aggregation Unit markers
     mapPlot <- mapPlot +
 	       ggplot2::geom_point(ggplot2::aes(x=Longitude, y=Latitude, fill=ClusterProp), 

@@ -52,7 +52,7 @@ graphics.loadAttributes <- function (ctx, attrId, attrField, attrFile, attrSheet
 # Attributes Resolution
 ################################################################################
 #
-graphics.getGraphicalAttributes <- function (sampleMeta, userAttrNames) {
+graphics.getGraphicalAttributes <- function (ctx, sampleMeta, userAttrNames) {
     #
     # Retrieve the use attributes
     #

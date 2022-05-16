@@ -33,9 +33,8 @@ markerMap.execute <- function(userCtx, datasetName, sampleSetName, interval, map
     # Get the output folders
     dataFolder <- getOutFolder(ctx, sampleSetName, c(paste("map", mapType, sep="-"), "data"))
     
-    # Build the map necessary to display these samples
-    # Construct a base plot for completing subsequent maps
-    #baseMapInfo <- map.buildBaseMap (ctx, datasetName, sampleSetName, sampleMeta, dataFolder, params)
+    # Silly trick to make the package checker happy... :-(
+    lon <- lat <- label <- NULL
 
     # Now compute the aggregation units, the values to be plotted, and make the map
     for (aggIdx in 1:length(aggregation)) {

@@ -20,13 +20,13 @@ connectMap.execute <- function(userCtx, datasetName, sampleSetName, mapType, bas
     dataOutFolder <- getOutFolder(ctx, sampleSetName, c(paste("map", mapType, sep="-"), "data"))
     # Get the sample metadata
     sampleMeta <- dataset$meta
-    # Build the map necessary to display these samples
-    # Construct a base plot for completing subsequent maps
-    #baseMapInfo <- map.buildBaseMap (ctx, datasetName, sampleSetName, sampleMeta, dataOutFolder, params)
     
     # If "similarity" is one of the measures, remove it and add one measure for each similarity threshold (e.g. "similarity-ge0.80")
     measures <- connectMap.expandMeasures(measures, params)
     
+    # Silly trick to make the package checker happy... :-(
+    lon <- lat <- label <- NULL
+
     # Now compute the aggregation units, the values to be plotted, and make the map
     for (aggIdx in 1:length(aggregation)) {
         aggLevel <- as.integer(aggregation[aggIdx])        					#; print(aggLevel)

@@ -143,7 +143,7 @@ writeMatrix <- function (matrixData, matrixDataFile) {
 }
 #
 filterMatrix <- function (matrixData, sampleNames) {
-    matrixData <- matrixData[samplesNames,samplesNames]
+    matrixData <- matrixData[sampleNames,sampleNames]
     matrixData
 }
 #
