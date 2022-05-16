@@ -7,6 +7,7 @@
 mapSampleCounts(
   ctx,
   sampleSet,
+  timePeriods = NULL,
   aggregate = "Province",
   minAggregateCount = 1,
   markerSize = c(4, 40),
@@ -20,6 +21,8 @@ mapSampleCounts(
 \item{ctx}{The analysis context, created by intializeContext().}
 
 \item{sampleSet}{The name of the sample set being used; must have been previusly created by selectSampleSet().}
+
+\item{timePeriods}{The list of time period object for partitioning samples into time-interval plots}
 
 \item{aggregate}{The administrative level at which we aggregate (Province or District)}
 
@@ -35,7 +38,7 @@ and max sizeof the marker, whose size will reflect the number of samples.}
 
 \item{width}{The width (in inches) of the map image.}
 
-\item{height}{The heigt (in inches) of the map image.}
+\item{height}{The height (in inches) of the map image.}
 }
 \description{
 Creates a map showing the numbers of samples collected at different aggregation levels.

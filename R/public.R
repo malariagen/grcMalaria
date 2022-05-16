@@ -113,6 +113,7 @@ selectSampleSet <- function (ctx, sampleSetName, select) {
 #'
 #' @param ctx The analysis context, created by intializeContext().
 #' @param sampleSet The name of the sample set being used; must have been previusly created by selectSampleSet().
+#' @param timePeriods The list of time period object for partitioning samples into time-interval plots
 #' @param aggregate The administrative level at which we aggregate (Province or District)
 #' @param minAggregateCount The minimum count of aggregated samples, below which a marker is not shown.
 #' @param showNames If TRUE, labels are shown with the name of the aggregation unit (Province or District)
@@ -121,27 +122,29 @@ selectSampleSet <- function (ctx, sampleSetName, select) {
 #'                   all markers will be that size; if two values are passed, they will be used as the min 
 #'                   and max sizeof the marker, whose size will reflect the number of samples.
 #' @param width The width (in inches) of the map image.
-#' @param height The heigt (in inches) of the map image.
+#' @param height The height (in inches) of the map image.
 #'
 #' @export
 #'
 #' @examples
 #' #TBD
 #
-mapSampleCounts <- function (ctx, sampleSet,
+mapSampleCounts <- function (ctx, sampleSet, timePeriods=NULL,
                    aggregate="Province", minAggregateCount=1,
                    markerSize=c(4,40), showNames=TRUE, colourBy="Province",
                    width=15, height=15) {
 
     if (length(colourBy) > 1) {
-        die ("colourBy parameter can only accet a single value (\"Country\" or \"Province\")")
+        stop ("colourBy parameter can only accet a single value (\"Country\" or \"Province\")")
     }
     colourAggLevel <- map.getAggregationLevelsFromLabels (colourBy)
     if (colourAggLevel > 1) {
-        die ("colourBy parameter can only accet values \"Country\" or \"Province\"")
+        stop ("colourBy parameter can only accet values \"Country\" or \"Province\"")
     }
     aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
+    timeIntervals <- parseTimeIntervals(timePeriods)
     params <- list(
+        analysis.timeIntervals=timeIntervals,
         aggegation.levels=aggLevels,
         map.aggregateCountMin=minAggregateCount,
         map.markerColourAggLevel=colourAggLevel,
@@ -164,27 +167,30 @@ mapSampleCounts <- function (ctx, sampleSet,
 #'
 #' @param ctx The analysis context, created by intializeContext().
 #' @param sampleSet The name of the sample set being used; must have been previusly created by selectSampleSet().
+#' @param timePeriods The list of time period object for partitioning samples into time-interval plots
 #' @param drugs An array of drugs for which prevalence of resistance will be estimated; "ALL" creats maps for all the drugs for which we have resistance predictions.
 #' @param aggregate The administrative level at which we aggregate
 #' @param minAggregateCount The minimum count of aggregated samples, below which a marker is not shown.
 #' @param showNames If TRUE, labels are shown with the name of the aggregation unit (Province or District)
 #' @param markerSize Allows adjustment of the size of markers on the map.
 #' @param width The width (in inches) of the map image.
-#' @param height The heigt (in inches) of the map image.
+#' @param height The height (in inches) of the map image.
 #'
 #' @export
 #'
 #' @examples
 #' #TBD
 #
-mapDrugResistancePrevalence <- function (ctx, sampleSet,
+mapDrugResistancePrevalence <- function (ctx, sampleSet, timePeriods=NULL,
                    drugs="ALL",
                    aggregate="Province", minAggregateCount=10,
                    showNames=TRUE, markerSize=16,
                    width=15, height=15) {
 
     aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
+    timeIntervals <- parseTimeIntervals(timePeriods)
     params <- list(
+        analysis.timeIntervals=timeIntervals,
         analysis.measures=drugs,
         aggegation.levels=aggLevels,
         map.aggregateCountMin=minAggregateCount,
@@ -202,27 +208,30 @@ mapDrugResistancePrevalence <- function (ctx, sampleSet,
 #'
 #' @param ctx TBD
 #' @param sampleSet TBD
+#' @param timePeriods The list of time period object for partitioning samples into time-interval plots
 #' @param mutations TBD
 #' @param aggregate TBD
 #' @param minAggregateCount TBD
 #' @param showNames TBD
 #' @param markerSize TBD
-#' @param width TBD
-#' @param height TBD
+#' @param width The width (in inches) of the map image.
+#' @param height The height (in inches) of the map image.
 #'
 #' @return TBD
 #' @export
 #'
 #' @examples
 #'  #TBD
-mapMutationPrevalence <- function (ctx, sampleSet,
+mapMutationPrevalence <- function (ctx, sampleSet, timePeriods=NULL,
                    mutations="ALL",
                    aggregate="Province", minAggregateCount=10,
                    showNames=TRUE, markerSize=16,
                    width=15, height=15) {
 
     aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
+    timeIntervals <- parseTimeIntervals(timePeriods)
     params <- list(
+        analysis.timeIntervals=timeIntervals,
         analysis.measures=mutations,
         aggegation.levels=aggLevels,
         map.aggregateCountMin=minAggregateCount,
@@ -240,28 +249,31 @@ mapMutationPrevalence <- function (ctx, sampleSet,
 #'
 #' @param ctx TBD
 #' @param sampleSet TBD
+#' @param timePeriods The list of time period object for partitioning samples into time-interval plots
 #' @param measures can be "ALL", or any vector containing one or more of ("maxHaploFreq","haploHet", "meanSnpHet","medianDistance")
 #' @param aggregate TBD
 #' @param minAggregateCount TBD
 #' @param showNames TBD
 #' @param markerColours TBD
 #' @param markerSize TBD
-#' @param width TBD
-#' @param height TBD
+#' @param width The width (in inches) of the map image.
+#' @param height The height (in inches) of the map image.
 #'
 #' @return TBD
 #' @export
 #'
 #' @examples
 #'  #TBD
-mapDiversity <- function (ctx, sampleSet,
+mapDiversity <- function (ctx, sampleSet, timePeriods=NULL,
                    measures="ALL",
                    aggregate="Province", minAggregateCount=10,
                    showNames=TRUE, markerSize=16, markerColours="red3",
                    width=15, height=15) {
 
     aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
+    timeIntervals <- parseTimeIntervals(timePeriods)
     params <- list(
+        analysis.timeIntervals=timeIntervals,
         analysis.measures=measures,
         aggegation.levels=aggLevels,
         map.aggregateCountMin=minAggregateCount,
@@ -287,8 +299,8 @@ mapDiversity <- function (ctx, sampleSet,
 #' @param minAggregateCount TBD
 #' @param showNames TBD
 #' @param markerSize TBD
-#' @param width TBD
-#' @param height TBD
+#' @param width The width (in inches) of the map image.
+#' @param height The height (in inches) of the map image.
 #'
 #' @return TBD
 #' @export
@@ -330,8 +342,8 @@ mapConnections <- function (ctx, sampleSet,
 #' @param minAggregateCount TBD
 #' @param showNames TBD
 #' @param markerScale TBD
-#' @param width TBD
-#' @param height TBD
+#' @param width The width (in inches) of the map image.
+#' @param height The height (in inches) of the map image.
 #'
 #' @return TBD
 #' @export
@@ -396,8 +408,8 @@ findClusters <- function (ctx, sampleSet, clusterSet,
 #' @param clusterSet TBD
 #' @param graphLayout TBD
 #' @param weightPower TBD
-#' @param width TBD
-#' @param height TBD
+#' @param width The width (in inches) of the map image.
+#' @param height The height (in inches) of the map image.
 #'
 #' @return TBD
 #' @export
@@ -428,8 +440,8 @@ plotClusterGraph <- function (ctx, sampleSet, clusterSet,
 #' @param minAggregateCount TBD
 #' @param showNames TBD
 #' @param markerScale TBD
-#' @param width TBD
-#' @param height TBD
+#' @param width The width (in inches) of the map image.
+#' @param height The height (in inches) of the map image.
 #'
 #' @return TBD
 #' @export
@@ -466,8 +478,8 @@ mapClusterSharing <- function (ctx, sampleSet, clusterSet,
 #' @param minAggregateCount TBD
 #' @param showNames TBD
 #' @param markerScale TBD
-#' @param width TBD
-#' @param height TBD
+#' @param width The width (in inches) of the map image.
+#' @param height The height (in inches) of the map image.
 #'
 #' @return TBD
 #' @export
@@ -520,8 +532,8 @@ loadGraphicAttributes <- function (ctx, name, field, file, sheet) {
 #' @param sampleSet TBD TBD
 #' @param type TBD
 #' @param plots TBD
-#' @param width TBD
-#' @param height TBD
+#' @param width The width (in inches) of the map image.
+#' @param height The height (in inches) of the map image.
 #'
 #' @return TBD
 #' @export
@@ -547,8 +559,8 @@ plotPrincipalComponents <- function (ctx, sampleSet,
 #' @param sampleSet TBD TBD
 #' @param type TBD
 #' @param plots TBD
-#' @param width TBD
-#' @param height TBD
+#' @param width The width (in inches) of the map image.
+#' @param height The height (in inches) of the map image.
 #'
 #' @return TBD
 #' @export

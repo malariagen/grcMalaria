@@ -174,3 +174,21 @@ meta.select <- function(sampleMeta, selectDefs) {
     }
     sampleMeta
 }
+#
+# Select sample metadata within a given time period (start and end date inclusive)
+#
+meta.filterByDate <- function(sampleMeta, startDate, endDate) {
+    metaDates <- as.Date(sampleMeta$CollectionDate, tryFormats=c("%d/%m/%Y"), optional=TRUE)	#; print(length(metaDates)); print(metaDates[1:10])
+    selectIdx <- rep(TRUE, length(metaDates))
+    if (!is.null(startDate)) {
+        selectIdx <- selectIdx & (metaDates>=startDate)
+    }								#; print(selectIdx[1:10])
+    if (!is.null(endDate)) {
+        selectIdx <- selectIdx & (metaDates<=endDate)
+    }								#; print(selectIdx[1:10])
+    filterMeta <- NULL						#; print(length(which(selectIdx==TRUE)))
+    if (length(which(selectIdx==TRUE)) > 0) {
+         filterMeta <- sampleMeta[selectIdx,]
+    }								#; print(nrow(filterMeta))
+    filterMeta
+}

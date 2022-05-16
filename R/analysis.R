@@ -74,6 +74,19 @@ analysis.trimContext <- function (ctx, sampleNames) {
     trimCtx
 }
 #
+analysis.trimContextByTimeInterval <- function (ctx, interval) {		#; print(interval)
+    # Get the sample metadata and filter it by time interval
+    dataset <- ctx$unfiltered
+    sampleMeta <- dataset$meta							#; print(nrow(sampleMeta))
+    filterMeta <- meta.filterByDate(sampleMeta, interval$start, interval$end)	#; print(nrow(filterMeta))
+    if (is.null(filterMeta)) {
+        return(NULL)
+    }
+    filterSamples <- rownames(filterMeta)					#; print(filterSamples[1:10])
+    trimCtx <- analysis.trimContext (ctx, filterSamples)
+    trimCtx
+}
+#
 analysis.addTrimmedDatasetToContext <- function (ctx, datasetName, sampleNames, trimCtx) {
     # Use only samples that are shared with the original context
     dataset <- ctx[[datasetName]]
@@ -174,7 +187,16 @@ analysis.executeOnSampleSet <- function(ctx, sampleSetName, tasks, params) {
             haploNet.execute (ctx, sampleSetName, plotList, params)
 
         } else if (task == "map") {
-            map.execute(ctx, sampleSetName, method, aggregation, measures, params)
+            interval <- NULL
+            if (method %in% c("drug", "mutation", "diversity", "sampleCount")) {
+                intervals <- params$analysis.timeIntervals
+                for (idx in 1:length(intervals)) {
+                    interval <- intervals[[idx]]
+                    map.execute(ctx, sampleSetName, interval, method, aggregation, measures, params)
+                }
+            } else {
+                map.execute(ctx, sampleSetName, interval, method, aggregation, measures, params)
+            }
 
         } else {
             stop(paste("Invalid analysis task:", task))

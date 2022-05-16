@@ -7,6 +7,7 @@
 mapDiversity(
   ctx,
   sampleSet,
+  timePeriods = NULL,
   measures = "ALL",
   aggregate = "Province",
   minAggregateCount = 10,
@@ -22,6 +23,8 @@ mapDiversity(
 
 \item{sampleSet}{TBD}
 
+\item{timePeriods}{The list of time period object for partitioning samples into time-interval plots}
+
 \item{measures}{can be "ALL", or any vector containing one or more of ("maxHaploFreq","haploHet", "meanSnpHet","medianDistance")}
 
 \item{aggregate}{TBD}
@@ -34,9 +37,9 @@ mapDiversity(
 
 \item{markerColours}{TBD}
 
-\item{width}{TBD}
+\item{width}{The width (in inches) of the map image.}
 
-\item{height}{TBD}
+\item{height}{The height (in inches) of the map image.}
 }
 \value{
 TBD

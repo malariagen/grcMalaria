@@ -146,3 +146,28 @@ filterMatrix <- function (matrixData, sampleNames) {
     matrixData <- matrixData[samplesNames,samplesNames]
     matrixData
 }
+#
+# #####################################################################################
+#  Date and interval calculation
+# #####################################################################################
+#
+# 
+#
+parseTimeIntervals <- function (timePeriods) {
+    intervals <- list()
+    if (is.null(timePeriods)) {
+         intervals[[1]] <- list(name=NULL, start=NULL, end=NULL)
+    } else {
+        for (tpIdx in 1 : length(timePeriods)) {
+             tp <- timePeriods[[tpIdx]]
+             if (tp$type == "year") {
+                 startDate <- as.Date(tp$start, format="%d-%B-%Y")
+                 endDate <- startDate + lubridate::years(1) - 1
+                 intervals[[tpIdx]] <- list(name=tp$name, start=startDate, end=endDate)
+             } else {
+                 stop(paste("Invalid type of time period:", tp$type))
+             }
+        }
+    }
+    intervals
+}

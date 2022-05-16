@@ -11,13 +11,12 @@ License: MIT + file LICENSE
 LazyData: true
 Imports: 
     Rcpp (>= 1.0.5),
-    utils, stats, graphics, grDevices, stringi, digest,
-    readxl, openxlsx,
+    utils, stats, graphics, grDevices, stringi, digest, lubridate,
+    readxl, 
     ape, pegas, pcaMethods,
     igraph,
-    GADMTools, OpenStreetMap, raster,
-    RColorBrewer,
-    ggmap, ggplot2, ggrepel, ggforce
+    raster, sp,
+    ggplot2, ggrepel, ggforce
 Depends: 
     R (>= 3.5.0)
 LinkingTo: Rcpp
