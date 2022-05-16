@@ -183,9 +183,9 @@ analysis.executeOnSampleSet <- function(ctx, sampleSetName, tasks, params) {
         } else if (task == "graph") {
             clusterGraph.execute (ctx, sampleSetName, plotList, params)
 
-        } else if (task == "haploNet") {
-            haploNet.execute (ctx, sampleSetName, plotList, params)
-
+        #} else if (task == "haploNet") {
+        #    haploNet.execute (ctx, sampleSetName, plotList, params)
+        
         } else if (task == "map") {
             interval <- NULL
             if (method %in% c("drug", "mutation", "diversity", "sampleCount")) {

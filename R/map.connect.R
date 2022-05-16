@@ -70,7 +70,7 @@ connectMap.execute <- function(userCtx, datasetName, sampleSetName, mapType, bas
                 mapPlot <- mapPlot +
                     ggplot2::geom_curve(aes_string2(x="Lon1", y="Lat1", xend="Lon2", yend="Lat2", size=measure, colour=measure),
                                         data=selAggUnitPairData, curvature=0.2, alpha=0.75) +
-                    ggplot2::scale_size_continuous(guide=FALSE, range=c(0.25, 4)) +          					# scale for edge widths
+                    ggplot2::scale_size_continuous(guide="none", range=c(0.25, 4)) +          					# scale for edge widths
                     ggplot2::scale_colour_gradientn(colours=c("skyblue1","midnightblue"))
                 
                 # Now add the markers

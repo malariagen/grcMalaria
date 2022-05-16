@@ -150,10 +150,12 @@ map.buildBaseMap <- function(userCtx, datasetName, analysisName) {
     baseMapPlot <- ggplot2::ggplot(bg=map.colour.sea) +
     	    ggplot2::coord_quickmap(xlim=c(anBB$xMin, anBB$xMax), ylim=c(anBB$yMin, anBB$yMax), expand=FALSE) +
             ggplot2::geom_polygon(data=adm0_df, ggplot2::aes(x=long, y=lat, group=group), 
-                                  fill=map.colour.land, col=map.colour.border.country, size=1.5) +
+                                  fill=map.colour.land, col=NA) +
     	    ggplot2::labs(x="Longitude", y="Latitude") +
     	    ggplot2::geom_polygon(data=adm1_df, ggplot2::aes(x=long, y=lat, group=group),
-    	                          fill=NA, col=map.colour.border.admdiv1, size=1)
+    	                          fill=NA, col=map.colour.border.admdiv1, size=1) +
+            ggplot2::geom_polygon(data=adm0_df, ggplot2::aes(x=long, y=lat, group=group), 
+                                  fill=NA, col=map.colour.border.country, size=1.5)
     if (!is.null(river_df)) {	                         
         baseMapPlot <- baseMapPlot +
     	    ggplot2::geom_path(data=river_df, ggplot2::aes(x=long, y=lat, group=group), 

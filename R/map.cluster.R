@@ -536,7 +536,7 @@ clusterMap.addConnections <- function (mapPlot, visType, cluster, clusterShareDa
         mapPlot <- mapPlot +
                    ggplot2::geom_curve(ggplot2::aes(x=Lon1, y=Lat1, xend=Lon2, yend=Lat2, size=Weight, colour=Weight),	# draw edges as arcs
                                data=aggUnitPairData, curvature=0.2, alpha=0.75) +
-                   ggplot2::scale_size_continuous(guide=FALSE, range=c(0.25, 4)) +          			# scale for edge widths
+                   ggplot2::scale_size_continuous(guide="none", range=c(0.25, 4)) +          			# scale for edge widths
                    ggplot2::scale_colour_gradientn(name="Sharing", colours=c(weakHaploColour,clusterColour))
     }
     
