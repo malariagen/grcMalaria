@@ -74,11 +74,13 @@ analysis.trimContext <- function (ctx, sampleNames) {
     trimCtx
 }
 #
+#
+#
 analysis.trimContextByTimeInterval <- function (ctx, interval) {		#; print(interval)
     # Get the sample metadata and filter it by time interval
     dataset <- ctx$unfiltered
     sampleMeta <- dataset$meta							#; print(nrow(sampleMeta))
-    filterMeta <- meta.filterByDate(sampleMeta, interval$start, interval$end)	#; print(nrow(filterMeta))
+    filterMeta <- meta.filterByDate (sampleMeta, interval$start, interval$end)	#; print(nrow(filterMeta))
     if (is.null(filterMeta)) {
         return(NULL)
     }
@@ -86,6 +88,8 @@ analysis.trimContextByTimeInterval <- function (ctx, interval) {		#; print(inter
     trimCtx <- analysis.trimContext (ctx, filterSamples)
     trimCtx
 }
+#
+#
 #
 analysis.addTrimmedDatasetToContext <- function (ctx, datasetName, sampleNames, trimCtx) {
     # Use only samples that are shared with the original context
