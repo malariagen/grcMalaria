@@ -16,9 +16,9 @@ initializeContext(
 
 \item{dir}{The folder where the outputs from this and subsequent analyses will be stored.}
 
-\item{minSnpTypability}{The minimum proportion of non-missing samples for a barcode position to be retained in analysis. The default is 0.8. Meaning, SNPs where the allele is missing in more than 20\% of samples are removed.}
+\item{minSnpTypability}{The minimum proportion of non-missing samples for a barcode position to be retained in analysis. The default is 0.8. Meaning, SNPs where the allele is missing in more than 20 percent of samples are removed.}
 
-\item{minSampleTypability}{The minimum proportion of non-missing positions for a sample to be retained in analysis. The default is 0.75. Meaning, samples where more than 25\% of the remaining SNPs are missing are removed.}
+\item{minSampleTypability}{The minimum proportion of non-missing positions for a sample to be retained in analysis. The default is 0.75. Meaning, samples where more than 25 percent of the remaining SNPs are missing are removed.}
 }
 \value{
 A analysis context object, which is a list that contains all the data for analysis, which will be passed to subsequent analysis tasks.
