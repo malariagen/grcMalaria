@@ -56,7 +56,8 @@ barcode.initializeBarcodes <- function (ctx, datasetName, loadFromCache=TRUE) {
         barcode.validateBarcodeAlleles (barcodeData, barcodeMeta)
 
         # Filter the barcodes by typability, trying to throw away as little as possible
-        barcode.writeBarcodeStats (dataset, datasetName, barcodeData, "noFiltering")
+        #barcode.writeBarcodeStats (dataset, datasetName, barcodeData, "noFiltering")
+        barcode.writeBarcodeStats (ctx, datasetName, barcodeData, "noFiltering")
         minSampleTypability <- config$minSampleTypability
         minSnpTypability    <- config$minSnpTypability
         print(paste("Filtering barcodes by typability (samples:", minSampleTypability, ", SNPs:", minSnpTypability, ")",sep=""))
@@ -69,7 +70,8 @@ barcode.initializeBarcodes <- function (ctx, datasetName, loadFromCache=TRUE) {
         filteredData <- barcode.filterByTypability (filteredData, bySnp=FALSE, minTypability=minSampleTypability)
         barcodeData <- filteredData
         #
-        barcode.writeBarcodeStats (dataset, datasetName, barcodeData,
+        #barcode.writeBarcodeStats (dataset, datasetName, barcodeData,
+        barcode.writeBarcodeStats (ctx, datasetName, barcodeData,
                            paste("filtered-snps_", minSnpTypability, "-samples_", minSampleTypability, sep=""))
         print(paste("Barcode alleles after filtering - Samples:", nrow(barcodeData), "x SNPs:", ncol(barcodeData)))
         #
