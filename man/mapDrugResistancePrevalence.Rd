@@ -7,6 +7,7 @@
 mapDrugResistancePrevalence(
   ctx,
   sampleSet,
+  timePeriods = NULL,
   drugs = "ALL",
   aggregate = "Province",
   minAggregateCount = 10,
@@ -21,6 +22,8 @@ mapDrugResistancePrevalence(
 
 \item{sampleSet}{The name of the sample set being used; must have been previusly created by selectSampleSet().}
 
+\item{timePeriods}{The list of time period object for partitioning samples into time-interval plots}
+
 \item{drugs}{An array of drugs for which prevalence of resistance will be estimated; "ALL" creats maps for all the drugs for which we have resistance predictions.}
 
 \item{aggregate}{The administrative level at which we aggregate}
@@ -33,7 +36,7 @@ mapDrugResistancePrevalence(
 
 \item{width}{The width (in inches) of the map image.}
 
-\item{height}{The heigt (in inches) of the map image.}
+\item{height}{The height (in inches) of the map image.}
 }
 \description{
 Creates a map showing the levels of resistance to a particular drug for different administrative divisions.

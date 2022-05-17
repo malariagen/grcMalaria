@@ -59,7 +59,7 @@ tree.execute <- function(userCtx, sampleSetName, method, params) {
         #
         # Set up the graphical attributes for rendering
         #
-        ga <- graphics.getGraphicalAttributes(sampleMeta, plotDef$attributes)
+        ga <- graphics.getGraphicalAttributes(userCtx, sampleMeta, plotDef$attributes)
         gaData <- ga$sampleAttrData
         legendData <- ga$legendData
         #

@@ -11,7 +11,7 @@ connectMap.getConnectednessMeasures <- function() {
 # Map Aggregated Measure Analysis
 ################################################################################
 #
-connectMap.execute <- function(userCtx, datasetName, sampleSetName, mapType, aggregation, measures, params) {
+connectMap.execute <- function(userCtx, datasetName, sampleSetName, mapType, baseMapInfo, aggregation, measures, params) {
     sampleSet <- userCtx$sampleSets[[sampleSetName]]
     ctx <- sampleSet$ctx
     dataset <- ctx[[datasetName]]
@@ -20,13 +20,13 @@ connectMap.execute <- function(userCtx, datasetName, sampleSetName, mapType, agg
     dataOutFolder <- getOutFolder(ctx, sampleSetName, c(paste("map", mapType, sep="-"), "data"))
     # Get the sample metadata
     sampleMeta <- dataset$meta
-    # Build the map necessary to display these samples
-    # Construct a base plot for completing subsequent maps
-    baseMapInfo <- map.buildBaseMap (ctx, datasetName, sampleSetName, sampleMeta, dataOutFolder, params)
     
     # If "similarity" is one of the measures, remove it and add one measure for each similarity threshold (e.g. "similarity-ge0.80")
     measures <- connectMap.expandMeasures(measures, params)
     
+    # Silly trick to make the package checker happy... :-(
+    lon <- lat <- label <- NULL
+
     # Now compute the aggregation units, the values to be plotted, and make the map
     for (aggIdx in 1:length(aggregation)) {
         aggLevel <- as.integer(aggregation[aggIdx])        					#; print(aggLevel)
@@ -70,7 +70,7 @@ connectMap.execute <- function(userCtx, datasetName, sampleSetName, mapType, agg
                 mapPlot <- mapPlot +
                     ggplot2::geom_curve(aes_string2(x="Lon1", y="Lat1", xend="Lon2", yend="Lat2", size=measure, colour=measure),
                                         data=selAggUnitPairData, curvature=0.2, alpha=0.75) +
-                    ggplot2::scale_size_continuous(guide=FALSE, range=c(0.25, 4)) +          					# scale for edge widths
+                    ggplot2::scale_size_continuous(guide="none", range=c(0.25, 4)) +          					# scale for edge widths
                     ggplot2::scale_colour_gradientn(colours=c("skyblue1","midnightblue"))
                 
                 # Now add the markers

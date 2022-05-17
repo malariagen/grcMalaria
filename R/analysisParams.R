@@ -28,7 +28,7 @@ analysis.defaultParams <- list (
     cluster.minSize=5,
     cluster.identity.min=1.0,
     
-    haploNet.minHaploCount=1,
+    #haploNet.minHaploCount=1,
     
     map.connect.identity.min=1.0,
     map.connect.meanDistance.min=0.5,

@@ -31,9 +31,9 @@ mapClusterPrevalence(
 
 \item{markerScale}{TBD}
 
-\item{width}{TBD}
+\item{width}{The width (in inches) of the map image.}
 
-\item{height}{TBD}
+\item{height}{The height (in inches) of the map image.}
 }
 \value{
 TBD

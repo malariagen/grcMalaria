@@ -6,14 +6,14 @@
 # barcodeFrequency has visualization types "pie" and "bar" (pie and bar markers)
 # clusterPrevalence has visualization type "cluster" to show the prevalence of the different clusters
 #
-clusterMap.execute <- function(userCtx, datasetName, sampleSetName, mapType, aggregation, measures, params) {
+clusterMap.execute <- function(userCtx, datasetName, sampleSetName, mapType, baseMapInfo, aggregation, measures, params) {
     visTypes <- analysis.getParam ("map.cluster.visualizations", params)			#; print(visTypes)
     for (vIdx in 1:length(visTypes)) {
-        clusterMap.executeVisualization (userCtx, datasetName, sampleSetName, mapType, visTypes[vIdx], aggregation, measures, params)
+        clusterMap.executeVisualization (userCtx, datasetName, sampleSetName, mapType, baseMapInfo, visTypes[vIdx], aggregation, measures, params)
     }
 }
 #
-clusterMap.executeVisualization <- function(userCtx, datasetName, sampleSetName, mapType, visType, aggregation, measures, params) {
+clusterMap.executeVisualization <- function(userCtx, datasetName, sampleSetName, mapType, baseMapInfo, visType, aggregation, measures, params) {
     sampleSet <- userCtx$sampleSets[[sampleSetName]]
     ctx <- sampleSet$ctx
     dataset <- ctx[[datasetName]]
@@ -24,11 +24,8 @@ clusterMap.executeVisualization <- function(userCtx, datasetName, sampleSetName,
     info <- list(dataFolder=dataFolder)
 
     info$sampleSetName <- sampleSetName;    info$mapType <- mapType;    info$visType <- visType
-    info$plotTitle <- sampleSetName;
-
-    # Build the map necessary to display these samples
-    # Construct a base plot for completing subsequent maps
-    baseMapInfo <- info$baseMapInfo <- map.buildBaseMap (ctx, datasetName, sampleSetName, dataset$meta, dataFolder, params)
+    info$plotTitle <- sampleSetName
+    info$baseMapInfo <- baseMapInfo
 
     # Now compute the aggregation units, the values to be plotted, and make the map
     for (aggIdx in 1:length(aggregation)) {
@@ -40,7 +37,7 @@ clusterMap.executeVisualization <- function(userCtx, datasetName, sampleSetName,
 
         # Work out a "standard" marker size (1/25 of the shortest side) and apply a scaling factor
         scalingFactor <- analysis.getParam ("map.cluster.markerScale", params)			#; print(scalingFactor)
-        bbox <- baseMapInfo$gadmBB;
+        bbox <- baseMapInfo$anBB;
         minSide <- min(abs(bbox$yMax-bbox$yMin),abs(bbox$xMax-bbox$xMin))
         stdMarkerSize <- info$stdMarkerSize <- scalingFactor * minSide / 25			#; print(info$stdMarkerSize)
         
@@ -123,7 +120,10 @@ clusterMap.plotMap <- function (ctx, info, params) {
     # Start with the background map
     baseMapInfo <- info$baseMapInfo
     mapPlot <- baseMapInfo$baseMap
-
+    
+    # Silly trick to make the package checker happy... :-(
+    lon <- lat <- label <- x <- y <- alpha <- NULL
+    
     # If we need to show aggregation unit names, we need to compute the label positioning and plot before the markers
     aggUnitData <- info$aggUnitData
     aggLevel <- info$aggLevel
@@ -160,7 +160,7 @@ clusterMap.plotMap <- function (ctx, info, params) {
             
         # Dirty trick so we can show an annotation with cluster info above the legends.
         # We "plot" a couple of points, and create a ficticious alpha legend containing the cluster info text.
-        bb <- baseMapInfo$gadmBB
+        bb <- baseMapInfo$anBB
         dummydf <- data.frame(x=c(bb$xMin,bb$xMin), y=c(bb$yMax,bb$yMax), alpha=c(0.1, 0.11))
         mapPlot <- mapPlot +
                    ggplot2::geom_point(ggplot2::aes(x=x, y=y, alpha=as.numeric(alpha), size=0.01), data=dummydf) +
@@ -217,19 +217,24 @@ clusterMap.addFreqMarkers <- function (mapPlot, visType, countData, aggUnitData,
 }
 
 clusterMap.addFreqPies <- function (mapPlot, countData, aggUnitData, stdMarkerCount, stdMarkerSize) {
+    # Silly trick to make the package checker happy... :-(
+    Longitude <- Latitude <- Haplo <- ClusterCount <- SampleCount <-NULL
+
     # Now add the pie chart markers
     if (stdMarkerCount==0) {
         mapPlot <- mapPlot +
                    ggforce::geom_arc_bar(ggplot2::aes(x0=Longitude, y0=Latitude, r0=0, r=stdMarkerSize, 
                                          fill=Haplo, amount=ClusterCount),
                              data=countData, stat="pie", inherit.aes=FALSE,
-                             colour="gray25", stroke=0.5, fill="white", show.legend=FALSE)
+                             #colour="gray25", stroke=0.5, fill="white", show.legend=FALSE)
+                             colour="gray25", fill="white", show.legend=FALSE)
     } else {
         mapPlot <- mapPlot +
                    ggforce::geom_arc_bar(ggplot2::aes(x0=Longitude, y0=Latitude, r0=0, r=stdMarkerSize*sqrt(SampleCount/stdMarkerCount), 
                                          fill=Haplo, amount=ClusterCount),
                              data=countData, stat="pie", inherit.aes=FALSE,
-                             colour="gray25", stroke=0.5, fill="white", show.legend=FALSE)
+                             #colour="gray25", stroke=0.5, fill="white", show.legend=FALSE)
+                             colour="gray25", fill="white", show.legend=FALSE)
     }
     mapPlot
 }
@@ -338,20 +343,25 @@ clusterMap.addShareMarkers <- function (mapPlot, visType, clusterShareData, clus
 }
 
 clusterMap.addSharePies <- function (mapPlot, clusterShareData, clusterPalette, aggUnitData, stdMarkerCount, stdMarkerSize) {
+    # Silly trick to make the package checker happy... :-(
+    Longitude <- Latitude <- Cluster <- ClusterCount <- SampleCount <-NULL
+
     # Now add the pie chart markers
     if (stdMarkerCount==0) {
         mapPlot <- mapPlot +
                    ggforce::geom_arc_bar(ggplot2::aes(x0=Longitude, y0=Latitude, r0=0, r=stdMarkerSize, 
                                          fill=Cluster, amount=ClusterCount),
                                 data=clusterShareData, stat="pie", inherit.aes=FALSE,
-                                colour="gray25", stroke=0.5, show.legend=FALSE) +
+                                #colour="gray25", stroke=0.5, show.legend=FALSE) +
+                                colour="gray25", show.legend=FALSE) +
                    ggplot2::scale_fill_manual(values=clusterPalette)
     } else {
         mapPlot <- mapPlot +
                    ggforce::geom_arc_bar(ggplot2::aes(x0=Longitude, y0=Latitude, r0=0, r=stdMarkerSize*sqrt(SampleCount/stdMarkerCount), 
                                          fill=Cluster, amount=ClusterCount),
                                 data=clusterShareData, stat="pie", inherit.aes=FALSE,
-                                colour="gray25", stroke=0.5, show.legend=FALSE) +
+                                #colour="gray25", stroke=0.5, show.legend=FALSE) +
+                                colour="gray25", show.legend=FALSE) +
                    ggplot2::scale_fill_manual(values=clusterPalette)
     }
     mapPlot
@@ -405,6 +415,9 @@ clusterMap.addShareBars <- function (mapPlot, clusterShareData, clusterPalette, 
         freqBarData <- rbind(freqBarData, unitBarData)
     }												#; print(freqBarData)
     
+    # Silly trick to make the package checker happy... :-(
+    Cluster <- NULL
+
     # Got the dataframe for drawing all the rectangles, now do the drawing and colouring
     mapPlot <- mapPlot +
                ggplot2::geom_rect(ggplot2::aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2, fill=Cluster), 
@@ -515,15 +528,21 @@ clusterMap.addConnections <- function (mapPlot, visType, cluster, clusterShareDa
         
         hc <- grDevices::rgb2hsv(grDevices::col2rgb(clusterColour))
         weakHaploColour <- grDevices::hsv(h=hc[1,1],s=hc[2,1]*0.2,v=hc[3,1])
+        
+        # Silly trick to make the package checker happy... :-(
+        Lon1 <- Lat1 <- Lon2 <- Lat2 <- Weight <- NULL
 	
         # Now plot the connections
         mapPlot <- mapPlot +
                    ggplot2::geom_curve(ggplot2::aes(x=Lon1, y=Lat1, xend=Lon2, yend=Lat2, size=Weight, colour=Weight),	# draw edges as arcs
                                data=aggUnitPairData, curvature=0.2, alpha=0.75) +
-                   ggplot2::scale_size_continuous(guide=FALSE, range=c(0.25, 4)) +          			# scale for edge widths
+                   ggplot2::scale_size_continuous(guide="none", range=c(0.25, 4)) +          			# scale for edge widths
                    ggplot2::scale_colour_gradientn(name="Sharing", colours=c(weakHaploColour,clusterColour))
     }
-     
+    
+    # Silly trick to make the package checker happy... :-(
+    Longitude <- Latitude <- ClusterProp <- NULL
+
     # Plot the Aggregation Unit markers
     mapPlot <- mapPlot +
 	       ggplot2::geom_point(ggplot2::aes(x=Longitude, y=Latitude, fill=ClusterProp), 

@@ -1,6 +1,6 @@
 ###############################################################################
 # Map Aggregated Measure Analysis
-################################################################################
+###############################################################################
 #
 markerMap.getDiversityMeasures <- function() {
     c("maxHaploFreq",
@@ -9,14 +9,22 @@ markerMap.getDiversityMeasures <- function() {
       "medianDistance")
 }
 
-markerMap.execute <- function(userCtx, datasetName, sampleSetName, mapType, aggregation, measures, params) {
-    sampleSet <- userCtx$sampleSets[[sampleSetName]]
-    ctx <- sampleSet$ctx
-    dataset <- ctx[[datasetName]]
-    config <- ctx$config
+markerMap.execute <- function(userCtx, datasetName, sampleSetName, interval, mapType, baseMapInfo, aggregation, measures, params) {
         
-    # Get the sample metadata
+    # Get the context and trim it by time interval
+    sampleSet <- userCtx$sampleSets[[sampleSetName]]
+    ctx <- analysis.trimContextByTimeInterval (sampleSet$ctx, interval)
+    if (is.null(ctx)) {
+        print(paste("No samples found- skipping interval", interval$name))
+        return()
+    }								#; print(str(ctx))
+    dataset <- ctx[[datasetName]]
     sampleMeta <- dataset$meta
+    if (nrow(sampleMeta)==0) {
+        print(paste("No samples found - skipping interval", interval$name))
+        return()
+    }
+    config <- ctx$config
     
     if (mapType=="sampleCount") {
         measures <- "NumberOfSamples"
@@ -25,9 +33,8 @@ markerMap.execute <- function(userCtx, datasetName, sampleSetName, mapType, aggr
     # Get the output folders
     dataFolder <- getOutFolder(ctx, sampleSetName, c(paste("map", mapType, sep="-"), "data"))
     
-    # Build the map necessary to display these samples
-    # Construct a base plot for completing subsequent maps
-    baseMapInfo <- map.buildBaseMap (ctx, datasetName, sampleSetName, sampleMeta, dataFolder, params)
+    # Silly trick to make the package checker happy... :-(
+    lon <- lat <- label <- NULL
 
     # Now compute the aggregation units, the values to be plotted, and make the map
     for (aggIdx in 1:length(aggregation)) {
@@ -154,7 +161,10 @@ markerMap.execute <- function(userCtx, datasetName, sampleSetName, mapType, aggr
             if (mapType=="sampleCount") {
                 aggLabel <- paste(aggLabel, datasetName, sep="-")
             }												#;print(aggLabel)
-            graphicFilenameRoot  <- paste(plotFolder, paste("map", sampleSetName, aggLabel, measure, sep="-"), sep="/")	#;print(graphicFilenameRoot)
+            graphicFilenameRoot  <- paste(plotFolder, paste("map", sampleSetName, aggLabel, measure, sep="-"), sep="/")
+            if (!is.null(interval$name)) {
+                graphicFilenameRoot  <- paste(graphicFilenameRoot, interval$name, sep="-")		#;print(graphicFilenameRoot)
+            }
             ggplot2::ggsave(plot=mapPlot, filename=paste(graphicFilenameRoot,"png",sep="."), device="png", width=mapSize$width, height=mapSize$height, units="in", dpi=300)
         }
     }
