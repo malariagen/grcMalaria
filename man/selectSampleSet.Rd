@@ -9,20 +9,32 @@ selectSampleSet(ctx, sampleSetName, select)
 \arguments{
 \item{ctx}{The analysis context, created by intializeContext().}
 
-\item{sampleSetName}{The name of the sample set, to be used to identifty it when calling analysis tasks.}
+\item{sampleSetName}{The name of the sample set, to be used to identify it when calling analysis tasks. This will create a folder with the same name e.g. “Laos”, or "Test170522".}
 
-\item{select}{The criteria for selecting the samples. The value must be a list.}
+\item{select}{The criteria for sample selection. Selected samples will match all specified criteria. The values must be a list. "field" corresponds to a column name in the datafile. "values" correspond to an array of possible values that can be matched for a sample to be selected. Use "," to add additional parameters inside a quotation mark " ".}
 }
 \value{
 The analysis context, augmented with the new sample set
 }
 \description{
-Selects a set of samples for analysis, based on their metadata values.
-A given analysis context can contain multiple sampe sets, with different names.
-The selection criteria are specified as a list containing a sequence of lists wth two elements each:
+Selects a set of samples for analysis, based on the provided metadata values.
+A given analysis context can contain multiple sample sets. These can be labelled with different names.
+The selection criteria are specified as a list containing a sequence of lists with two elements each:
 "field" which is the column name to be checked, and "values" which is an array of possible values that can be matched for a sample to be selected.
 A selected sample must match all the criteria.
 }
 \examples{
-#TBD
+# Create a SampleSet named "Laos", based on "Timepoint" and "Study"
+ctx <- selectSampleSet(ctx, sampleSet="Laos", select=list(
+list(field="TimePoint", values=c("D00H00","-")),
+list(field="Study", values="1208-PF-LA-CMPE-GENRE") ))
+
+# Create a SampleSet named "Test170522", containing only isolates from 2018, and 2019 from Vietnam
+ctx <- selectSampleSet(ctx, sampleSet="Test170522", select=list(
+list(field="Year", values=c("2018","2019")),
+list(field="Country", values="VN") ))
+
+# Create a SampleSet named "C580Y", containing only isolates with the C580Y genotype
+ctx <- selectSampleSet(ctx, sampleSet="C580Y", select=list(
+list(field="Kelch", values="C580Y") ))
 }
