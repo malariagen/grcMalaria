@@ -2,7 +2,7 @@
 % Please edit documentation in R/public.R
 \name{mapDrugResistancePrevalence}
 \alias{mapDrugResistancePrevalence}
-\title{Map prevalence of Drug resistance (estimated phenotype)}
+\title{Map prevalence of Drug resistance (predicted phenotype)}
 \usage{
 mapDrugResistancePrevalence(
   ctx,
@@ -42,7 +42,7 @@ To specify a drug put the drug name in between quotation marks e.g. "Artemisinin
 \item{height}{The height (in inches) of the map image.}
 }
 \description{
-Creates a map showing the levels of estimated phenotypic resistance to a particular antimalarial drug.
+Creates a map showing the levels of estimated resistance to a particular antimalarial drug. Based on published genetic markers, each sample has a predicted phenotype for different types of antimalarial drugs.
 If multiple drugs are specified, then different maps will be created for different drugs.
 The predictions of resistance for any given drug are aggregated at the desired administrative level: Province (level 1), or District (level 2). Separate maps are created for each drug-administrative-combination.
 For each aggregation unit, we place a marker on the map, coloured according to the level of resistance to the drug, with a label indicating the prevalence.
@@ -63,4 +63,12 @@ mapDrugResistancePrevalence (ctx, sampleSet="Laos", timePeriods=periods,
 drugs=c(“Artemisinin”, “Chloroquine”), aggregate=c("Province","District"),
 minAggregateCount=10, showNames=TRUE, markerSize=16,
 width=15, height=15)
+
+}
+\seealso{
+Useful links:
+\itemize{
+\item Details of how drug resistance phenotypes are predicted based on genetic markers {\url{http://ngs.sanger.ac.uk/production/malaria/Resource/29/20200705-GenRe-05-PhenotypeRules-0.39.pdf}}
+\item Other useful background information about the SpotMalaria platform  {\url{https://www.malariagen.net/resource/29}}
+}
 }
