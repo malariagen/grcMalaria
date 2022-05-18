@@ -177,8 +177,10 @@ meta.select <- function(sampleMeta, selectDefs) {
 #
 # Select sample metadata within a given time period (start and end date inclusive)
 #
-meta.filterByDate <- function(sampleMeta, startDate, endDate) {
-    metaDates <- as.Date(sampleMeta$CollectionDate, tryFormats=c("%d/%m/%Y"), optional=TRUE)	#; print(length(metaDates)); print(metaDates[1:10])
+meta.defaultDateFormat <- "%d/%m/%Y"
+#
+meta.filterByDate <- function(sampleMeta, startDate, endDate, format=meta.defaultDateFormat) {
+    metaDates <- meta.getSampleDates (sampleMeta, format)		#; print(head(metaDates))
     selectIdx <- rep(TRUE, length(metaDates))
     if (!is.null(startDate)) {
         selectIdx <- selectIdx & (metaDates>=startDate)
@@ -191,4 +193,18 @@ meta.filterByDate <- function(sampleMeta, startDate, endDate) {
          filterMeta <- sampleMeta[selectIdx,]
     }								#; print(nrow(filterMeta))
     filterMeta
+}
+#
+#
+#
+meta.getSampleDates <- function (sampleMeta, format=meta.defaultDateFormat) {
+    if ("CollectionDate" %in% colnames(sampleMeta)) {
+        metaDatesIn <- sampleMeta$CollectionDate
+    } else {
+        message("Your GRC data does not contain the CollectionDate Field. Using the Year field instead- see the documentation.")
+        years <- as.integer(sampleMeta$Year)
+        metaDatesIn <- paste0("31/12/", years)		#; print(head(metaDatesIn))
+    }
+    metaDates <- as.Date(metaDatesIn, tryFormats=format, optional=TRUE)		#; print(head(metaDates))
+    metaDates
 }
