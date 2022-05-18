@@ -29,7 +29,7 @@ Currently, the public GRC data only contains years, so only the year in the prov
 which include "Artemisinin", "Chloroquine", "Piperaquine", "DHA-PPQ" (i.e. Dihydroartemisinin/piperaquine), "Chloroquine", and "Pyrimethamine".
 To specify a drug put the drug name in between quotation marks e.g. "Artemisinin", or  c(“Artemisinin”, “Chloroquine”, “S-P”) to select several specific drugs.}
 
-\item{aggregate}{The administrative level at which we aggregate}
+\item{aggregate}{The administrative level at which we aggregate.}
 
 \item{minAggregateCount}{The minimum count of aggregated samples. To avoid estimating on very small samples, one can set a minimum count of samples, below which the marker is not shown.}
 
@@ -51,14 +51,14 @@ Additionally data files are created. Created .tab files can be opened with for e
 Maps and data are located in .../output/out/sampleSetName/map-drug/.
 }
 \examples{
-#Given lists of time periods of interest, in this case calender years
+#Given lists of time periods of interest, in this case calendar years
 periods <- list(
 list(name="2018", type="year", start="1-Jan-2018"),
 list(name="2019", type="year", start="1-Jan-2019"),
 list(name="2020", type="year", start="1-Jan-2020")
 )
 
-# Map estimated Artemisinin and Chloroquine phenotypic resistance prevalence for sampleSet "Laos" for both Province and District level for calender years 2018-2020.
+# Map estimated Artemisinin and Chloroquine phenotypic resistance prevalence for sampleSet "Laos" for both Province and District level for calendar years 2018-2020.
 mapDrugResistancePrevalence (ctx, sampleSet="Laos", timePeriods=periods,
 drugs=c(“Artemisinin”, “Chloroquine”), aggregate=c("Province","District"),
 minAggregateCount=10, showNames=TRUE, markerSize=16,

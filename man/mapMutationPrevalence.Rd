@@ -53,14 +53,14 @@ Additionally data files are created. Created .tab files can be opened with for e
 Maps and data are located in .../output/out/sampleSetName/map-mutation/.
 }
 \examples{
-#Given lists of time periods of interest, in this case calender years
+#Given lists of time periods of interest, in this case calendar years
 periods <- list(
 list(name="2018", type="year", start="1-Jan-2018"),
 list(name="2019", type="year", start="1-Jan-2019"),
 list(name="2020", type="year", start="1-Jan-2020")
 )
 
-# Produce prevalence maps for all available genetic mutation types, for sampleSet "Laos", for District level, and for calender years 2018-2020.
+# Produce prevalence maps for all available genetic mutation types, for sampleSet "Laos", for District level, and for calendar years 2018-2020.
 mapMutationPrevalence (ctx, sampleSet="Laos", timePeriods=periods,
 mutations="ALL", aggregate="District",
 minAggregateCount=10, showNames=TRUE, markerSize=16,
