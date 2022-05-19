@@ -23,7 +23,7 @@ mapBarcodeFrequencies(
 
 \item{type}{Frequency of barcode groups can be visualized either as a "bar" and/or a "pie".}
 
-\item{aggregate}{The administrative level at which we perform pairwise comparisons, either "Province" and/or "District"}
+\item{aggregate}{The administrative level at which we perform pairwise comparisons, either "Province" and/or "District".}
 
 \item{minAggregateCount}{The minimum count of aggregated samples. To avoid estimating on very small samples, one can set a minimum count of samples, below which the marker is not shown.}
 

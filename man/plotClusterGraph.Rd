@@ -35,7 +35,7 @@ Produces network graphs of clusters assigned in findClusters function
 \description{
 Creates graphs of cluster networks within a sampleSet of Plasmodium samples.
 The graphs are based on the cluster analysis context, which needs to be produced with the findClusters function in advance.
-The findClusters functions function partitions the Plasmodium samples into clusters with a similar genetic background, based on the 'genetic barcode' similarity.
+The findClusters function partitions the Plasmodium samples into clusters with a similar genetic background, based on the 'genetic barcode' similarity.
 Use command ?findClusters for more information.
 The 'genetic barcode' consists of 101 SNPs determined for each sample. These SNPs are distributed across all nuclear chromosomes.
 SNP positions were chosen based on their ability to differentiate populations and their power to recapitulate genetic distance.
