@@ -25,11 +25,12 @@ mapMutationPrevalence(
 \item{timePeriods}{A separately given list of time period object for partitioning samples into time-interval plots. Each list specifies a time period, with three parameters: name, type and, start. Parameter type can currently only be year. Parameter start must be a date in the format “dd-MMM-yyyy”, and parameter name must be provided. The string passed in the name parameter is added to the end of the file name of the produced files.
 Currently, the public GRC data only contains years, so only the year in the provided “start” date is used.}
 
-\item{mutations}{The genetic mutation types for which prevalence will be calculated; "ALL" creates maps for all available genetic mutation types,
-which include "kelch13", "arps10", "ferredoxin", "mdr2" (conferring resistance to Artemisinin), "crt" (conferring resistance to Chloroquine),
-"dhfr" (conferring resistance to Pyrimethamine), "dhps" (conferring resistance to Sulfadoxine), "plasmepsin 2/3" (conferring resistance to Piperaquine),
-"mdr1" (conferring resistance to multiple drugs).
-To specify a mutation put the mutation type in between quotation marks e.g. "dhfr", or  c(“arps10”, “kelch13”, “mdr1”) to select several genetic mutation types.}
+\item{mutations}{The genetic mutation types for which prevalence will be calculated; "ALL" creates maps for all 42 available genetic mutation types.
+Available mutation types include: "crt_C72S",    "crt_M74I",    "crt_N75E",    "crt_N75D",    "crt_K76T",    "crt_T93S",    "crt_H97Y",    "crt_H97L",    "crt_I218F",    "crt_A220S",
+"crt_Q271E",    "crt_N326S",    "crt_N326D",    "crt_T333S",    "crt_I356T",    "crt_I356L",    "crt_R371I",    "dhfr_N51I",    "dhfr_C59R",    "dhfr_C59H",    "dhfr_S108N",
+"dhfr_S108T",    "dhfr_I164L",    "dhps_S436A",    "dhps_S436F",    "dhps_A437G",    "dhps_K540E",    "dhps_K540N",    "dhps_A581G",    "dhps_A613T",    "dhps_A613S",    "mdr1_N86Y",
+mdr1_Y184F",    "mdr1_S1034I",    "mdr1_F1226Y",    "mdr1_D1246Y",    "arps10_V127M",    "arps10_D128H",    "arps10_D128Y",    "fd_D193Y",    "mdr2_T484I",    "exo_E415G".
+To specify a mutation put the mutation type in between quotation marks e.g. "crt_N75E", or  c("arps10_D128Y","fd_D193Y","crt_I218F") to select several genetic mutation types.}
 
 \item{aggregate}{The administrative level at which we aggregate.}
 
@@ -44,7 +45,7 @@ To specify a mutation put the mutation type in between quotation marks e.g. "dhf
 \item{height}{The height (in inches) of the map image.}
 }
 \description{
-Creates a map showing the prevalence of genetic mutations known to be associated with antimalarial drug resistance.
+Creates maps showing the prevalence of genetic mutations types known to be associated with antimalarial drug resistance.
 If multiple mutation types are specified, then a map will be created for each mutation type.
 The prevalence of genetic mutation types are aggregated at the desired administrative level: Province (level 1), or District (level 2). Separate maps are created for each mutation-administrative-combination.
 For each aggregation unit, we place a marker on the map, coloured according to the prevalence of the genetic mutation type, with a label indicating the prevalence.
@@ -65,4 +66,10 @@ mapMutationPrevalence (ctx, sampleSet="Laos", timePeriods=periods,
 mutations="ALL", aggregate="District",
 minAggregateCount=10, showNames=TRUE, markerSize=16,
 width=15, height=15)
+}
+\seealso{
+Useful links:
+\itemize{
+ \item user guide for information on functionality of specific genetic mutation types {\url{https://olivo-miotto-genre.notion.site/grcMalaria-R-package-User-Guide-dfaac7ea30b5430b8522e8b531fd2e4b}}
+}
 }
