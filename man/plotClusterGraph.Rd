@@ -2,10 +2,10 @@
 % Please edit documentation in R/public.R
 \name{plotClusterGraph}
 \alias{plotClusterGraph}
-\title{Plot graphs of bracode identity, using cluster}
+\title{Plot cluster networks based on genetic barcode}
 \usage{
 plotClusterGraph(
-  ctx,
+  ctx_cluster,
   sampleSet,
   clusterSet,
   graphLayout = "fr",
@@ -15,26 +15,36 @@ plotClusterGraph(
 )
 }
 \arguments{
-\item{ctx}{TBD}
+\item{ctx_cluster}{The cluster analysis context, created by findClusters().}
 
-\item{sampleSet}{TBD}
+\item{sampleSet}{The name of the sample set being used; must have been previously created by selectSampleSet().}
 
-\item{clusterSet}{TBD}
+\item{clusterSet}{The name of the clustering set, defined in findClusters().}
 
-\item{graphLayout}{TBD}
+\item{graphLayout}{?, the default="fr".}
 
-\item{weightPower}{TBD}
+\item{weightPower}{?, the default is 2.}
 
 \item{width}{The width (in inches) of the map image.}
 
 \item{height}{The height (in inches) of the map image.}
 }
 \value{
-TBD
+Produces network graphs of clusters assigned in findClusters function
 }
 \description{
-Plot graphs of bracode identity, using cluster
+Creates graphs of cluster networks within a sampleSet of Plasmodium samples.
+The graphs are based on the cluster analysis context, which needs to be produced with the findClusters function in advance.
+The findClusters functions function partitions the Plasmodium samples into clusters with a similar genetic background, based on the 'genetic barcode' similarity.
+Use command ?findClusters for more information.
+The 'genetic barcode' consists of 101 SNPs determined for each sample. These SNPs are distributed across all nuclear chromosomes.
+SNP positions were chosen based on their ability to differentiate populations and their power to recapitulate genetic distance.
+Additionally, data files are created. Created .tab files can be opened with for example Excel.
+Maps and data are located in .../output/out/(sampleSetName)/graph/.
 }
 \examples{
- #TBD
+#Plot cluster network graph for sampleSet "Laos", and clusterSet "LAclust"
+plotClusterGraph (ctx_cluster, sampleSet="Laos", clusterSet="LAclust",
+graphLayout="fr",weightPower=2,
+width=15,height=15)
 }

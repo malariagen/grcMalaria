@@ -60,7 +60,7 @@ list(name="2020", type="year", start="1-Jan-2020")
 
 # Map estimated Artemisinin and Chloroquine phenotypic resistance prevalence for sampleSet "Laos" for both Province and District level for calendar years 2018-2020.
 mapDrugResistancePrevalence (ctx, sampleSet="Laos", timePeriods=periods,
-drugs=c(“Artemisinin”, “Chloroquine”), aggregate=c("Province","District"),
+drugs=c("Artemisinin", "Chloroquine"), aggregate=c("Province","District"),
 minAggregateCount=10, showNames=TRUE, markerSize=16,
 width=15, height=15)
 
