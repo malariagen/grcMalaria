@@ -21,7 +21,7 @@ Examples of names are: 'Countries', 'Provinces', 'Kelch13', etc.}
 }
 \description{
 This function allows for specification of graphical display of samples based on their metadata,
-that can subsequently be used in a principal component analysis (plotPrincipalComponents()),
+that can subsequently be used to plot the population structure with a principal component analysis (plotPrincipalComponents()),
 or creation of a neighbour-joining tree (plotTree()).
 Give command ?plotPrincipalComponents, or ?plotTree for more information.
 Specification based on metadata (i.e. attributes) is done by loading an Excel spreadsheet into R.
