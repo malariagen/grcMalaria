@@ -37,11 +37,11 @@ This function produces principal component analysis (PCA) plots, in which the po
 is structured in principal components based on their 'genetic barcode'.
 The 'genetic barcode' consists of 101 SNPs determined for each sample. These SNPs are distributed across all nuclear chromosomes.
 SNP positions were chosen based on their ability to differentiate populations and their power to recapitulate genetic distance.
-One plot is created for each specified attribute in the parameter 'plots'.
+One plot is created for each specified attribute in the parameter 'plots', in which the samples are coloured according to user input.
 Graphical display of attributes needs to be specified before using this function.
 Give command ?loadGraphicAttributes for more information.
 Additionally, data files are created. Created .tab files can be opened with for example Excel.
-Maps and data are located in .../output/out/(sampleSetName)/(PCA-method, see parameter 'type')/.
+Plots and data are located in .../output/out/(sampleSetName)/(PCA-method, see parameter 'type')/.
 }
 \examples{
 # Perform a principal component analysis for province, kelch13, plasmepsin 2,3, and kelch13 in combination with plasmepsin 2,3,
