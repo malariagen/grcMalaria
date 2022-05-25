@@ -606,7 +606,7 @@ mapBarcodeFrequencies <- function (ctx, sampleSet,
 #' # Produces a cluster analysis context named "ctx_cluster",
 #' # and clusterSet output named "Laos_clusters", containing clusters of at least 5 samples
 #' # based on sampleSet "Laos", using the Louvain method at genetic similarity levels of 100 and 95 percent
-#' ctx_cluster <- findClusters(ctx, sampleSet="Laos", clusterSet = "Laos_clusters",
+#' ctx <- findClusters(ctx, sampleSet="Laos", clusterSet = "Laos_clusters",
 #' minIdentity = c(1, 0.95),
 #' clusteringMethod = "louvain", minClusterSize = 5)
 #
@@ -638,7 +638,7 @@ findClusters <- function (ctx, sampleSet, clusterSet,
 #' Additionally, data files are created. Created .tab files can be opened with for example Excel.
 #' Maps and data are located in .../output/out/(sampleSetName)/graph/.
 #'
-#' @param ctx_cluster The cluster analysis context, created by findClusters().
+#' @param ctx The (cluster) analysis context, created by findClusters().
 #' @param sampleSet The name of the sample set being used; must have been previously created by selectSampleSet().
 #' @param clusterSet The name of the clustering set, defined in findClusters().
 #' @param graphLayout ?, the default="fr".
@@ -651,11 +651,11 @@ findClusters <- function (ctx, sampleSet, clusterSet,
 #'
 #' @examples
 #' #Plot cluster network graph for sampleSet "Laos", and clusterSet "LAclust"
-#' plotClusterGraph (ctx_cluster, sampleSet="Laos", clusterSet="LAclust",
+#' plotClusterGraph (ctx, sampleSet="Laos", clusterSet="LAclust",
 #' graphLayout="fr",weightPower=2,
 #' width=15,height=15)
 #
-plotClusterGraph <- function (ctx_cluster, sampleSet, clusterSet,
+plotClusterGraph <- function (ctx, sampleSet, clusterSet,
                    graphLayout="fr", weightPower=2,
                    width=15, height=15) {
     mapParams <- list(
@@ -664,7 +664,7 @@ plotClusterGraph <- function (ctx_cluster, sampleSet, clusterSet,
         graph.weightPower=weightPower,
         plot.size=list(width=width,height=height)
     )
-    analysis.executeOnSampleSet (ctx_cluster=ctx_cluster, sampleSetName=sampleSet, tasks="graph", params=mapParams)
+    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="graph", params=mapParams)
 }
 
 #############################################################
@@ -682,7 +682,7 @@ plotClusterGraph <- function (ctx_cluster, sampleSet, clusterSet,
 #' Additionally, data files are created. Created .tab files can be opened with for example Excel.
 #' Maps and data are located in .../output/out/(sampleSetName)/map-clusterSharing/.
 #'
-#' @param ctx_cluster The cluster analysis context, created by findClusters().
+#' @param ctx The (cluster) analysis context, created by findClusters().
 #' @param sampleSet The name of the sample set being used; must have been previously created by selectSampleSet().
 #' @param clusterSet The name of the clustering set, defined in findClusters().
 #' @param type Frequency of clusters can be visualized either as a "bar" and/or a "pie". The default is c("bar", "pie").
@@ -700,14 +700,14 @@ plotClusterGraph <- function (ctx_cluster, sampleSet, clusterSet,
 #' @examples
 #' # Map cluster frequencies in both bar and pie form, for sampleSet "Laos", and clusterSet "LAclust" on both a Province and District level,
 #' # based on cluster analysis context called ctx_cluster
-#' mapClusterSharing (ctx_cluster, sampleSet="Laos", clusterSet = "LAclust",
+#' mapClusterSharing (ctx, sampleSet="Laos", clusterSet = "LAclust",
 #' type=c("bar", "pie"),
 #' aggregate=c("Province","District"),
 #' minAggregateCount=5, showNames=TRUE, markerScale=0.8,
 #' width=15, height=15)
 #'
 #
-mapClusterSharing <- function (ctx_cluster, sampleSet, clusterSet,
+mapClusterSharing <- function (ctx, sampleSet, clusterSet,
                    type=c("bar","pie"),
                    aggregate="Province", minAggregateCount=5,
                    showNames=TRUE, markerScale=0.8,
@@ -723,7 +723,7 @@ mapClusterSharing <- function (ctx_cluster, sampleSet, clusterSet,
         map.cluster.markerScale=markerScale,
         plot.size=list(width=width,height=height)
     )
-    analysis.executeOnSampleSet (ctx_cluster=ctx_cluster, sampleSetName=sampleSet, tasks="map/clusterSharing", params=mapParams)
+    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/clusterSharing", params=mapParams)
 }
 
 #############################################################
@@ -743,7 +743,7 @@ mapClusterSharing <- function (ctx_cluster, sampleSet, clusterSet,
 #' Additionally, data files are created. Created .tab files can be opened with for example Excel.
 #' Maps and data are located in .../output/out/(sampleSetName)/map-clusterPrevalence/.
 #'
-#' @param ctx_cluster The cluster analysis context, created by findClusters().
+#' @param ctx The (cluster) analysis context, created by findClusters().
 #' @param sampleSet The name of the sample set being used; must have been previously created by selectSampleSet().
 #' @param clusterSet The name of the clustering set, defined in findClusters().
 #' @param aggregate The administrative level at which we perform pairwise comparisons, either "Province" and/or "District". The default is "Province".
@@ -761,12 +761,12 @@ mapClusterSharing <- function (ctx_cluster, sampleSet, clusterSet,
 #' # Produce a network and prevalence map for each assigned cluster,
 #' # using cluster analysis context called ctx_cluster,
 #' # for sampleSet "Laos", and clusterSet "LAclust" on both a Province and District level,
-#' mapClusterPrevalence (ctx_cluster, sampleSet="Laos", clusterSet = "LAclust",
+#' mapClusterPrevalence (ctx, sampleSet="Laos", clusterSet = "LAclust",
 #' aggregate=c("Province","District"),
 #' minAggregateCount=5, showNames=TRUE, markerScale=0.8,
 #' width=15, height=15)
 #
-mapClusterPrevalence <- function (ctx_cluster, sampleSet, clusterSet,
+mapClusterPrevalence <- function (ctx, sampleSet, clusterSet,
                    aggregate="Province", minAggregateCount=5,
                    showNames=TRUE, markerScale=0.8,
                    width=15, height=15) {
@@ -781,7 +781,7 @@ mapClusterPrevalence <- function (ctx_cluster, sampleSet, clusterSet,
         map.cluster.markerScale=markerScale,
         plot.size=list(width=width,height=height)
     )
-    analysis.executeOnSampleSet (ctx_cluster=ctx_cluster, sampleSetName=sampleSet, tasks="map/clusterPrevalence", params=mapParams)
+    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/clusterPrevalence", params=mapParams)
 }
 
 #############################################################
