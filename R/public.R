@@ -640,11 +640,7 @@ findClusters <- function (ctx, sampleSet, clusterSet,
 #' Additionally, data files are created. Created .tab files can be opened with for example Excel.
 #' Maps and data are located in .../output/out/(sampleSetName)/graph/.
 #'
-<<<<<<< HEAD
 #' @param ctx The analysis context, updated with findClusters().
-=======
-#' @param ctx The (cluster) analysis context, created by findClusters().
->>>>>>> 6ae4bbb2b9bfa4efa83c1124e577f572cdf17c51
 #' @param sampleSet The name of the sample set being used; must have been previously created by selectSampleSet().
 #' @param clusterSet The name of the clustering set, defined in findClusters().
 #' @param graphLayout ?, the default="fr".
@@ -657,10 +653,7 @@ findClusters <- function (ctx, sampleSet, clusterSet,
 #'
 #' @examples
 #' #Plot cluster network graph for sampleSet "Laos", and clusterSet "LAclust"
-<<<<<<< HEAD
 #' # based on analysis context called ctx updated with findClusters
-=======
->>>>>>> 6ae4bbb2b9bfa4efa83c1124e577f572cdf17c51
 #' plotClusterGraph (ctx, sampleSet="Laos", clusterSet="LAclust",
 #' graphLayout="fr",weightPower=2,
 #' width=15,height=15)
@@ -692,11 +685,7 @@ plotClusterGraph <- function (ctx, sampleSet, clusterSet,
 #' Additionally, data files are created. Created .tab files can be opened with for example Excel.
 #' Maps and data are located in .../output/out/(sampleSetName)/map-clusterSharing/.
 #'
-<<<<<<< HEAD
 #' @param ctx The analysis context, updated with findClusters().
-=======
-#' @param ctx The (cluster) analysis context, created by findClusters().
->>>>>>> 6ae4bbb2b9bfa4efa83c1124e577f572cdf17c51
 #' @param sampleSet The name of the sample set being used; must have been previously created by selectSampleSet().
 #' @param clusterSet The name of the clustering set, defined in findClusters().
 #' @param type Frequency of clusters can be visualized either as a "bar" and/or a "pie". The default is c("bar", "pie").
@@ -713,11 +702,7 @@ plotClusterGraph <- function (ctx, sampleSet, clusterSet,
 #'
 #' @examples
 #' # Map cluster frequencies in both bar and pie form, for sampleSet "Laos", and clusterSet "LAclust" on both a Province and District level,
-<<<<<<< HEAD
 #' # based on analysis context called ctx updated with findClusters
-=======
-#' # based on cluster analysis context called ctx_cluster
->>>>>>> 6ae4bbb2b9bfa4efa83c1124e577f572cdf17c51
 #' mapClusterSharing (ctx, sampleSet="Laos", clusterSet = "LAclust",
 #' type=c("bar", "pie"),
 #' aggregate=c("Province","District"),
@@ -761,11 +746,7 @@ mapClusterSharing <- function (ctx, sampleSet, clusterSet,
 #' Additionally, data files are created. Created .tab files can be opened with for example Excel.
 #' Maps and data are located in .../output/out/(sampleSetName)/map-clusterPrevalence/.
 #'
-<<<<<<< HEAD
 #' @param ctx The analysis context, updated with findClusters().
-=======
-#' @param ctx The (cluster) analysis context, created by findClusters().
->>>>>>> 6ae4bbb2b9bfa4efa83c1124e577f572cdf17c51
 #' @param sampleSet The name of the sample set being used; must have been previously created by selectSampleSet().
 #' @param clusterSet The name of the clustering set, defined in findClusters().
 #' @param aggregate The administrative level at which we perform pairwise comparisons, either "Province" and/or "District". The default is "Province".
