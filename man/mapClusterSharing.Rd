@@ -5,7 +5,7 @@
 \title{Map cluster frequencies}
 \usage{
 mapClusterSharing(
-  ctx_cluster,
+  ctx,
   sampleSet,
   clusterSet,
   type = c("bar", "pie"),
@@ -18,7 +18,7 @@ mapClusterSharing(
 )
 }
 \arguments{
-\item{ctx_cluster}{The cluster analysis context, created by findClusters().}
+\item{ctx}{The analysis context, updated with findClusters().}
 
 \item{sampleSet}{The name of the sample set being used; must have been previously created by selectSampleSet().}
 
@@ -56,8 +56,8 @@ Maps and data are located in .../output/out/(sampleSetName)/map-clusterSharing/.
 }
 \examples{
 # Map cluster frequencies in both bar and pie form, for sampleSet "Laos", and clusterSet "LAclust" on both a Province and District level,
-# based on cluster analysis context called ctx_cluster
-mapClusterSharing (ctx_cluster, sampleSet="Laos", clusterSet = "LAclust",
+# based on analysis context called ctx updated with findClusters
+mapClusterSharing (ctx, sampleSet="Laos", clusterSet = "LAclust",
 type=c("bar", "pie"),
 aggregate=c("Province","District"),
 minAggregateCount=5, showNames=TRUE, markerScale=0.8,

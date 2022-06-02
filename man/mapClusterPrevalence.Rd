@@ -5,7 +5,7 @@
 \title{Map cluster networks between sites based on prevalence}
 \usage{
 mapClusterPrevalence(
-  ctx_cluster,
+  ctx,
   sampleSet,
   clusterSet,
   aggregate = "Province",
@@ -17,7 +17,7 @@ mapClusterPrevalence(
 )
 }
 \arguments{
-\item{ctx_cluster}{The cluster analysis context, created by findClusters().}
+\item{ctx}{The analysis context, updated with findClusters().}
 
 \item{sampleSet}{The name of the sample set being used; must have been previously created by selectSampleSet().}
 
@@ -55,9 +55,9 @@ Maps and data are located in .../output/out/(sampleSetName)/map-clusterPrevalenc
 }
 \examples{
 # Produce a network and prevalence map for each assigned cluster,
-# using cluster analysis context called ctx_cluster,
+# using analysis context called ctx, updated with findClusters()
 # for sampleSet "Laos", and clusterSet "LAclust" on both a Province and District level,
-mapClusterPrevalence (ctx_cluster, sampleSet="Laos", clusterSet = "LAclust",
+mapClusterPrevalence (ctx, sampleSet="Laos", clusterSet = "LAclust",
 aggregate=c("Province","District"),
 minAggregateCount=5, showNames=TRUE, markerScale=0.8,
 width=15, height=15)

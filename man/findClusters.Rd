@@ -2,7 +2,7 @@
 % Please edit documentation in R/public.R
 \name{findClusters}
 \alias{findClusters}
-\title{Clustering (Initialize a clustering context)}
+\title{Clustering (Updating the analysis context)}
 \usage{
 findClusters(
   ctx,
@@ -14,7 +14,7 @@ findClusters(
 )
 }
 \arguments{
-\item{ctx}{The analysis context, created by intializeContext().}
+\item{ctx}{The analysis context, updated with intializeContext().}
 
 \item{sampleSet}{The name of the sample set being used; must have been previously created by selectSampleSet().}
 
@@ -25,7 +25,7 @@ The default is 1.}
 
 \item{clusteringMethod}{The clustering method. Two methods are available: "allNeighbours" and "louvain". The default is "allNeighbours".
 The "allNeighbours" method clusters samples together that are above the set "minIdentity" threshold.
-This method is less informative at low similarity levels, because each sample will be assigned to a unique cluster.
+This method is less informative at low similarity levels, because each sample will be assigned to a single cluster.
 The "louvain" method is the preferred method. Also known as Louvain Community-based clustering,
 this method uses an algorithm to identify clusters within a network that are strongly connected to each other, and more weakly connected to other clusters.
 This method is superior to "allNeighbours", particularly in sample sets that have low genetic similarity.}
@@ -36,7 +36,7 @@ This method is superior to "allNeighbours", particularly in sample sets that hav
 This function partitions the Plasmodium samples into clusters with a similar genetic background, based on the 'genetic barcode' similarity.
 The 'genetic barcode' consists of 101 SNPs determined for each sample. These SNPs are distributed across all nuclear chromosomes.
 SNP positions were chosen based on their ability to differentiate populations and their power to recapitulate genetic distance.
-The clustering context produced by findClusters() will be saved in the RStudio environment to be used in future cluster analysis, as seen in examples.
+The analysis context will be updated by findClusters(), and will be saved in the RStudio environment to be used in future cluster analysis, as seen in examples.
 Functions providing cluster analyses include: mapClusterSharing(), and mapClusterPrevalence(). Use commands ?mapClusterSharing, and ?mapClusterPrevalence for more information.
 findClusters() also produces three .tab files that can be opened with for example Excel.
 Output files are located in .../output/out/(sampleSetName)/cluster/data/(clusterSetname)/ge(minIdentity).
@@ -44,10 +44,10 @@ The output files include: i) clusterMembers.tab: A list of samples and the clust
 ii) clusters.tab: A summary of cluster size and members. iii) clusterStats.tab: Frequencies of antimalarial drug resistance predictions and genetic mutation types for each cluster.
 }
 \examples{
-# Produces a cluster analysis context named "ctx_cluster",
+# Replaces the analysis context to also contain information about clustering
 # and clusterSet output named "Laos_clusters", containing clusters of at least 5 samples
 # based on sampleSet "Laos", using the Louvain method at genetic similarity levels of 100 and 95 percent
-ctx_cluster <- findClusters(ctx, sampleSet="Laos", clusterSet = "Laos_clusters",
+ctx <- findClusters(ctx, sampleSet="Laos", clusterSet = "Laos_clusters",
 minIdentity = c(1, 0.95),
 clusteringMethod = "louvain", minClusterSize = 5)
 }

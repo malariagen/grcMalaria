@@ -39,8 +39,6 @@ the proportion of sample pairs with at least the percentage of similarity given 
 
 \item{showNames}{If TRUE, labels are shown with the name of the aggregation unit (Province or District).}
 
-\item{markerSize}{Allows adjustment of the size of markers on the map.}
-
 \item{width}{The width (in inches) of the map image.}
 
 \item{height}{The height (in inches) of the map image.}

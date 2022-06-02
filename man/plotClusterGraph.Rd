@@ -5,7 +5,7 @@
 \title{Plot cluster networks based on genetic barcode}
 \usage{
 plotClusterGraph(
-  ctx_cluster,
+  ctx,
   sampleSet,
   clusterSet,
   graphLayout = "fr",
@@ -15,7 +15,7 @@ plotClusterGraph(
 )
 }
 \arguments{
-\item{ctx_cluster}{The cluster analysis context, created by findClusters().}
+\item{ctx}{The analysis context, updated with findClusters().}
 
 \item{sampleSet}{The name of the sample set being used; must have been previously created by selectSampleSet().}
 
@@ -44,7 +44,8 @@ Maps and data are located in .../output/out/(sampleSetName)/graph/.
 }
 \examples{
 #Plot cluster network graph for sampleSet "Laos", and clusterSet "LAclust"
-plotClusterGraph (ctx_cluster, sampleSet="Laos", clusterSet="LAclust",
+# based on analysis context called ctx updated with findClusters
+plotClusterGraph (ctx, sampleSet="Laos", clusterSet="LAclust",
 graphLayout="fr",weightPower=2,
 width=15,height=15)
 }

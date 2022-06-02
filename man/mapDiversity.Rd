@@ -28,13 +28,16 @@ Currently, the public GRC data only contains years, so only the year in the prov
 
 \item{measures}{This can be "ALL", or any vector containing one or more of c("maxHaploFreq","haploHet", "meanSnpHet","medianDistance").
 The method "maxHaploFreq" is a measure of loss of diversity. This measure gives the proportion of samples carrying the most common haplotype (defined as samples with identical barcodes).
-The output ranges from 0-1, with a low value corresponding to a low proportion of samples with the same haplotype, and a high value corresponding to a
-high proportion of samples with the same haplotype.
+The output ranges from 0-1, with a low value corresponding to a low proportion of samples with the most common haplotype, and a high value corresponding to a
+high proportion of samples with the most common haplotype.
 The method "haploHet" is a measure of heterozygosity based on the complete barcode.
 This measure gives the probability of two randomly selected samples carrying a different barcode, and is useful to detect large changes in a population structure.
 The output ranges from 0-1, with a low value corresponding to low diversity (low probability of carrying a different barcode), while a high value corresponds to high diversity (high probability of a different barcode).
-The method "meanSnpHet" is a measure of heterozygosity based on one locus, corresponding to the mean of the heterozygosity of each of the determined SNPs in the barcode.
-This measure gives the probability of two randomly selected isolates carrying a different allele at one locus. This measure is able to detect smaller changes in a population structure, and stable as it uses the mean of all SNPs.
+The method "meanSnpHet" is also known as the expected heterozygosity or gene diversity of a locus.
+For each barcode SNP, expected heterozygosity is calculated using: HE= n/(n-1) [1-∑ipi^2 ],
+where n = the number of samples and pi = the allele frequency of the ith SNP in the barcode.
+The final value shows the mean of heterozygosity across all the loci.
+This measure is able to detect smaller changes in a population structure, and stable as it uses the mean of all SNPs.
 The output ranges from 0-1, with a low value corresponding to low diversity (low probability of a different allele), and a high value corresponding to high diversity (high probability of a different allele).
 The method "medianDistance" is a measure that gives the median genetic distance in a assessed group.
 The is calculated using pairwise genetic distance as the proportion of SNPs differing between two samples. Then taking the median of these in the group of samples of interest.}

@@ -396,13 +396,16 @@ mapMutationPrevalence <- function (ctx, sampleSet, timePeriods=NULL,
 #' Currently, the public GRC data only contains years, so only the year in the provided “start” date is used.
 #' @param measures This can be "ALL", or any vector containing one or more of c("maxHaploFreq","haploHet", "meanSnpHet","medianDistance").
 #' The method "maxHaploFreq" is a measure of loss of diversity. This measure gives the proportion of samples carrying the most common haplotype (defined as samples with identical barcodes).
-#' The output ranges from 0-1, with a low value corresponding to a low proportion of samples with the same haplotype, and a high value corresponding to a
-#' high proportion of samples with the same haplotype.
+#' The output ranges from 0-1, with a low value corresponding to a low proportion of samples with the most common haplotype, and a high value corresponding to a
+#' high proportion of samples with the most common haplotype.
 #' The method "haploHet" is a measure of heterozygosity based on the complete barcode.
 #' This measure gives the probability of two randomly selected samples carrying a different barcode, and is useful to detect large changes in a population structure.
 #' The output ranges from 0-1, with a low value corresponding to low diversity (low probability of carrying a different barcode), while a high value corresponds to high diversity (high probability of a different barcode).
-#' The method "meanSnpHet" is a measure of heterozygosity based on one locus, corresponding to the mean of the heterozygosity of each of the determined SNPs in the barcode.
-#' This measure gives the probability of two randomly selected isolates carrying a different allele at one locus. This measure is able to detect smaller changes in a population structure, and stable as it uses the mean of all SNPs.
+#' The method "meanSnpHet" is also known as the expected heterozygosity or gene diversity of a locus.
+#' For each barcode SNP, expected heterozygosity is calculated using: HE= n/(n-1) [1-∑ipi^2 ],
+#' where n = the number of samples and pi = the allele frequency of the ith SNP in the barcode.
+#' The final value shows the mean of heterozygosity across all the loci.
+#' This measure is able to detect smaller changes in a population structure, and stable as it uses the mean of all SNPs.
 #' The output ranges from 0-1, with a low value corresponding to low diversity (low probability of a different allele), and a high value corresponding to high diversity (high probability of a different allele).
 #' The method "medianDistance" is a measure that gives the median genetic distance in a assessed group.
 #' The is calculated using pairwise genetic distance as the proportion of SNPs differing between two samples. Then taking the median of these in the group of samples of interest.
@@ -484,7 +487,6 @@ mapDiversity <- function (ctx, sampleSet, timePeriods=NULL,
 #' @param aggregate The administrative level at which we perform pairwise comparisons
 #' @param minAggregateCount The minimum count of aggregated samples. To avoid estimating on very small samples, one can set a minimum count of samples, below which the marker is not shown.
 #' @param showNames If TRUE, labels are shown with the name of the aggregation unit (Province or District).
-#' @param markerSize Allows adjustment of the size of markers on the map.
 #' @param width The width (in inches) of the map image.
 #' @param height The height (in inches) of the map image.
 #'
@@ -575,26 +577,26 @@ mapBarcodeFrequencies <- function (ctx, sampleSet,
 
 #############################################################
 #
-#' Clustering (Initialize a clustering context)
+#' Clustering (Updating the analysis context)
 #'
 #' This function partitions the Plasmodium samples into clusters with a similar genetic background, based on the 'genetic barcode' similarity.
 #' The 'genetic barcode' consists of 101 SNPs determined for each sample. These SNPs are distributed across all nuclear chromosomes.
 #' SNP positions were chosen based on their ability to differentiate populations and their power to recapitulate genetic distance.
-#' The clustering context produced by findClusters() will be saved in the RStudio environment to be used in future cluster analysis, as seen in examples.
+#' The analysis context will be updated by findClusters(), and will be saved in the RStudio environment to be used in future cluster analysis, as seen in examples.
 #' Functions providing cluster analyses include: mapClusterSharing(), and mapClusterPrevalence(). Use commands ?mapClusterSharing, and ?mapClusterPrevalence for more information.
 #' findClusters() also produces three .tab files that can be opened with for example Excel.
 #' Output files are located in .../output/out/(sampleSetName)/cluster/data/(clusterSetname)/ge(minIdentity).
 #' The output files include: i) clusterMembers.tab: A list of samples and the cluster they belong to. Samples that are missing from the list are the one that do not belong to a cluster.
 #' ii) clusters.tab: A summary of cluster size and members. iii) clusterStats.tab: Frequencies of antimalarial drug resistance predictions and genetic mutation types for each cluster.
 #'
-#' @param ctx The analysis context, created by intializeContext().
+#' @param ctx The analysis context, updated with intializeContext().
 #' @param sampleSet The name of the sample set being used; must have been previously created by selectSampleSet().
 #' @param clusterSet The name of the clustering set.
 #' @param minIdentity The minimal similarity level set for a pair of samples to be in a cluster. For example, "0.95" corresponds to at least 95 percent genetic barcode similarity.
 #' The default is 1.
 #' @param clusteringMethod The clustering method. Two methods are available: "allNeighbours" and "louvain". The default is "allNeighbours".
 #' The "allNeighbours" method clusters samples together that are above the set "minIdentity" threshold.
-#' This method is less informative at low similarity levels, because each sample will be assigned to a unique cluster.
+#' This method is less informative at low similarity levels, because each sample will be assigned to a single cluster.
 #' The "louvain" method is the preferred method. Also known as Louvain Community-based clustering,
 #' this method uses an algorithm to identify clusters within a network that are strongly connected to each other, and more weakly connected to other clusters.
 #' This method is superior to "allNeighbours", particularly in sample sets that have low genetic similarity.
@@ -603,10 +605,10 @@ mapBarcodeFrequencies <- function (ctx, sampleSet,
 #' @export
 #'
 #' @examples
-#' # Produces a cluster analysis context named "ctx_cluster",
+#' # Replaces the analysis context to also contain information about clustering
 #' # and clusterSet output named "Laos_clusters", containing clusters of at least 5 samples
 #' # based on sampleSet "Laos", using the Louvain method at genetic similarity levels of 100 and 95 percent
-#' ctx_cluster <- findClusters(ctx, sampleSet="Laos", clusterSet = "Laos_clusters",
+#' ctx <- findClusters(ctx, sampleSet="Laos", clusterSet = "Laos_clusters",
 #' minIdentity = c(1, 0.95),
 #' clusteringMethod = "louvain", minClusterSize = 5)
 #
@@ -638,7 +640,7 @@ findClusters <- function (ctx, sampleSet, clusterSet,
 #' Additionally, data files are created. Created .tab files can be opened with for example Excel.
 #' Maps and data are located in .../output/out/(sampleSetName)/graph/.
 #'
-#' @param ctx_cluster The cluster analysis context, created by findClusters().
+#' @param ctx The analysis context, updated with findClusters().
 #' @param sampleSet The name of the sample set being used; must have been previously created by selectSampleSet().
 #' @param clusterSet The name of the clustering set, defined in findClusters().
 #' @param graphLayout ?, the default="fr".
@@ -651,11 +653,12 @@ findClusters <- function (ctx, sampleSet, clusterSet,
 #'
 #' @examples
 #' #Plot cluster network graph for sampleSet "Laos", and clusterSet "LAclust"
-#' plotClusterGraph (ctx_cluster, sampleSet="Laos", clusterSet="LAclust",
+#' # based on analysis context called ctx updated with findClusters
+#' plotClusterGraph (ctx, sampleSet="Laos", clusterSet="LAclust",
 #' graphLayout="fr",weightPower=2,
 #' width=15,height=15)
 #
-plotClusterGraph <- function (ctx_cluster, sampleSet, clusterSet,
+plotClusterGraph <- function (ctx, sampleSet, clusterSet,
                    graphLayout="fr", weightPower=2,
                    width=15, height=15) {
     mapParams <- list(
@@ -664,7 +667,7 @@ plotClusterGraph <- function (ctx_cluster, sampleSet, clusterSet,
         graph.weightPower=weightPower,
         plot.size=list(width=width,height=height)
     )
-    analysis.executeOnSampleSet (ctx_cluster=ctx_cluster, sampleSetName=sampleSet, tasks="graph", params=mapParams)
+    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="graph", params=mapParams)
 }
 
 #############################################################
@@ -682,7 +685,7 @@ plotClusterGraph <- function (ctx_cluster, sampleSet, clusterSet,
 #' Additionally, data files are created. Created .tab files can be opened with for example Excel.
 #' Maps and data are located in .../output/out/(sampleSetName)/map-clusterSharing/.
 #'
-#' @param ctx_cluster The cluster analysis context, created by findClusters().
+#' @param ctx The analysis context, updated with findClusters().
 #' @param sampleSet The name of the sample set being used; must have been previously created by selectSampleSet().
 #' @param clusterSet The name of the clustering set, defined in findClusters().
 #' @param type Frequency of clusters can be visualized either as a "bar" and/or a "pie". The default is c("bar", "pie").
@@ -699,15 +702,15 @@ plotClusterGraph <- function (ctx_cluster, sampleSet, clusterSet,
 #'
 #' @examples
 #' # Map cluster frequencies in both bar and pie form, for sampleSet "Laos", and clusterSet "LAclust" on both a Province and District level,
-#' # based on cluster analysis context called ctx_cluster
-#' mapClusterSharing (ctx_cluster, sampleSet="Laos", clusterSet = "LAclust",
+#' # based on analysis context called ctx updated with findClusters
+#' mapClusterSharing (ctx, sampleSet="Laos", clusterSet = "LAclust",
 #' type=c("bar", "pie"),
 #' aggregate=c("Province","District"),
 #' minAggregateCount=5, showNames=TRUE, markerScale=0.8,
 #' width=15, height=15)
 #'
 #
-mapClusterSharing <- function (ctx_cluster, sampleSet, clusterSet,
+mapClusterSharing <- function (ctx, sampleSet, clusterSet,
                    type=c("bar","pie"),
                    aggregate="Province", minAggregateCount=5,
                    showNames=TRUE, markerScale=0.8,
@@ -723,7 +726,7 @@ mapClusterSharing <- function (ctx_cluster, sampleSet, clusterSet,
         map.cluster.markerScale=markerScale,
         plot.size=list(width=width,height=height)
     )
-    analysis.executeOnSampleSet (ctx_cluster=ctx_cluster, sampleSetName=sampleSet, tasks="map/clusterSharing", params=mapParams)
+    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/clusterSharing", params=mapParams)
 }
 
 #############################################################
@@ -743,7 +746,7 @@ mapClusterSharing <- function (ctx_cluster, sampleSet, clusterSet,
 #' Additionally, data files are created. Created .tab files can be opened with for example Excel.
 #' Maps and data are located in .../output/out/(sampleSetName)/map-clusterPrevalence/.
 #'
-#' @param ctx_cluster The cluster analysis context, created by findClusters().
+#' @param ctx The analysis context, updated with findClusters().
 #' @param sampleSet The name of the sample set being used; must have been previously created by selectSampleSet().
 #' @param clusterSet The name of the clustering set, defined in findClusters().
 #' @param aggregate The administrative level at which we perform pairwise comparisons, either "Province" and/or "District". The default is "Province".
@@ -759,14 +762,14 @@ mapClusterSharing <- function (ctx_cluster, sampleSet, clusterSet,
 #'
 #' @examples
 #' # Produce a network and prevalence map for each assigned cluster,
-#' # using cluster analysis context called ctx_cluster,
+#' # using analysis context called ctx, updated with findClusters()
 #' # for sampleSet "Laos", and clusterSet "LAclust" on both a Province and District level,
-#' mapClusterPrevalence (ctx_cluster, sampleSet="Laos", clusterSet = "LAclust",
+#' mapClusterPrevalence (ctx, sampleSet="Laos", clusterSet = "LAclust",
 #' aggregate=c("Province","District"),
 #' minAggregateCount=5, showNames=TRUE, markerScale=0.8,
 #' width=15, height=15)
 #
-mapClusterPrevalence <- function (ctx_cluster, sampleSet, clusterSet,
+mapClusterPrevalence <- function (ctx, sampleSet, clusterSet,
                    aggregate="Province", minAggregateCount=5,
                    showNames=TRUE, markerScale=0.8,
                    width=15, height=15) {
@@ -781,7 +784,7 @@ mapClusterPrevalence <- function (ctx_cluster, sampleSet, clusterSet,
         map.cluster.markerScale=markerScale,
         plot.size=list(width=width,height=height)
     )
-    analysis.executeOnSampleSet (ctx_cluster=ctx_cluster, sampleSetName=sampleSet, tasks="map/clusterPrevalence", params=mapParams)
+    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/clusterPrevalence", params=mapParams)
 }
 
 #############################################################
