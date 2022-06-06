@@ -26,7 +26,7 @@ mapDrugResistancePrevalence(
 Currently, the public GRC data only contains years, so only the year in the provided “start” date is used.}
 
 \item{drugs}{The antimalarial drugs for which prevalence of phenotypic resistance will be estimated; "ALL" creates maps for all the drugs for which phenotypic resistance predictions are available,
-which include "Artemisinin", "Chloroquine", "Piperaquine", "DHA-PPQ" (i.e. Dihydroartemisinin/piperaquine), "Chloroquine", and "Pyrimethamine".
+which include "Artemisinin", "Chloroquine", "Piperaquine", "DHA-PPQ" (i.e. Dihydroartemisinin/piperaquine), "Sulfadoxine", "Pyrimethamine", "S-P" (i.e. Sulfadoxine-Pyrimethamine), and "S-P-IPTp" (i.e. Sulfadoxine-Pyrimethamine).
 To specify a drug put the drug name in between quotation marks e.g. "Artemisinin", or  c(“Artemisinin”, “Chloroquine”, “S-P”) to select several specific drugs.}
 
 \item{aggregate}{The administrative level at which we aggregate.}
