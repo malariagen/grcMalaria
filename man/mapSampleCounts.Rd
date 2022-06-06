@@ -20,31 +20,58 @@ mapSampleCounts(
 \arguments{
 \item{ctx}{The analysis context, created by intializeContext().}
 
-\item{sampleSet}{The name of the sample set being used; must have been previusly created by selectSampleSet().}
+\item{sampleSet}{The name of the sample set being used; must have been previously created by selectSampleSet().}
 
-\item{timePeriods}{The list of time period object for partitioning samples into time-interval plots}
+\item{timePeriods}{A separately given list of time period object for partitioning samples into time-interval plots. Each list specifies a time period, with three parameters: name, type and, start. Parameter type can currently only be year. Parameter start must be a date in the format “dd-MMM-yyyy”, and parameter name must be provided. The string passed in the name parameter is added to the end of the file name of the produced files.
+Currently, the public GRC data only contains years, so only the year in the provided “start” date is used.}
 
-\item{aggregate}{The administrative level at which we aggregate (Province or District)}
+\item{aggregate}{The administrative level at which we aggregate (Province or District). Separate maps are created for each administrative level.}
 
-\item{minAggregateCount}{The minimum count of aggregated samples, below which a marker is not shown.}
+\item{minAggregateCount}{The minimum count of aggregated samples. To avoid estimating on very small samples, one can set a minimum count of samples, below which the marker is not shown.}
 
-\item{markerSize}{Allows adjustment of the size of markers on the map. If only one value is passed, 
-all markers will be that size; if two values are passed, they will be used as the min 
-and max sizeof the marker, whose size will reflect the number of samples.}
+\item{markerSize}{Allows adjustment of the size of markers on the map. If only one value is passed,
+all markers will be that size; if two values are passed, they will be used as the min
+and max size of the marker, whose size will reflect the number of samples.}
 
-\item{showNames}{If TRUE, labels are shown with the name of the aggregation unit (Province or District)}
+\item{showNames}{If TRUE, labels are shown with the name of the aggregation unit (Province or District).}
 
-\item{colourBy}{Shows the aggregation level to be used to colour the markers (Country or Province)}
+\item{colourBy}{Shows the aggregation level to be used to color the markers (Country or Province).}
 
 \item{width}{The width (in inches) of the map image.}
 
 \item{height}{The height (in inches) of the map image.}
 }
 \description{
-Creates a map showing the numbers of samples collected at different aggregation levels.
+Creates maps showing the numbers of samples collected at different aggregation levels.
 For each aggregation unit, we place a marker on the map, coloured according to the administrative
-division it is in
+division it is in.
+Additionally data files are created. Created .tab files can be opened with for example Excel.
+Maps and data are located in .../output/out/sampleSetName/map-sampleCount/.
 }
 \examples{
-#TBD
+#Given lists of time periods of interest, in this case calendar years
+periods <- list(
+list(name="2018", type="year", start="1-Jan-2018"),
+list(name="2019", type="year", start="1-Jan-2019"),
+list(name="2020", type="year", start="1-Jan-2020")
+)
+
+#Maps showing the numbers of samples collected at Province and District aggregation levels.
+mapSampleCounts (ctx, sampleSet="Laos", timePeriods=periods,
+aggregate=c("Province","District"), minAggregateCount=1,
+markerSize=c(10,40), colourBy="Province", showNames=TRUE,
+width=15, height=15)
+
+#Given lists of time periods of interest, in this case the Southern Laos malaria season
+periods2 <- list(
+list(name="2018", type="year", start="1-Sep-2018"),
+list(name="2019", type="year", start="1-Sep-2019"),
+list(name="2020", type="year", start="1-Sep-2020")
+)
+
+#Maps showing the numbers of samples collected at Province and District aggregation levels.
+mapSampleCounts (ctx, sampleSet="Laos", timePeriods=periods2,
+aggregate=c("Province","District"), minAggregateCount=1,
+markerSize=c(10,40), colourBy="Province", showNames=TRUE,
+width=15, height=15)
 }

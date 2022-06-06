@@ -19,34 +19,66 @@ mapDiversity(
 )
 }
 \arguments{
-\item{ctx}{TBD}
+\item{ctx}{The analysis context, created by intializeContext().}
 
-\item{sampleSet}{TBD}
+\item{sampleSet}{The name of the sample set being used; must have been previously created by selectSampleSet().}
 
-\item{timePeriods}{The list of time period object for partitioning samples into time-interval plots}
+\item{timePeriods}{A separately given list of time period object for partitioning samples into time-interval plots. Each list specifies a time period, with three parameters: name, type and, start. Parameter type can currently only be year. Parameter start must be a date in the format “dd-MMM-yyyy”, and parameter name must be provided. The string passed in the name parameter is added to the end of the file name of the produced files.
+Currently, the public GRC data only contains years, so only the year in the provided “start” date is used.}
 
-\item{measures}{can be "ALL", or any vector containing one or more of ("maxHaploFreq","haploHet", "meanSnpHet","medianDistance")}
+\item{measures}{This can be "ALL", or any vector containing one or more of c("maxHaploFreq","haploHet", "meanSnpHet","medianDistance").
+The method "maxHaploFreq" is a measure of loss of diversity. This measure gives the proportion of samples carrying the most common haplotype (defined as samples with identical barcodes).
+The output ranges from 0-1, with a low value corresponding to a low proportion of samples with the most common haplotype, and a high value corresponding to a
+high proportion of samples with the most common haplotype.
+The method "haploHet" is a measure of heterozygosity based on the complete barcode.
+This measure gives the probability of two randomly selected samples carrying a different barcode, and is useful to detect large changes in a population structure.
+The output ranges from 0-1, with a low value corresponding to low diversity (low probability of carrying a different barcode), while a high value corresponds to high diversity (high probability of a different barcode).
+The method "meanSnpHet" is also known as the expected heterozygosity or gene diversity of a locus.
+For each barcode SNP, expected heterozygosity is calculated using: HE= n/(n-1) [1-∑ipi^2 ],
+where n = the number of samples and pi = the allele frequency of the ith SNP in the barcode.
+The final value shows the mean of heterozygosity across all the loci.
+This measure is able to detect smaller changes in a population structure, and stable as it uses the mean of all SNPs.
+The output ranges from 0-1, with a low value corresponding to low diversity (low probability of a different allele), and a high value corresponding to high diversity (high probability of a different allele).
+The method "medianDistance" is a measure that gives the median genetic distance in a assessed group.
+The is calculated using pairwise genetic distance as the proportion of SNPs differing between two samples. Then taking the median of these in the group of samples of interest.}
 
-\item{aggregate}{TBD}
+\item{aggregate}{The administrative level at which we aggregate.}
 
-\item{minAggregateCount}{TBD}
+\item{minAggregateCount}{The minimum count of aggregated samples. To avoid estimating on very small samples, one can set a minimum count of samples, below which the marker is not shown.}
 
-\item{showNames}{TBD}
+\item{showNames}{If TRUE, labels are shown with the name of the aggregation unit (Province or District).}
 
-\item{markerSize}{TBD}
+\item{markerSize}{Allows adjustment of the size of markers on the map.}
 
-\item{markerColours}{TBD}
+\item{markerColours}{The colour to indicate the level of genetic diversity. Default: "red3", other examples: "forestgreen", "cornflowerblue","darkgoldenrod3".}
 
 \item{width}{The width (in inches) of the map image.}
 
 \item{height}{The height (in inches) of the map image.}
 }
-\value{
-TBD
-}
 \description{
-Map genetic Diversity
+Creates a map showing the calculated genetic diversity of the collected Plasmodium samples in the selected sampleSet.
+Genetic diversity can be calculated using four different measures: "maxHaploFreq","haploHet", "meanSnpHet", and "medianDistance".
+Calculations are based on the 'genetic barcode', which consists of 101 SNPs determined for each sample. These SNPs are distributed across all nuclear chromosomes.
+SNP positions were chosen based on their ability to differentiate populations and their power to recapitulate genetic distance.
+If multiple measures are specified, then a map will be created for each measure.
+The genetic diversity is aggregated at the desired administrative level: Province (level 1), or District (level 2).
+For each aggregation unit, we place a marker on the map, coloured according to the genetic diversity, with a label indicating the genetic diversity.
+To avoid estimating on very small samples, one can set a minimum count of samples, below which the marker is not shown.
+Additionally data files are created. Created .tab files can be opened with for example Excel.
+Maps and data are located in .../output/out/sampleSetName/map-diversity/.
 }
 \examples{
- #TBD
+#' #Given lists of time periods of interest, in this case calendar years
+periods <- list(
+list(name="2018", type="year", start="1-Jan-2018"),
+list(name="2019", type="year", start="1-Jan-2019"),
+list(name="2020", type="year", start="1-Jan-2020")
+)
+
+# Produce genetic diversity maps for all available measures, for sampleSet "Laos", for District level, and for calendar years 2018-2020.
+mapDiversity (ctx, sampleSet="Laos", timePeriods=periods,
+measures="ALL", aggregate="District", markerColours="red3",
+minAggregateCount=10, showNames=TRUE, markerSize=16,
+width=15, height=15)
 }

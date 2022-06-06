@@ -7,24 +7,44 @@
 plotTree(ctx, sampleSet, type = "njt", plots, width = 15, height = 15)
 }
 \arguments{
-\item{ctx}{TBD}
+\item{ctx}{The analysis context, created by intializeContext().}
 
-\item{sampleSet}{TBD TBD}
+\item{sampleSet}{The name of the sample set being used; must have been previously created by selectSampleSet().}
 
-\item{type}{TBD}
+\item{type}{The method used to create a phylogenetic tree.
+Currently the only option "njt" which creates a neighbour-joining tree.}
 
-\item{plots}{TBD}
+\item{plots}{The list of attributes for which plots will be created. See example below.}
 
 \item{width}{The width (in inches) of the map image.}
 
 \item{height}{The height (in inches) of the map image.}
 }
 \value{
-TBD
+Phylogenetic tree plots, .tab data files, and a .newick tree file.
 }
 \description{
-Plot Trees
+This function creates phylogenetic tree plots,
+in which the evolution of the population (i.e. samples in the sampleSet) is reconstructed based on the 'genetic barcode'.
+The 'genetic barcode' consists of 101 SNPs determined for each sample. These SNPs are distributed across all nuclear chromosomes.
+SNP positions were chosen based on their ability to differentiate populations and their power to recapitulate genetic distance.
+For each specified attribute, a plot is created for the phylogenetic tree, in which the nodes (i.e. samples) are coloured according to that attribute.
+Graphical display of attributes needs to be specified before using this function.
+Give command ?loadGraphicAttributes for more information.
+Additionally, separate .npg legend files are created.
+Furthermore, data files are created. Created .tab files can be opened with for example Excel.
+Lastly, a newick file is created that can be used for phylogenetic tree visualization tools.
+Plots and data are located in .../output/out/(sampleSetName)/njt/.
 }
 \examples{
- #TBD
+#Produce a neighbour-joining tree for sampleSet "Laos"
+#with plots in which the samples (i.e. nodes) are coloured according to i) province, ii) kelch13, iii) plasmepsin 2,3, iv) kelch13 and plasmepsin 2,3
+plotTree (ctx, sampleSet="Laos", type="njt",
+plots=list(
+ list(name="ByProvince",       attributes="province"),
+ list(name="ByKelch13",        attributes="k13"),
+ list(name="ByPm23",           attributes="pm23"),
+ list(name="ByKelch13AndPm23", attributes=c("k13","pm23-noColour"))
+), width=15, height=10)
+
 }

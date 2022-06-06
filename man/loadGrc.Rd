@@ -9,9 +9,9 @@ loadGrc(file, sheet = "GenRe-Mekong", species = "Pf", version = "1.0")
 \arguments{
 \item{file}{The path to the GRC data Microsoft Excel file (use forward slashes in the path)}
 
-\item{sheet}{The name of the datasheet within the Excel file containing the GRC data}
+\item{sheet}{The name of the datasheet or tab name within the Excel file containing the GRC data}
 
-\item{species}{The species being analyzed ("Pf" or "Pv")}
+\item{species}{The species being analyzed ("Pf" (i.e. Plasmodium falciparum) or "Pv" (i.e. Plasmodium vivax))}
 
 \item{version}{The version number of the GRC data file format. This is in the documentation when you receive or download the file.}
 }
@@ -24,5 +24,12 @@ The data frame returned contains a data table whose values and structure may hav
 and may have been updated to the latest version fo the format.
 }
 \examples{
-#TBD
+# Load data file
+# Change the path to where your file is located before running the code
+Data <- loadGrc("D:/.../name_file.xlsx",
+               sheet = "GenRe-Mekong",
+               species = "Pf", version = "1.0")
+}
+\seealso{
+Information on the Genetic Report Card (GRC) structure input file {\url{https://olivo-miotto-genre.notion.site/Genetic-Report-Card-GRC-Structure-40c4f6cd8a8144eab5f1a4151ce9127a}}
 }

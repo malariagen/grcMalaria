@@ -2,7 +2,7 @@
 % Please edit documentation in R/public.R
 \name{mapClusterSharing}
 \alias{mapClusterSharing}
-\title{Map cluster sharing}
+\title{Map cluster frequencies}
 \usage{
 mapClusterSharing(
   ctx,
@@ -18,32 +18,49 @@ mapClusterSharing(
 )
 }
 \arguments{
-\item{ctx}{TBD}
+\item{ctx}{The analysis context, updated with findClusters().}
 
-\item{sampleSet}{TBD}
+\item{sampleSet}{The name of the sample set being used; must have been previously created by selectSampleSet().}
 
-\item{clusterSet}{TBD}
+\item{clusterSet}{The name of the clustering set, defined in findClusters().}
 
-\item{type}{TBD}
+\item{type}{Frequency of clusters can be visualized either as a "bar" and/or a "pie". The default is c("bar", "pie").}
 
-\item{aggregate}{TBD}
+\item{aggregate}{The administrative level at which we perform pairwise comparisons, either "Province" and/or "District".}
 
-\item{minAggregateCount}{TBD}
+\item{minAggregateCount}{The minimum count of aggregated samples. To avoid estimating on very small samples, one can set a minimum count of samples,
+below which the marker is not shown.The default is 5.}
 
-\item{showNames}{TBD}
+\item{showNames}{If TRUE, labels are shown with the name of the aggregation unit (Province or District).}
 
-\item{markerScale}{TBD}
+\item{markerScale}{Allows adjustment of the size of markers on the map, default: 0.8.}
 
 \item{width}{The width (in inches) of the map image.}
 
 \item{height}{The height (in inches) of the map image.}
 }
 \value{
-TBD
+Maps with cluster frequencies across administrative divisions
 }
 \description{
-Map cluster sharing
+Creates maps showing the frequency of clusters, allowing for comparison across administrative divisions.
+Each colour in the bar/pie represents a different cluster.
+White represents samples that do not belong to a cluster because they did not meet the specified parameter criteria.
+The maps are based on the cluster analysis context, which needs to be produced with the findClusters function in advance.
+The findClusters function partitions the Plasmodium samples into clusters with a similar genetic background, based on the 'genetic barcode' similarity.
+Use command ?findClusters for more information.
+The 'genetic barcode' consists of 101 SNPs determined for each sample. These SNPs are distributed across all nuclear chromosomes.
+SNP positions were chosen based on their ability to differentiate populations and their power to recapitulate genetic distance.
+Additionally, data files are created. Created .tab files can be opened with for example Excel.
+Maps and data are located in .../output/out/(sampleSetName)/map-clusterSharing/.
 }
 \examples{
- #TBD
+# Map cluster frequencies in both bar and pie form, for sampleSet "Laos", and clusterSet "LAclust" on both a Province and District level,
+# based on analysis context called ctx updated with findClusters
+mapClusterSharing (ctx, sampleSet="Laos", clusterSet = "LAclust",
+type=c("bar", "pie"),
+aggregate=c("Province","District"),
+minAggregateCount=5, showNames=TRUE, markerScale=0.8,
+width=15, height=15)
+
 }
