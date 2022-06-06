@@ -252,7 +252,7 @@ mapSampleCounts <- function (ctx, sampleSet, timePeriods=NULL,
 #' @param timePeriods A separately given list of time period object for partitioning samples into time-interval plots. Each list specifies a time period, with three parameters: name, type and, start. Parameter type can currently only be year. Parameter start must be a date in the format “dd-MMM-yyyy”, and parameter name must be provided. The string passed in the name parameter is added to the end of the file name of the produced files.
 #' Currently, the public GRC data only contains years, so only the year in the provided “start” date is used.
 #' @param drugs The antimalarial drugs for which prevalence of phenotypic resistance will be estimated; "ALL" creates maps for all the drugs for which phenotypic resistance predictions are available,
-#' which include "Artemisinin", "Chloroquine", "Piperaquine", "DHA-PPQ" (i.e. Dihydroartemisinin/piperaquine), "Chloroquine", and "Pyrimethamine".
+#' which include "Artemisinin", "Chloroquine", "Piperaquine", "DHA-PPQ" (i.e. Dihydroartemisinin/piperaquine), "Sulfadoxine", "Pyrimethamine", "S-P" (i.e. Sulfadoxine-Pyrimethamine), and "S-P-IPTp" (i.e. Sulfadoxine-Pyrimethamine).
 #' To specify a drug put the drug name in between quotation marks e.g. "Artemisinin", or  c(“Artemisinin”, “Chloroquine”, “S-P”) to select several specific drugs.
 #' @param aggregate The administrative level at which we aggregate.
 #' @param minAggregateCount The minimum count of aggregated samples. To avoid estimating on very small samples, one can set a minimum count of samples, below which the marker is not shown.
