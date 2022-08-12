@@ -164,6 +164,10 @@ parseTimeIntervals <- function (timePeriods) {
                  startDate <- as.Date(tp$start, format="%d-%B-%Y")
                  endDate <- startDate + lubridate::years(1) - 1
                  intervals[[tpIdx]] <- list(name=tp$name, start=startDate, end=endDate)
+             } else if (tp$type == "period") {
+                 startDate <- as.Date(tp$start, format="%d-%B-%Y")
+                 endDate <- as.Date(tp$end, format="%d-%B-%Y")
+                 intervals[[tpIdx]] <- list(name=tp$name, start=startDate, end=endDate)
              } else {
                  stop(paste("Invalid type of time period:", tp$type))
              }
