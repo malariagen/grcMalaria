@@ -14,7 +14,7 @@ GID_COLUMNS     <- c("Country", "AdmDiv1_GID", "AdmDiv2_GID")
 ################################################################################
 #
 map.execute <- function(userCtx, sampleSetName, interval, mapType, aggregation, measures, params) {
-    if (mapType %in% c("drug", "mutation")) {
+    if (mapType %in% c("drug", "mutation", "location")) {
         map.executeOnDataset (userCtx, "unfiltered", sampleSetName, interval, mapType, aggregation, measures, params)
     } else if (mapType  %in% c("diversity", "connect", "barcodeFrequency", "clusterSharing", "clusterPrevalence")) {
         map.executeOnDataset (userCtx, "imputed",    sampleSetName, interval, mapType, aggregation, measures, params)
@@ -30,7 +30,7 @@ map.executeOnDataset <- function(userCtx, datasetName, sampleSetName, interval, 
 
     baseMapInfo <- map.buildBaseMap (userCtx, datasetName, sampleSetName)
 
-    if (mapType %in% c("drug", "mutation", "diversity", "sampleCount")) {
+    if (mapType %in% c("drug", "mutation", "diversity", "sampleCount", "location")) {
         markerMap.execute (userCtx, datasetName, sampleSetName, interval, mapType, baseMapInfo, aggregation, measures, params)
         
     } else if (mapType %in% c("connect")) {
@@ -49,6 +49,13 @@ map.executeOnDataset <- function(userCtx, datasetName, sampleSetName, interval, 
 ################################################################################
 #
 #
+map.defaultBorderThickness <- 1
+map.getBordersThickness <- function(bbox) {
+    plotWidth <- bbox$xMax - bbox$xMin
+    plotBorderThickness <- map.defaultBorderThickness / sqrt(plotWidth / 3.0)	#; print(plotBorderThickness)
+    plotBorderThickness
+}
+
 map.buildBaseMap <- function(userCtx, datasetName, analysisName) {
 
     # Get the sample metadata
@@ -144,6 +151,7 @@ map.buildBaseMap <- function(userCtx, datasetName, analysisName) {
     # Silly trick to make the package checker happy... :-(
     long <- lat <- group <- NULL
 
+    baseBorderThickness <- map.getBordersThickness (anBB)
     #
     # Construct a base plot for completing subsequent maps
     #
@@ -153,9 +161,9 @@ map.buildBaseMap <- function(userCtx, datasetName, analysisName) {
                                   fill=map.colour.land, col=NA) +
     	    ggplot2::labs(x="Longitude", y="Latitude") +
     	    ggplot2::geom_polygon(data=adm1_df, ggplot2::aes(x=long, y=lat, group=group),
-    	                          fill=NA, col=map.colour.border.admdiv1, size=1) +
+    	                          fill=NA, col=map.colour.border.admdiv1, size=baseBorderThickness) +
             ggplot2::geom_polygon(data=adm0_df, ggplot2::aes(x=long, y=lat, group=group), 
-                                  fill=NA, col=map.colour.border.country, size=1.5)
+                                  fill=NA, col=map.colour.border.country, size=(1.5*baseBorderThickness))
     if (!is.null(river_df)) {	                         
         baseMapPlot <- baseMapPlot +
     	    ggplot2::geom_path(data=river_df, ggplot2::aes(x=long, y=lat, group=group), 
@@ -164,7 +172,7 @@ map.buildBaseMap <- function(userCtx, datasetName, analysisName) {
     if (!is.null(lakes_df)) {	                         
         baseMapPlot <- baseMapPlot +
     	    ggplot2::geom_polygon(data=lakes_df, ggplot2::aes(x=long, y=lat, group=group), 
-    	                          fill=map.colour.river, col=map.colour.river, size=1)
+    	                          fill=map.colour.river, col=map.colour.river, size=baseBorderThickness)
     }
     baseMapPlot <- baseMapPlot +
     	    ggplot2::theme(panel.background=ggplot2::element_rect(fill=map.colour.sea))

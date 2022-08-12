@@ -105,6 +105,53 @@ selectSampleSet <- function (ctx, sampleSetName, select) {
 
 #############################################################
 #
+#' Map of Locations
+#'
+#' Creates a map showing markers for all sites/districts/provinces where samples are collected.
+#' For each location, we place a marker on the map, coloured according to the administrative
+#' division it is in
+#'
+#' @param ctx The analysis context, created by intializeContext().
+#' @param sampleSet The name of the sample set being used; must have been previusly created by selectSampleSet().
+#' @param aggregate The administrative level at which we aggregate (Province/District/Site)
+#' @param markerSize Allows adjustment of the size of markers on the map. If only one value is passed, 
+#'                   all markers will be that size; if two values are passed, they will be used as the min 
+#'                   and max sizeof the marker, whose size will reflect the number of samples.
+#' @param showNames If TRUE, labels are shown with the name of the aggregation unit (Province or District)
+#' @param colourBy Shows the aggregation level to be used to colour the markers (Country or Province)
+#' @param width The width (in inches) of the map image.
+#' @param height The height (in inches) of the map image.
+#'
+#' @export
+#'
+#' @examples
+#' #TBD
+#
+mapLocations <- function (ctx, sampleSet,
+                   aggregate="Province",
+                   markerSize=c(4,40), showNames=TRUE, colourBy="Province",
+                   width=15, height=15) {
+
+    if (length(colourBy) > 1) {
+        stop ("colourBy parameter can only accet a single value (\"Country\" or \"Province\")")
+    }
+    colourAggLevel <- map.getAggregationLevelsFromLabels (colourBy)
+    if (colourAggLevel > 1) {
+        stop ("colourBy parameter can only accet values \"Country\" or \"Province\"")
+    }
+    aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
+    params <- list(
+        aggegation.levels=aggLevels,
+        map.markerColourAggLevel=colourAggLevel,
+        map.markerSize=markerSize,
+        map.markerNames=showNames,
+        plot.size=list(width=width,height=height)
+    )
+    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/location", params=params)
+}
+
+#############################################################
+#
 #' Map of Sample Counts
 #'
 #' Creates a map showing the numbers of samples collected at different aggregation levels.
@@ -154,6 +201,7 @@ mapSampleCounts <- function (ctx, sampleSet, timePeriods=NULL,
     )
     analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/sampleCount", params=params)
 }
+
 #
 #############################################################
 #

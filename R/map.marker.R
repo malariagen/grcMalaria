@@ -26,8 +26,10 @@ markerMap.execute <- function(userCtx, datasetName, sampleSetName, interval, map
     }
     config <- ctx$config
     
-    if (mapType=="sampleCount") {
+    if (mapType == "sampleCount") {
         measures <- "NumberOfSamples"
+    } else if (mapType == "location") {
+        measures <- "Location"
     }
 
     # Get the output folders
@@ -45,7 +47,7 @@ markerMap.execute <- function(userCtx, datasetName, sampleSetName, interval, map
         aggUnitData <- map.getAggregationUnitData (ctx, datasetName, aggLevel, sampleSetName, mapType, params, dataFolder)	#; print(aggUnitData)
 
         # For sample count markers, the colour may be based on a different admin division level from the aggregation
-        if (mapType=="sampleCount") {
+        if (mapType %in% c("sampleCount","location")) {
 	    colourAdmDivLevel <- analysis.getParam ("map.markerColourAggLevel", params)		#; print(colourAdmDivLevel) # should be 0 or 1
 	    colourAdmDivTitle <- ADM_DIV_LABELS[colourAdmDivLevel+1]				#; print(colourAdmDivCol)
 	    colourAdmDivCol <- GID_COLUMNS[colourAdmDivLevel+1]					#; print(colourAdmDivCol)
@@ -108,13 +110,18 @@ markerMap.execute <- function(userCtx, datasetName, sampleSetName, interval, map
                 ggplot2::geom_point(data=selAggUnitData, aes_string2(x="Longitude", y="Latitude", fill=measure), size=pointSizes, shape=21, stroke=2) +
                 ggplot2::scale_fill_gradientn(limits=c(scaleMin,scaleMax), colours=markerColours, values=c(0,1))
             } else if (mapType=="sampleCount") {
-                #print(admDivColumn)
                 mapPlot <- mapPlot +
 	              ggplot2::geom_point(data=selAggUnitData, aes_string2(x="Longitude", y="Latitude", fill=colourAdmDivCol),
 	                                  size=pointSizes, shape=21, stroke=2) +
                       ggplot2::scale_fill_manual(values=admDivPalette, labels=admDivPaletteLabels, name=colourAdmDivTitle,
                                                  guide=ggplot2::guide_legend(override.aes=list(size=3,stroke=0.5)))
-                      
+            }  else if (mapType=="location") {
+                mapPlot <- mapPlot +
+	              ggplot2::geom_point(data=selAggUnitData, aes_string2(x="Longitude", y="Latitude", fill=colourAdmDivCol),
+	                                  size=pointSizes, shape=21, stroke=2)
+	              #                    +
+                      #ggplot2::scale_fill_manual(values=admDivPalette, labels=admDivPaletteLabels, name=colourAdmDivTitle,
+                      #                           guide=ggplot2::guide_legend(override.aes=list(size=3,stroke=0.5)))
             } else if (mapType=="drug") {
                 mapPlot <- mapPlot +
 	              ggplot2::geom_point(aes_string2(x="Longitude", y="Latitude", fill=measure), 
@@ -135,7 +142,11 @@ markerMap.execute <- function(userCtx, datasetName, sampleSetName, interval, map
 	    } 
 	    
             # Now add the decorative elements
-            valueLabels <- round(mValues, digits=2)
+            if (mapType=="location") {
+                valueLabels <- rep("", length(mValues))
+            } else {
+                valueLabels <- round(mValues, digits=2)
+            }
             if (mapType=="sampleCount") {
                 mapPlot <- mapPlot +
                            ggplot2::geom_text(data=selAggUnitData, ggplot2::aes_string(x="Longitude", y="Latitude", colour=colourAdmDivCol),
@@ -242,7 +253,7 @@ markerMap.estimateMeasures <- function(ctx, datasetName, aggLevel, aggUnitData, 
         aggDist <- distData[aggSamples,aggSamples]
         
         # Get the admin division values from the first sample of this unit (assuming the values are the same for all)
-        if (mapType=="sampleCount") {
+        if (mapType %in% c("sampleCount","location")) {
             cValues <- length(aggSamples)
         } else if (mapType=="diversity") {
             cValues <- markerMap.estimateDiversityMeasures (ctx, aggBarcodes, aggDist, measures)

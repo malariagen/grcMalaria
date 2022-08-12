@@ -192,7 +192,7 @@ analysis.executeOnSampleSet <- function(ctx, sampleSetName, tasks, params) {
         
         } else if (task == "map") {
             interval <- NULL
-            if (method %in% c("drug", "mutation", "diversity", "sampleCount")) {
+            if (method %in% c("drug", "mutation", "diversity", "sampleCount", "location")) {
                 intervals <- params$analysis.timeIntervals
                 for (idx in 1:length(intervals)) {
                     interval <- intervals[[idx]]
