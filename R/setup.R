@@ -72,6 +72,8 @@ setup.getPfConfig <- function (version) {
             "Artemisinin",
             "Piperaquine",
             "DHA-PPQ",
+            "Mefloquine",
+            "AS-MQ",
             "Chloroquine",
             "Pyrimethamine",
             "Sulfadoxine",
