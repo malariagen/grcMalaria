@@ -17,7 +17,7 @@ connectMap.execute <- function(userCtx, datasetName, sampleSetName, mapType, bas
     dataset <- ctx[[datasetName]]
     
     # Get the output folders
-    dataOutFolder <- getOutFolder(ctx, sampleSetName, c(paste("map", mapType, sep="-"), "data"))
+    dataOutFolder <- getOutFolder(ctx$config, sampleSetName, c(paste("map", mapType, sep="-"), "data"))
     # Get the sample metadata
     sampleMeta <- dataset$meta
     
@@ -98,7 +98,7 @@ connectMap.execute <- function(userCtx, datasetName, sampleSetName, mapType, bas
     	    
     	        # Save to file. the size in inches is given in the config.
     	        mapSize  <- analysis.getParam ("plot.size", params)
-    	        plotFolder <- getOutFolder(ctx, sampleSetName, c(paste("map", mapType, sep="-"), "plots"))
+    	        plotFolder <- getOutFolder(ctx$config, sampleSetName, c(paste("map", mapType, sep="-"), "plots"))
                 aggLabel <- map.getAggregationLabels(aggLevel)
                 graphicFilenameRoot  <- paste(plotFolder, paste("map", sampleSetName, aggLabel, measure, sep="-"), sep="/")
                 if (connectMap.filterThreshold (measure)) {

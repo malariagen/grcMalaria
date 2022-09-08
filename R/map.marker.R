@@ -33,7 +33,7 @@ markerMap.execute <- function(userCtx, datasetName, sampleSetName, interval, map
     }
 
     # Get the output folders
-    dataFolder <- getOutFolder(ctx, sampleSetName, c(paste("map", mapType, sep="-"), "data"))
+    dataFolder <- getOutFolder(ctx$config, sampleSetName, c(paste("map", mapType, sep="-"), "data"))
     
     # Silly trick to make the package checker happy... :-(
     lon <- lat <- label <- NULL
@@ -167,7 +167,7 @@ markerMap.execute <- function(userCtx, datasetName, sampleSetName, interval, map
 	    
             # Save to file. the size in inches is given in the config.
             mapSize  <- analysis.getParam ("plot.size", params)
-            plotFolder <- getOutFolder(ctx, sampleSetName, c(paste("map", mapType, sep="-"), "plots"))
+            plotFolder <- getOutFolder(ctx$config, sampleSetName, c(paste("map", mapType, sep="-"), "plots"))
             aggLabel <- map.getAggregationLabels(aggLevel)
             if (mapType=="sampleCount") {
                 aggLabel <- paste(aggLabel, datasetName, sep="-")

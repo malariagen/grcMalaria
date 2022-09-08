@@ -19,8 +19,8 @@ pca.execute <- function(userCtx, sampleSetName, method, params) {
     #
     # Get the output folders
     #
-    dataFolder      <- getOutFolder(ctx, sampleSetName, c(method, "data"))
-    plotsRootFolder <- getOutFolder(ctx, sampleSetName, c(method, "plots"))
+    dataFolder      <- getOutFolder(ctx$config, sampleSetName, c(method, "data"))
+    plotsRootFolder <- getOutFolder(ctx$config, sampleSetName, c(method, "plots"))
     #
     # Get the metadata, distance and genotypes
     #

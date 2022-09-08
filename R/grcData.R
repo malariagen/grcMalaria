@@ -74,20 +74,6 @@ grcData.merge <- function (inGrc, newGrc, overwrite=FALSE, extendColumns=FALSE) 
 }
 
 ###############################################################################
-# Version checking and transformation
-################################################################################
-#
-# Read sample metadata file
-#
-grcData.standardize <- function (grcSampleData, species, version) {
-    speciesConfig <- setup.getSpeciesConfig (species, version)		#; print(species); print(str(speciesConfig))
-    
-    # TODO - in future, perform structure checks and homogenization, and handle versioning
-    grc <- list(data=grcSampleData, speciesConfig=speciesConfig, version=version)
-    grc
-}
-
-###############################################################################
 # Data input routines
 ################################################################################
 #
@@ -99,4 +85,26 @@ grcData.readExcel <- function (grcDataFile, grcDataSheet) {
     sampleNames <- grcData[, GRC_SAMPLE_ID_COL]			#; print (sampleNames)
     rownames(grcData) <- sampleNames				#; print(str(sampleMeta))
     grcData
+}
+
+###############################################################################
+# Version checking and transformation
+################################################################################
+#
+# Read sample metadata file
+#
+grcData.standardize <- function (grcSampleData, species, version) {
+    if (species == "Pf") {
+         currentVersion <- "1.2"
+    } else if (version == "Pv") {
+         currentVersion <- "1.0"
+    } else {
+        stop(paste("Invalid species:",species))
+    }
+    if (version != currentVersion) {
+        stop(paste("Invalid data version:",version, "- Please upgrade to", currentVersion))
+    }
+    speciesConfig <- setup.getSpeciesConfig ("Pf", currentVersion)				#; print(species); print(str(speciesConfig))
+    grc <- list(data=grcSampleData, speciesConfig=speciesConfig, version=version)
+    grc
 }

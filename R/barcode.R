@@ -38,7 +38,7 @@ barcode.setDatasetBarcodes <- function (ctx, datasetName, barcodes, store=TRUE) 
 barcode.initializeBarcodes <- function (ctx, datasetName, loadFromCache=TRUE) {
     GRC_BARCODE_COL <- "GenBarcode"			# TODO  This may need to be configured globally
 
-    config <- ctx$config
+    config <- ctx$config				#; print(config)
     dataset <- ctx[[datasetName]]
 
     barcodeDataFile <- barcode.getBarcodeDataFile (ctx, datasetName)
@@ -110,14 +110,12 @@ barcode.validateBarcodeAlleles <- function (barcodeData, barcodeMeta) {
 #
 # Convert barcodes into a dataframe of alleles, filtering both samples and barcode SNPs by typability
 #
-barcode.getAllelesFromBarcodes <- function(sampleMetadata, barcodeColumnName, barcodeMeta) {
+barcode.getAllelesFromBarcodes <- function(sampleMetadata, barcodeColumnName, barcodeMeta) {	#;print (head(barcodeMeta))
     barcodes <- as.character(sampleMetadata[,barcodeColumnName])
     names(barcodes) <- rownames(sampleMetadata)
 
     # Eliminate all samples without barcode
-    barcodes <- barcodes[which(barcodes != "-")]
-    #print (length(barcodes))
-    #print (barcodes[1:10])
+    barcodes <- barcodes[which(barcodes != "-")]		#; print (length(barcodes)); print (barcodes[1:10])
     
     # Split the barcodes into constituent alleles
     #print (rownames(barcodeMeta))

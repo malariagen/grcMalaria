@@ -22,19 +22,18 @@ getSubFolder <- function (parent, subnames, recursive=TRUE, create=TRUE) {
     dir
 }
 #
-getOutFolder <- function (ctx, analysisName, subnames=NULL, create=TRUE) {
-    cfg <- ctx$config
-    sub <- getSubFolder (cfg$folder.out, analysisName, recursive=TRUE, create)
+getOutFolder <- function (config, analysisName, subnames=NULL, create=TRUE) {
+    sub <- getSubFolder (config$folder.out, analysisName, recursive=TRUE, create)
     if (!is.null(subnames)) {
         sub <- getSubFolder (sub, subnames, recursive=TRUE, create)
     }
     sub
 }
 #
-getCacheFolder <- function (ctx, subnames, create=TRUE) {
-    sub <- getSubFolder (ctx$config$folder.data, subnames, recursive=TRUE, create)
-    sub
-}
+#getCacheFolder <- function (config, subnames, create=TRUE) {
+#    sub <- getSubFolder (config$folder.data, subnames, recursive=TRUE, create)
+#    sub
+#}
 #
 # Datafile Naming - prefix with context name so that datafiles are not overwritten
 #
@@ -156,7 +155,7 @@ filterMatrix <- function (matrixData, sampleNames) {
 parseTimeIntervals <- function (timePeriods) {
     intervals <- list()
     if (is.null(timePeriods)) {
-         intervals[[1]] <- list(name=NULL, start=NULL, end=NULL)
+         intervals[[1]] <- list(NULL)
     } else {
         for (tpIdx in 1 : length(timePeriods)) {
              tp <- timePeriods[[tpIdx]]

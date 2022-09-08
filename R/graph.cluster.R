@@ -1,7 +1,7 @@
 ###############################################################################
 # Network Analysis Tasks
 ###############################################################################
-clusterGraph.execute <- function (userCtx, sampleSetName, plotList, params) {
+clusterGraph.execute <- function (userCtx, sampleSetName, params) {
     sampleSet <- userCtx$sampleSets[[sampleSetName]]
     ctx     <- sampleSet$ctx
     dataset <- ctx$imputed
@@ -9,7 +9,7 @@ clusterGraph.execute <- function (userCtx, sampleSetName, plotList, params) {
     meta     <- dataset$meta
     
     # Set up output folders
-    dataFolder <- getOutFolder(ctx, sampleSetName, c("graph", "data"))
+    dataFolder <- getOutFolder(ctx$config, sampleSetName, c("graph", "data"))
 
     # Get the cluster data
     clusterSetName  <- analysis.getParam ("cluster.clusterSet.name", params)	#; print(clusterSetName)
@@ -108,7 +108,7 @@ clusterGraph.makeClusterPlot <- function (ctx, graphInfo, params) {
     # Draw the plot and save to file
     filenameSuffix <- paste(sampleSetName, clusterSetName, minIdentityLabel, sep="-")
     clGraphFilename <- paste("graph", filenameSuffix, "clusters", sep="-")
-    plotFolder <- getOutFolder(ctx, sampleSetName, c("graph", "plots"))
+    plotFolder <- getOutFolder(ctx$config, sampleSetName, c("graph", "plots"))
     clGraphFile <- paste(plotFolder, clGraphFilename, sep="/")
     initializeGraphics (getGraphicsFilename (clGraphFile), widthInch=24, heightInch=24)
     plot(gr, layout=grLayout,

@@ -71,6 +71,7 @@ analysis.trimContext <- function (ctx, sampleNames) {
         trimCtx <- analysis.addTrimmedDatasetToContext (ctx, "imputed", sampleNames, trimCtx)
     }
     trimCtx$config     <- ctx$config
+    trimCtx$sampleSets <- ctx$sampleSets
     trimCtx
 }
 #
@@ -124,6 +125,7 @@ analysis.selectSampleSet <- function (ctx, sampleSetName, select) {
     # Create a trimmed analysis context containing only data pertaining to the selected samples
     sampleNames <- rownames(sampleMeta)
     trimCtx <- analysis.trimContext (ctx, sampleNames)
+    trimCtx$sampleSets <- NULL
     
     sampleSet <- list(
         name=sampleSetName,
@@ -134,7 +136,7 @@ analysis.selectSampleSet <- function (ctx, sampleSetName, select) {
     )
     ctx$sampleSets[[sampleSetName]] <- sampleSet
     
-    metaOutFolder <- getOutFolder(ctx, c(sampleSetName, "metadata"))
+    metaOutFolder <- getOutFolder(ctx$config, c(sampleSetName, "metadata"))
     metaFilename  <- paste(metaOutFolder, "/meta-", sampleSetName, "-unfiltered.tab", sep="")
     utils::write.table(trimCtx$unfiltered$meta, file=metaFilename, sep="\t", quote=FALSE, row.names=FALSE)
     metaFilename  <- paste(metaOutFolder, "/meta-", sampleSetName, "-filtered.tab", sep="")
@@ -150,6 +152,7 @@ analysis.selectSampleSet <- function (ctx, sampleSetName, select) {
 # Execute
 ###################################################################
 #
+
 analysis.executeOnSampleSet <- function(ctx, sampleSetName, tasks, params) {
     if (!sampleSetName %in% names(ctx$sampleSets)) {
         stop(paste("Sample set not initialized:", sampleSetName))
@@ -157,14 +160,6 @@ analysis.executeOnSampleSet <- function(ctx, sampleSetName, tasks, params) {
     print(paste("Analyzing sample set:", sampleSetName))
     measures    <- analysis.getParamIfDefined ("analysis.measures", params)
     aggregation <- analysis.getParamIfDefined ("aggegation.levels", params)
-
-    # Resolve all the automatic rendering in the plots
-    plotList <- NULL	# TODO - plots are not yet implemented, will pass them through the params
-    #if (!is.null(plotList)) {
-    #    # Get the trimmed analysis context containing only data pertaining to the selected samples
-    #    sampleSet <- ctx$sampleSets[[sampleSetName]]
-    #    plotList <- resolveAutomaticRenderingInPlots (sampleSet$ctx$meta, plotList)
-    #}
 
     # Execute computations and plots with different tasks
     for (tIdx in 1:length(tasks)) {
@@ -185,11 +180,8 @@ analysis.executeOnSampleSet <- function(ctx, sampleSetName, tasks, params) {
             tree.execute (ctx, sampleSetName, method, params)
 
         } else if (task == "graph") {
-            clusterGraph.execute (ctx, sampleSetName, plotList, params)
+            clusterGraph.execute (ctx, sampleSetName, params)
 
-        #} else if (task == "haploNet") {
-        #    haploNet.execute (ctx, sampleSetName, plotList, params)
-        
         } else if (task == "map") {
             interval <- NULL
             if (method %in% c("drug", "mutation", "diversity", "sampleCount", "location")) {

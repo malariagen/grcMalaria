@@ -141,6 +141,7 @@ mapLocations <- function (ctx, sampleSet,
     }
     aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
     params <- list(
+        analysis.measures="Location",
         aggegation.levels=aggLevels,
         map.markerColourAggLevel=colourAggLevel,
         map.markerSize=markerSize,
@@ -192,6 +193,7 @@ mapSampleCounts <- function (ctx, sampleSet, timePeriods=NULL,
     timeIntervals <- parseTimeIntervals(timePeriods)
     params <- list(
         analysis.timeIntervals=timeIntervals,
+        analysis.measures="NumberOfSamples",
         aggegation.levels=aggLevels,
         map.aggregateCountMin=minAggregateCount,
         map.markerColourAggLevel=colourAggLevel,
@@ -201,7 +203,6 @@ mapSampleCounts <- function (ctx, sampleSet, timePeriods=NULL,
     )
     analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/sampleCount", params=params)
 }
-
 #
 #############################################################
 #

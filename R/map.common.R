@@ -13,14 +13,17 @@ GID_COLUMNS     <- c("Country", "AdmDiv1_GID", "AdmDiv2_GID")
 # Common Routines for Map Generation.
 ################################################################################
 #
-map.execute <- function(userCtx, sampleSetName, interval, mapType, aggregation, measures, params) {
+map.execute <- function(userCtx, sampleSetName, interval, mapType, aggregation, measures, params) {		#;print(mapType) ;print(aggregation)
+    if (is.null(interval)) {
+        interval <- list(name=NULL, start=NULL, end=NULL)
+    }
     if (mapType %in% c("drug", "mutation", "location")) {
         map.executeOnDataset (userCtx, "unfiltered", sampleSetName, interval, mapType, aggregation, measures, params)
     } else if (mapType  %in% c("diversity", "connect", "barcodeFrequency", "clusterSharing", "clusterPrevalence")) {
         map.executeOnDataset (userCtx, "imputed",    sampleSetName, interval, mapType, aggregation, measures, params)
     } else if (mapType == "sampleCount") {
         map.executeOnDataset (userCtx, "unfiltered", sampleSetName, interval, mapType, aggregation, measures, params)
-        map.executeOnDataset (userCtx, "filtered",   sampleSetName, interval, mapType, aggregation, measures,   params)
+        map.executeOnDataset (userCtx, "filtered",   sampleSetName, interval, mapType, aggregation, measures, params)
     } else {
         stop(paste("Invalid map type:", mapType))
     }

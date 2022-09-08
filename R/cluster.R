@@ -41,7 +41,7 @@ cluster.findClusters <- function (userCtx, sampleSetName, params) {
 
         # Write out result files
         dataFileSuffix <- paste("", sampleSetName, clusterSetName, minIdentityLabel, sep="-")
-        dataFolder  <- getOutFolder(ctx, sampleSetName, 
+        dataFolder  <- getOutFolder(ctx$config, sampleSetName, 
                                     c("cluster", "data", clusterSetName, minIdentityLabel))
     
         # Write out cluster definitions

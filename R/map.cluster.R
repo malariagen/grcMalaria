@@ -20,7 +20,7 @@ clusterMap.executeVisualization <- function(userCtx, datasetName, sampleSetName,
     
     # Create the information object, used to create the plot
     # Start by getting the output folders
-    dataFolder <- getOutFolder(ctx, sampleSetName, c(paste("map", mapType, sep="-"), "data"))
+    dataFolder <- getOutFolder(ctx$config, sampleSetName, c(paste("map", mapType, sep="-"), "data"))
     info <- list(dataFolder=dataFolder)
 
     info$sampleSetName <- sampleSetName;    info$mapType <- mapType;    info$visType <- visType
@@ -198,7 +198,7 @@ clusterMap.plotMap <- function (ctx, info, params) {
         plotSubFolders <- c(plotSubFolders, levelLabel, aggLabel)
         plotFilename <- paste(plotFilename, info$cluster, sep="-")
     }
-    plotFolder <- getOutFolder(ctx, info$sampleSetName, plotSubFolders)
+    plotFolder <- getOutFolder(ctx$config, info$sampleSetName, plotSubFolders)
     graphicFilename  <- paste(plotFolder, paste(plotFilename,"png",sep="."), sep="/")
     ggplot2::ggsave(plot=mapPlot, filename=graphicFilename, device="png", width=mapSize$width, height=mapSize$height, units="in", dpi=300)
 }
