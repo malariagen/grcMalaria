@@ -103,7 +103,7 @@ map.buildBaseMap <- function(userCtx, datasetName, analysisName) {
         #
         anAdm1GIDs <- cl$adm1GIDs						#; print(adm1GIDs)
         anAdm1Lines <- cAdm1Lines[cAdm1Lines@data$GADM_GID_1 %in% anAdm1GIDs,]
-        for (idx in 1:nrow(anAdm1Lines)) {
+        for (idx in 1:nrow(anAdm1Lines)) {			#; print (anAdm1Lines@polygons[[idx]])
             #
             # Get the bounding box for the province
             # (a 2-column matrix; the first column has the minimum, the second the maximum values; rows represent the spatial dimensions)
@@ -127,25 +127,50 @@ map.buildBaseMap <- function(userCtx, datasetName, analysisName) {
     # Adjust the bounding box to give some margin
     #
     xMar <- (xMax-xMin)/20;    yMar <- (yMax-yMin)/20
+    #
+    # *******************************************************************
+    # TEST
+    # Bounding box creation alternative
+    # 
+    #sf::st_bbox(c(xmin = 16.1, xmax = 16.6, ymax = 48.6, ymin = 47.9), crs = st_crs(4326))
+    #
+    #new_bb = c(8, 48, 12, 50)
+    #names(new_bb) = c("xmin", "ymin", "xmax", "ymax")
+    #attr(new_bb, "class") = "bbox"
+    #attr(st_geometry(fran), "bbox") = new_bb
+    #
+    #
+    # Create a bounding box, specifying WGS84 (EPSG:4326) to be the coordinates system 
+    #
+    #anBB <- sf::st_bbox(c(xmin=(xMin-xMar), xmax=(xMax+xMar), ymax=(yMax+yMar), ymin=(yMin-yMar)), crs=st_crs(4326))
+    #
+    #
+    # *******************************************************************
+    #
+    #
+    # Create a bounding box, specifying WGS84 (EPSG:4326) to be the coordinates system 
+    #
     anBB <- list(xMin=(xMin-xMar), xMax=(xMax+xMar), yMin=(yMin-yMar), yMax=(yMax+yMar))
     anBB$tl <- c(anBB$yMax, anBB$xMin);    anBB$br <- c(anBB$yMin, anBB$xMax)
     anBB$bl <- c(anBB$yMin, anBB$xMin);    anBB$tr <- c(anBB$yMax, anBB$xMax)
+    anBBExt <- methods::as(raster::extent(anBB$xMin, anBB$xMax, anBB$yMin, anBB$yMax), 'SpatialPolygons')
+    raster::crs(anBBExt) <- sp::CRS(SRS_string="EPSG:4326")
     #
     # Get and Crop the country boundaries
     #
-    adm0 <- geo$country.lines 
-    adm0 <- raster::crop(adm0, raster::extent(anBB$xMin, anBB$xMax, anBB$yMin, anBB$yMax))
+    adm0 <- geo$country.lines
+    adm0 <- raster::crop(adm0, anBBExt)					#; cat(paste(sp::proj4string(adm0),"\n"))
     adm0_df <- suppressMessages(ggplot2::fortify(adm0))    		#; print(colnames(adm0$spdf))
     #
     rivers <- geo$river.lines 
-    rivers <- raster::crop(rivers, raster::extent(anBB$xMin, anBB$xMax, anBB$yMin, anBB$yMax))
+    rivers <- raster::crop(rivers, anBBExt)
     river_df <- NULL
     if (!is.null(rivers)) {
         river_df <- suppressMessages(ggplot2::fortify(rivers))		#; print(colnames(rivers))
     }
     #
-    lakes <- geo$lake.lines				#; print(lakes)
-    lakes <- raster::crop(lakes, raster::extent(anBB$xMin, anBB$xMax, anBB$yMin, anBB$yMax))
+    lakes <- geo$lake.lines						#; print(lakes)
+    lakes <- raster::crop(lakes, anBBExt)
     lakes_df <- NULL
     if (!is.null(lakes)) {
         lakes_df <- suppressMessages(ggplot2::fortify(lakes))		#; print(colnames(lakes))
