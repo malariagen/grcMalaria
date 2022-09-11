@@ -296,9 +296,11 @@ map.getAggregationUnitData <- function(ctx, datasetName, aggLevel, analysisName,
         aggUnitData <- rbind(aggUnitData, cValues)
     }
     aggUnitData <- data.frame(aggUnitData)
-    aggUnitData[, 6:8] <- sapply(aggUnitData[, 6:8], as.numeric)
     rownames(aggUnitData) <- aggUnitGids
     colnames(aggUnitData) <- aggUnitCnames
+    aggUnitData$Latitude    <- as.numeric(aggUnitData$Latitude)
+    aggUnitData$Longitude   <- as.numeric(aggUnitData$Longitude)
+    aggUnitData$SampleCount <- as.integer(aggUnitData$SampleCount)
 
     # Write out the aggregation unit data to file
     aggDataFilename  <- paste(dataFolder, "/AggregationUnits-", analysisName, "-", aggLevel, ".tab", sep="")
