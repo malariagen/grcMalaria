@@ -89,6 +89,7 @@ map.buildBaseMap <- function(userCtx, datasetName, analysisName) {
     # Get the boundaries for all provinces (AdmDiv1) needed for this map, and calculate the bounding box
     #
     sl <- sp::Line(cbind(c(1,2,3),c(3,2,2)))	# This loads the sp package, or else we get an error later
+    #
     geo <- map.getGeoTables()
     adm1Spdf <- NULL
     xMin <- 1000; xMax <- -1000; yMin <- 1000; yMax <- -1000
@@ -134,6 +135,8 @@ map.buildBaseMap <- function(userCtx, datasetName, analysisName) {
     anBB$tl <- c(anBB$yMax, anBB$xMin);    anBB$br <- c(anBB$yMin, anBB$xMax)
     anBB$bl <- c(anBB$yMin, anBB$xMin);    anBB$tr <- c(anBB$yMax, anBB$xMax)
     #
+    CRS.new=sp::CRS("+init=epsg:4326")
+    #
     anBBCoords <- matrix(c(
                       anBB$xMin, anBB$yMin,
                       anBB$xMin, anBB$yMax,
@@ -145,25 +148,33 @@ map.buildBaseMap <- function(userCtx, datasetName, analysisName) {
                        sp::Polygons(list(sp::Polygon(anBBCoords)), ID="bb")
                    )
                )
-    sp::proj4string(anBBExt) <- sp::CRS(SRS_string="EPSG:4326")
+    sp::proj4string(anBBExt) <- CRS.new
+    #
+    #CRS.new=sp::CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
+    #+init=epsg:4326
+    #sp::proj4string(anBBExt) <- sp::CRS(SRS_string="EPSG:4326")
+    #sp::proj4string(anBBExt) <- sp::CRS("+init=epsg:4326")
     #
     # Get and Crop the country boundaries
     #
     adm0 <- geo$country.lines
-    adm0 <- suppressWarnings(adm0[anBBExt,])
+    #adm0 <- sp::spTransform(adm0, CRS.new)
+    adm0 <- adm0[anBBExt,]
     adm0_df <- suppressMessages(ggplot2::fortify(adm0))    		#; print(colnames(adm0$spdf))
     #
     rivers <- geo$river.lines
-    rivers <- suppressWarnings(rivers[anBBExt,])
+    #rivers <- sp::spTransform(rivers, CRS.new)
+    rivers <- rivers[anBBExt,]
     river_df <- NULL
-    if (!is.null(rivers)) {
+    if (!is.null(rivers) & (nrow(rivers)>0)) {
         river_df <- suppressMessages(ggplot2::fortify(rivers))		#; print(colnames(rivers))
     }
     #
     lakes <- geo$lake.lines
-    lakes <- suppressWarnings(lakes[anBBExt,])
+    #lakes <- sp::spTransform(lakes, CRS.new)
+    lakes <- lakes[anBBExt,]
     lakes_df <- NULL
-    if (!is.null(lakes)) {
+    if (!is.null(lakes) & (nrow(lakes)>0)) {
         lakes_df <- suppressMessages(ggplot2::fortify(lakes))		#; print(colnames(lakes))
     }
     
