@@ -131,11 +131,11 @@ map.buildBaseMap <- function(userCtx, datasetName, analysisName) {
     #
     # Create a bounding box, specifying WGS84 (EPSG:4326) to be the coordinates system 
     #
+    CRS.WGS84 <- geo$crs
+    #
     anBB <- list(xMin=(xMin-xMar), xMax=(xMax+xMar), yMin=(yMin-yMar), yMax=(yMax+yMar))
     anBB$tl <- c(anBB$yMax, anBB$xMin);    anBB$br <- c(anBB$yMin, anBB$xMax)
     anBB$bl <- c(anBB$yMin, anBB$xMin);    anBB$tr <- c(anBB$yMax, anBB$xMax)
-    #
-    CRS.new=sp::CRS("+init=epsg:4326")
     #
     anBBCoords <- matrix(c(
                       anBB$xMin, anBB$yMin,
@@ -148,22 +148,15 @@ map.buildBaseMap <- function(userCtx, datasetName, analysisName) {
                        sp::Polygons(list(sp::Polygon(anBBCoords)), ID="bb")
                    )
                )
-    sp::proj4string(anBBExt) <- CRS.new
-    #
-    #CRS.new=sp::CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
-    #+init=epsg:4326
-    #sp::proj4string(anBBExt) <- sp::CRS(SRS_string="EPSG:4326")
-    #sp::proj4string(anBBExt) <- sp::CRS("+init=epsg:4326")
+    sp::proj4string(anBBExt) <- CRS.WGS84
     #
     # Get and Crop the country boundaries
     #
     adm0 <- geo$country.lines
-    #adm0 <- sp::spTransform(adm0, CRS.new)
     adm0 <- adm0[anBBExt,]
     adm0_df <- suppressMessages(ggplot2::fortify(adm0))    		#; print(colnames(adm0$spdf))
     #
     rivers <- geo$river.lines
-    #rivers <- sp::spTransform(rivers, CRS.new)
     rivers <- rivers[anBBExt,]
     river_df <- NULL
     if (!is.null(rivers) & (nrow(rivers)>0)) {
@@ -171,7 +164,6 @@ map.buildBaseMap <- function(userCtx, datasetName, analysisName) {
     }
     #
     lakes <- geo$lake.lines
-    #lakes <- sp::spTransform(lakes, CRS.new)
     lakes <- lakes[anBBExt,]
     lakes_df <- NULL
     if (!is.null(lakes) & (nrow(lakes)>0)) {
