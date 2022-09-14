@@ -128,49 +128,40 @@ map.buildBaseMap <- function(userCtx, datasetName, analysisName) {
     #
     xMar <- (xMax-xMin)/20;    yMar <- (yMax-yMin)/20
     #
-    # *******************************************************************
-    # TEST
-    # Bounding box creation alternative
-    # 
-    #sf::st_bbox(c(xmin = 16.1, xmax = 16.6, ymax = 48.6, ymin = 47.9), crs = st_crs(4326))
-    #
-    #new_bb = c(8, 48, 12, 50)
-    #names(new_bb) = c("xmin", "ymin", "xmax", "ymax")
-    #attr(new_bb, "class") = "bbox"
-    #attr(st_geometry(fran), "bbox") = new_bb
-    #
-    #
-    # Create a bounding box, specifying WGS84 (EPSG:4326) to be the coordinates system 
-    #
-    #anBB <- sf::st_bbox(c(xmin=(xMin-xMar), xmax=(xMax+xMar), ymax=(yMax+yMar), ymin=(yMin-yMar)), crs=st_crs(4326))
-    #
-    #
-    # *******************************************************************
-    #
-    #
     # Create a bounding box, specifying WGS84 (EPSG:4326) to be the coordinates system 
     #
     anBB <- list(xMin=(xMin-xMar), xMax=(xMax+xMar), yMin=(yMin-yMar), yMax=(yMax+yMar))
     anBB$tl <- c(anBB$yMax, anBB$xMin);    anBB$br <- c(anBB$yMin, anBB$xMax)
     anBB$bl <- c(anBB$yMin, anBB$xMin);    anBB$tr <- c(anBB$yMax, anBB$xMax)
-    anBBExt <- methods::as(raster::extent(anBB$xMin, anBB$xMax, anBB$yMin, anBB$yMax), 'SpatialPolygons')
-    raster::crs(anBBExt) <- sp::CRS(SRS_string="EPSG:4326")
+    #
+    anBBCoords <- matrix(c(
+                      anBB$xMin, anBB$yMin,
+                      anBB$xMin, anBB$yMax,
+                      anBB$xMax, anBB$yMax,
+                      anBB$xMax, anBB$yMin,
+                      anBB$xMin, anBB$yMin), ncol = 2, byrow = TRUE)
+    anBBExt <- sp::SpatialPolygons(
+                   list(
+                       sp::Polygons(list(sp::Polygon(anBBCoords)), ID="bb")
+                   )
+               )
+    sp::proj4string(anBBExt) <- sp::CRS(SRS_string="EPSG:4326")
     #
     # Get and Crop the country boundaries
     #
     adm0 <- geo$country.lines
-    adm0 <- raster::crop(adm0, anBBExt)					#; cat(paste(sp::proj4string(adm0),"\n"))
+    adm0 <- suppressWarnings(adm0[anBBExt,])
     adm0_df <- suppressMessages(ggplot2::fortify(adm0))    		#; print(colnames(adm0$spdf))
     #
-    rivers <- geo$river.lines 
-    rivers <- raster::crop(rivers, anBBExt)
+    rivers <- geo$river.lines
+    rivers <- suppressWarnings(rivers[anBBExt,])
     river_df <- NULL
     if (!is.null(rivers)) {
         river_df <- suppressMessages(ggplot2::fortify(rivers))		#; print(colnames(rivers))
     }
     #
-    lakes <- geo$lake.lines						#; print(lakes)
-    lakes <- raster::crop(lakes, anBBExt)
+    lakes <- geo$lake.lines
+    lakes <- suppressWarnings(lakes[anBBExt,])
     lakes_df <- NULL
     if (!is.null(lakes)) {
         lakes_df <- suppressMessages(ggplot2::fortify(lakes))		#; print(colnames(lakes))

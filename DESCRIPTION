@@ -15,8 +15,7 @@ Imports:
     readxl, 
     ape, pegas, pcaMethods,
     igraph,
-    raster, sp, methods,
-    ggplot2, ggrepel, ggforce
+    sp, ggplot2, ggrepel, ggforce
 Depends: 
     R (>= 3.5.0)
 LinkingTo: Rcpp
