@@ -77,9 +77,9 @@ cluster.findClusters <- function (userCtx, sampleSetName, params) {
 #
 cluster.getClustersSetFromContext <- function(userCtx, sampleSetName, clusterSetName) {
     sampleSet <- userCtx$sampleSets[[sampleSetName]]		#; print(names(userCtx)); print(names(userCtx$sampleSets))
-    if (is.null(sampleSetInfo)) {
+    if (is.null(sampleSet)) {
         stop(paste("Sample set not found:", sampleSetName))        
-    }								#; print(names(sampleSetInfo));    
+    }								#; print(names(sampleSet));    
     clusterSetInfos <- sampleSet$clusters[[clusterSetName]]
     if (is.null(clusterSetInfos)) {
        stop(paste("Invalid cluster set specified:", clusterSetName))        

@@ -24,6 +24,7 @@ pieMap.execute <- function(userCtx, datasetName, sampleSetName, interval, mapTyp
     
     # Silly trick to make the package checker happy... :-(
     lon <- lat <- label <- NULL
+    Longitude <- Latitude <- PieSize <- Allele <- AlleleCount <- NULL
     #
     # Check the measures specified are valid.
     # If they are, ensure we have colour palettes for these measures, creating them if necessary.
@@ -114,7 +115,7 @@ if (FALSE) {
 	    
             # Save to file. the size in inches is given in the config.
             mapSize  <- analysis.getParam ("plot.size", params)
-            plotFolder <- getOutFolder(ctx$config, sampleSetName, c(paste("map", mapType, sep="-"), "plots"))
+            plotFolder <- getOutFolder(userCtx$config, sampleSetName, c(paste("map", mapType, sep="-"), "plots"))
             aggLabel <- map.getAggregationLabels(aggLevel)
             if (mapType=="sampleCount") {
                 aggLabel <- paste(aggLabel, datasetName, sep="-")
