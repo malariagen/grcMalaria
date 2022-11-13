@@ -3,22 +3,41 @@
 ###################################################################
 #
 analysis.createContext <- function (grcData, config) {
-    ctx <- list(
-        id         = digest::digest(grcData, algo="md5"),
-        config     = config,
-        sampleSets = list()
-    )
+    newCtx <- new.env()
+    newCtx$id         <- digest::digest(grcData, algo="md5")
+    newCtx$config     <- config
+    newCtx$sampleSets <- new.env()
+    newCtx$userGraphicAttributes <- new.env()
+    
+    #newCtx <- list(
+    #    id         = digest::digest(grcData, algo="md5"),
+    #    config     = config,
+    #    sampleSets = list()
+    #)
     #
     # Include basic (Unfiltered) Data - complete but raw data - built upon initialization
-    #
-    print("Initializing Unfiltered Dataset")
-    ctx$unfiltered <- list(name="unfiltered")
-    ctx <- meta.setDatasetMeta(ctx, "unfiltered", grcData, store=TRUE)
-    print(paste("Loaded metadata - Samples:", nrow(ctx$unfiltered$meta)))
+    # print("Initializing Unfiltered Dataset")
+    #newCtx$unfiltered <- list(name="unfiltered")
     
-    ctx <- analysis.createFilteredDataset(ctx)
-    ctx <- impute.createImputedDataset(ctx)
-    ctx
+    print("Initializing Unfiltered Dataset")
+    unfilteredDs <- analysis.createContextDataset (newCtx, "unfiltered")
+
+    meta.setDatasetMeta(newCtx, "unfiltered", grcData, store=TRUE)
+    print(paste("Loaded metadata - Samples:", nrow(newCtx$unfiltered$meta)))
+    
+    #newCtx <- analysis.createFilteredDataset(newCtx)
+    #newCtx <- impute.createImputedDataset(newCtx)
+    
+    analysis.createFilteredDataset(newCtx)
+    impute.createImputedDataset(newCtx)
+    newCtx
+}
+#
+analysis.createContextDataset <- function (ctx, datasetName) {
+    ds <- new.env()
+    ds$name <- datasetName
+    ctx[[datasetName]] <- ds
+    ds
 }
 #
 ###################################################################
@@ -26,10 +45,12 @@ analysis.createContext <- function (grcData, config) {
 ###################################################################
 #
 analysis.createFilteredDataset <- function (ctx, loadFromCache=TRUE) {
+
     print("Initializing Filtered Dataset")
-    ctx$filtered <- list(name="filtered")
+    filteredDs <- analysis.createContextDataset (ctx, "filtered")
+    #ctx$filtered <- list(name="filtered")
+    #filteredDs   <- ctx$filtered
     
-    filteredDs   <- ctx$filtered
     unfilteredDs <- ctx$unfiltered
     config       <- ctx$config
 
@@ -38,23 +59,22 @@ analysis.createFilteredDataset <- function (ctx, loadFromCache=TRUE) {
 
     if (loadFromCache & file.exists(filteredMetaFile) & file.exists(filteredBarcodeFile)) {
         meta <- readSampleData (filteredMetaFile)		#; print(colnames(meta))
-        ctx <- meta.setDatasetMeta (ctx, "filtered", meta, store=FALSE)
+        meta.setDatasetMeta (ctx, "filtered", meta, store=FALSE)
         barcodeData <- readSampleData (filteredBarcodeFile)
-        ctx <- barcode.setDatasetBarcodes (ctx, "filtered", barcodeData, store=FALSE)
+        barcode.setDatasetBarcodes (ctx, "filtered", barcodeData, store=FALSE)
         print(paste("Loaded filtered barcodes - Samples:", nrow(barcodeData), "x SNPs:", ncol(barcodeData)))
     } else {
-        ctx <- meta.setDatasetMeta (ctx, "filtered", ctx$unfiltered$meta, store=FALSE)
-        ctx <- barcode.initializeBarcodes (ctx, "filtered")
+        meta.setDatasetMeta (ctx, "filtered", ctx$unfiltered$meta, store=FALSE)
+        barcode.initializeBarcodes (ctx, "filtered")
         # Trim the metadata to cover the barcodes selected
         sampleNames   <- rownames(ctx$filtered$barcodes)
         filteredMeta  <- filterSampleData (ctx$unfiltered$meta, sampleNames)
-        ctx <- meta.setDatasetMeta (ctx, "filtered", filteredMeta)
+        meta.setDatasetMeta (ctx, "filtered", filteredMeta)
     }
 
     # Get the genotypes, distance matrix and execute the pop structure analysis
-    ctx <- geno.initialize(ctx, "filtered")
-    ctx <- distance.initialize(ctx, "filtered")
-    ctx
+    geno.initialize(ctx, "filtered")
+    distance.initialize(ctx, "filtered")
 }
 #
 ###################################################################
@@ -62,13 +82,14 @@ analysis.createFilteredDataset <- function (ctx, loadFromCache=TRUE) {
 ###################################################################
 #
 analysis.trimContext <- function (ctx, sampleNames) {
-    trimCtx <- list()
-    trimCtx <- analysis.addTrimmedDatasetToContext (ctx, "unfiltered", sampleNames, trimCtx)
+    #trimCtx <- list()
+    trimCtx <- new.env()
+    analysis.addTrimmedDatasetToContext (ctx, "unfiltered", sampleNames, trimCtx)
     if (!is.null(ctx$filtered)) {
-        trimCtx <- analysis.addTrimmedDatasetToContext (ctx, "filtered", sampleNames, trimCtx)
+        analysis.addTrimmedDatasetToContext (ctx, "filtered", sampleNames, trimCtx)
     }
     if (!is.null(ctx$imputed)) {
-        trimCtx <- analysis.addTrimmedDatasetToContext (ctx, "imputed", sampleNames, trimCtx)
+        analysis.addTrimmedDatasetToContext (ctx, "imputed", sampleNames, trimCtx)
     }
     trimCtx$config     <- ctx$config
     trimCtx$sampleSets <- ctx$sampleSets
@@ -98,16 +119,18 @@ analysis.addTrimmedDatasetToContext <- function (ctx, datasetName, sampleNames, 
     dsSampleNames <- rownames(dataset$meta)
     sampleNames <- sampleNames[which(sampleNames %in% dsSampleNames)]
     #
-    trimCtx[[datasetName]] <- list(name=dataset$name)
-    trimCtx <- meta.setDatasetMeta (trimCtx, datasetName, dataset$meta[sampleNames,], store=FALSE)
+    #trimCtx[[datasetName]] <- list(name=dataset$name)
+    analysis.createContextDataset (trimCtx, dataset$name)
+
+    meta.setDatasetMeta (trimCtx, datasetName, dataset$meta[sampleNames,], store=FALSE)
     if (!is.null(dataset$barcodes)) {
-        trimCtx <- barcode.setDatasetBarcodes (trimCtx, datasetName, dataset$barcodes[sampleNames,], store=FALSE)
+        barcode.setDatasetBarcodes (trimCtx, datasetName, dataset$barcodes[sampleNames,], store=FALSE)
     }
     if (!is.null(dataset$genos)) {
-        trimCtx <- geno.setDatasetGenotypes (trimCtx, datasetName, dataset$genos[sampleNames,], store=FALSE)
+        geno.setDatasetGenotypes (trimCtx, datasetName, dataset$genos[sampleNames,], store=FALSE)
     }
     if (!is.null(dataset$distance)) {
-        trimCtx <- distance.setDatasetDistance (trimCtx, datasetName, dataset$distance[sampleNames,sampleNames], store=FALSE)
+        distance.setDatasetDistance (trimCtx, datasetName, dataset$distance[sampleNames,sampleNames], store=FALSE)
     }
     trimCtx
 }
@@ -116,27 +139,28 @@ analysis.addTrimmedDatasetToContext <- function (ctx, datasetName, sampleNames, 
 # 
 ###################################################################
 #
-analysis.selectSampleSet <- function (ctx, sampleSetName, select) {
-    sampleMeta <- ctx$unfiltered$meta
+analysis.selectSampleSet <- function (userCtx, sampleSetName, select) {
+    sampleMeta <- userCtx$unfiltered$meta
 
     # Select the samples to be analyzed
     sampleMeta <- meta.select(sampleMeta, select)
 
     # Create a trimmed analysis context containing only data pertaining to the selected samples
     sampleNames <- rownames(sampleMeta)
-    trimCtx <- analysis.trimContext (ctx, sampleNames)
+    trimCtx <- analysis.trimContext (userCtx, sampleNames)
     trimCtx$sampleSets <- NULL
     
-    sampleSet <- list(
-        name=sampleSetName,
-        select=select,
-        samples=sampleNames,
-        ctx=trimCtx,
-        clusters=c()
-    )
-    ctx$sampleSets[[sampleSetName]] <- sampleSet
+    sampleSet <- new.env()
+    sampleSet$name=sampleSetName
+    sampleSet$select=select
+    sampleSet$samples=sampleNames
+    sampleSet$ctx=trimCtx
+    sampleSet$clusters=new.env()
+    sampleSet$valuePalettes=new.env()
     
-    metaOutFolder <- getOutFolder(ctx$config, c(sampleSetName, "metadata"))
+    userCtx$sampleSets[[sampleSetName]] <- sampleSet
+    
+    metaOutFolder <- getOutFolder(userCtx$config, c(sampleSetName, "metadata"))
     metaFilename  <- paste(metaOutFolder, "/meta-", sampleSetName, "-unfiltered.tab", sep="")
     utils::write.table(trimCtx$unfiltered$meta, file=metaFilename, sep="\t", quote=FALSE, row.names=FALSE)
     metaFilename  <- paste(metaOutFolder, "/meta-", sampleSetName, "-filtered.tab", sep="")
@@ -145,16 +169,15 @@ analysis.selectSampleSet <- function (ctx, sampleSetName, select) {
     unfilteredCount <- length(sampleNames)
     filteredCount <- nrow(trimCtx$filtered$meta)
     print(paste0("Selected ", unfilteredCount, " samples for dataset '", sampleSetName, "', including ", filteredCount, " quality filtered samples"))
-    ctx
+    userCtx
 }
 #
 ###################################################################
 # Execute
 ###################################################################
 #
-
-analysis.executeOnSampleSet <- function(ctx, sampleSetName, tasks, params) {
-    if (!sampleSetName %in% names(ctx$sampleSets)) {
+analysis.executeOnSampleSet <- function(userCtx, sampleSetName, tasks, params) {
+    if (!sampleSetName %in% names(userCtx$sampleSets)) {
         stop(paste("Sample set not initialized:", sampleSetName))
     }
     print(paste("Analyzing sample set:", sampleSetName))
@@ -174,24 +197,24 @@ analysis.executeOnSampleSet <- function(ctx, sampleSetName, tasks, params) {
 
         # Execute the task
         if (task == "pca") {
-            pca.execute (ctx, sampleSetName, method, params)
+            pca.execute (userCtx, sampleSetName, method, params)
 
         } else if (task == "tree") {
-            tree.execute (ctx, sampleSetName, method, params)
+            tree.execute (userCtx, sampleSetName, method, params)
 
         } else if (task == "graph") {
-            clusterGraph.execute (ctx, sampleSetName, params)
+            clusterGraph.execute (userCtx, sampleSetName, params)
 
         } else if (task == "map") {
             interval <- NULL
-            if (method %in% c("drug", "mutation", "diversity", "sampleCount", "location")) {
+            if (method %in% c("drug", "mutation", "alleleProp", "diversity", "sampleCount", "location")) {
                 intervals <- params$analysis.timeIntervals
                 for (idx in 1:length(intervals)) {
                     interval <- intervals[[idx]]
-                    map.execute(ctx, sampleSetName, interval, method, aggregation, measures, params)
+                    map.execute(userCtx, sampleSetName, interval, method, aggregation, measures, params)
                 }
             } else {
-                map.execute(ctx, sampleSetName, interval, method, aggregation, measures, params)
+                map.execute(userCtx, sampleSetName, interval, method, aggregation, measures, params)
             }
 
         } else {

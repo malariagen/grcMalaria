@@ -53,8 +53,9 @@ markerMap.execute <- function(userCtx, datasetName, sampleSetName, interval, map
 	    colourAdmDivCol <- GID_COLUMNS[colourAdmDivLevel+1]					#; print(colourAdmDivCol)
 	    colourAdmDivs <- aggUnitData[,colourAdmDivCol]					#; print(colourAdmDivs)
 	    colourGids    <- unique(colourAdmDivs)						#; print(colourGids)
-	    admDivPalette     <- config$defaultPalette[1:length(colourGids)]
-	    admDivTextPalette <- config$defaultTextPalette[1:length(colourGids)]		
+	    colPalette <- graphics.getColourPalette (userCtx)
+	    admDivPalette <- rep_len(colPalette, length.out=length(colourGids))
+	    admDivTextPalette <- graphics.makeTextPalette (admDivPalette)		
 	    names(admDivPalette) <- names(admDivTextPalette) <- colourGids			#; print(admDivPalette); print(admDivTextPalette)
 	    admDivPaletteLabels  <- map.getAdmDivNames (colourGids)				#; print(admDivPaletteLabels)
 	} 

@@ -17,7 +17,7 @@ map.execute <- function(userCtx, sampleSetName, interval, mapType, aggregation, 
     if (is.null(interval)) {
         interval <- list(name=NULL, start=NULL, end=NULL)
     }
-    if (mapType %in% c("drug", "mutation", "location")) {
+    if (mapType %in% c("drug", "mutation", "alleleProp", "location")) {
         map.executeOnDataset (userCtx, "unfiltered", sampleSetName, interval, mapType, aggregation, measures, params)
     } else if (mapType  %in% c("diversity", "connect", "barcodeFrequency", "clusterSharing", "clusterPrevalence")) {
         map.executeOnDataset (userCtx, "imputed",    sampleSetName, interval, mapType, aggregation, measures, params)
@@ -35,6 +35,9 @@ map.executeOnDataset <- function(userCtx, datasetName, sampleSetName, interval, 
 
     if (mapType %in% c("drug", "mutation", "diversity", "sampleCount", "location")) {
         markerMap.execute (userCtx, datasetName, sampleSetName, interval, mapType, baseMapInfo, aggregation, measures, params)
+        
+    } else if (mapType %in% c("alleleProp")) {
+        pieMap.execute (userCtx, datasetName, sampleSetName, interval, mapType, baseMapInfo, aggregation, measures, params)
         
     } else if (mapType %in% c("connect")) {
         connectMap.execute (userCtx, datasetName, sampleSetName, mapType, baseMapInfo, aggregation, measures, params)
@@ -245,12 +248,12 @@ map.getAdmDivNames <- function(gids) {		#; print(gids)
     admDivNames
 }
 #
-map.getAggregationUnitData <- function(ctx, datasetName, aggLevel, analysisName, mapType, params, dataFolder) {
+map.getAggregationUnitData <- function(plotCtx, datasetName, aggLevel, analysisName, mapType, params, dataFolder) {
 
     # Trim all data to discard samples that have incomplete geographical data
-    validSamples <- map.getAggregableSamples (ctx, datasetName, aggLevel)
+    validSamples <- map.getAggregableSamples (plotCtx, datasetName, aggLevel)
     
-    dataset <- ctx[[datasetName]]
+    dataset <- plotCtx[[datasetName]]
     sampleMeta   <- dataset$meta[validSamples,]
     barcodeData  <- dataset$barcodes[validSamples,]
     distData     <- dataset$distance[validSamples,validSamples]
@@ -303,8 +306,8 @@ map.getAggregationUnitData <- function(ctx, datasetName, aggLevel, analysisName,
     aggUnitData
 }
 #
-map.getAggregableSamples <- function(ctx, datasetName, aggLevel) {
-    dataset <- ctx[[datasetName]]
+map.getAggregableSamples <- function(plotCtx, datasetName, aggLevel) {
+    dataset <- plotCtx[[datasetName]]
     sampleMeta <- dataset$meta
     for (aIdx in 0:aggLevel) {
         cName  <- map.getAggregationColumns(aIdx);

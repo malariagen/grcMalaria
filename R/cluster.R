@@ -9,8 +9,8 @@ cluster.findClusters <- function (userCtx, sampleSetName, params) {
         stop(paste("Sample set not initialized:", sampleSetName))
     }
     sampleSet <- userCtx$sampleSets[[sampleSetName]]
-    ctx <- sampleSet$ctx
-    config <- ctx$config
+    ctx       <- sampleSet$ctx
+    config    <- ctx$config
 
     clusterSetName    <- analysis.getParam ("cluster.clusterSet.name", params)	#; print(clusterSetName)
     minIdentityLevels <- analysis.getParam ("cluster.identity.min", params) 	#; print(minIdentityLevels)
@@ -62,43 +62,25 @@ cluster.findClusters <- function (userCtx, sampleSetName, params) {
         clusterSetInfo <- list(clusterSetName=clusterSetName,
                                sampleSetName=sampleSetName,
                                minIdentity=minIdentity,
-                               clusters=clustersData, 
-                               members=memberData, 
-                               stats=statsData)
+                               clusters=clustersData,	# dataframe
+                               members=memberData, 	# dataframe
+                               stats=statsData)		# dataframe
         clusterSetInfos[[minIdentityLabel]] <- clusterSetInfo
     }
     
     # Reference the cluster data from the context
-    userCtx <- cluster.addClustersSetInContext (userCtx, sampleSetName, clusterSetName, clusterSetInfos)
-    userCtx
-}
-# 
-# Reference the cluster data in the context
-#
-cluster.addClustersSetInContext <- function(userCtx, sampleSetName, clusterSetName, clusterSetInfos) {
-    sampleSetInfo <- userCtx$sampleSets[[sampleSetName]]
-    sampleSetClusters <- sampleSetInfo$clusters
-    if (is.null(sampleSetClusters)) {
-        sampleSetClusters <- list()
-    }								#; print(names(sampleSetClusters))
-    sampleSetClusters[[clusterSetName]] <- clusterSetInfos	#; print(names(sampleSetClusters))
-    sampleSetInfo$clusters <- sampleSetClusters			#; print(names(sampleSetInfo))
-    userCtx$sampleSets[[sampleSetName]] <- sampleSetInfo	#; print(names(userCtx$sampleSets))
+    sampleSet$clusters[[clusterSetName]] <- clusterSetInfos	#; print(names(sampleSet$clusters))
     userCtx
 }
 #
 # Retrieve the cluster data from the context
 #
 cluster.getClustersSetFromContext <- function(userCtx, sampleSetName, clusterSetName) {
-    sampleSetInfo <- userCtx$sampleSets[[sampleSetName]]	#; print(names(userCtx)); print(names(userCtx$sampleSets))
+    sampleSet <- userCtx$sampleSets[[sampleSetName]]		#; print(names(userCtx)); print(names(userCtx$sampleSets))
     if (is.null(sampleSetInfo)) {
         stop(paste("Sample set not found:", sampleSetName))        
     }								#; print(names(sampleSetInfo));    
-    sampleSetClusters <- sampleSetInfo$clusters			#; print(names(sampleSetClusters))
-    if (is.null(sampleSetClusters)) {
-        stop(paste("No clusters found for", sampleSetName))        
-    }
-    clusterSetInfos <- sampleSetClusters[[clusterSetName]]
+    clusterSetInfos <- sampleSet$clusters[[clusterSetName]]
     if (is.null(clusterSetInfos)) {
        stop(paste("Invalid cluster set specified:", clusterSetName))        
     }
@@ -136,7 +118,8 @@ cluster.getClusterPalette <- function(ctx, clusterIds) {
     }									#; print(clusterIds)
     # Construct a palette using the default palette, recycling it if there are too many clusters
     # and adding white as the last colour for class "Other" (samples not belionging to a cluster)
-    clusterPalette <- rep_len(ctx$config$defaultPalette, length.out=(length(clusterIds)-1))
+    colPalette <- graphics.getColourPalette (ctx)
+    clusterPalette <- rep_len(colPalette, length.out=(length(clusterIds)-1))
     clusterPalette <- c(clusterPalette,"white")
     names(clusterPalette) <- clusterIds					#; print(clusterPalette)
     clusterPalette

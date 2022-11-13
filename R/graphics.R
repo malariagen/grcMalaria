@@ -9,11 +9,11 @@ graphics.defaultOrder <- 0
 # Initialization and configuration
 ################################################################################
 #
-graphics.loadAttributes <- function (ctx, attrId, attrField, attrFile, attrSheet) {		#; print(attrId)
+graphics.loadAttributes <- function (userCtx, attrId, attrField, attrFile, attrSheet) {		#; print(attrId)
     if (is.null(attrId)) {
         stop("A name was not specified for the attribute list, please provide one.")
-    }												#; print(colnames(ctx$unfiltered$meta)); print(attrField)
-    if (!(attrField %in% colnames(ctx$unfiltered$meta))) {
+    }												#; print(colnames(userCtx$unfiltered$meta)); print(attrField)
+    if (!(attrField %in% colnames(userCtx$unfiltered$meta))) {
         stop(paste0("The field name specified ('", attrField, "') was not found in the GRC data."))
     }
     if (!file.exists(attrFile)) {
@@ -39,13 +39,7 @@ graphics.loadAttributes <- function (ctx, attrId, attrField, attrFile, attrSheet
     userAttr <- list(id=attrId, field=attrField, data=attrData)
 
     # Store the attributes list in the context
-    userAttrList <- ctx$userGraphicAttributes
-    if (is.null(userAttrList)) {
-        userAttrList <- list()
-    }
-    userAttrList[[attrId]] <- userAttr
-    ctx$userGraphicAttributes <- userAttrList
-    ctx
+    userCtx$userGraphicAttributes[[attrId]] <- userAttr
 }
 #
 ###############################################################################
@@ -172,4 +166,59 @@ getGraphicsFilename <- function(graphicFilenameRoot) {
 
 initializeGraphics <- function(graphicFilename, widthInch, heightInch, resolution=150, fontSize=14, background="white") {
     grDevices::png(filename=graphicFilename, width=widthInch, height=heightInch, units="in", pointsize=fontSize, bg=background, res=resolution)
+}
+
+###############################################################################
+# Colour Palettes
+###############################################################################
+graphics.getColourPalette <- function (userCtx) {
+    palette <- userCtx$userColourPalette
+    if (is.null(palette)) {
+        palette <- userCtx$config$defaultPalette
+    }
+    palette
+}
+
+graphics.getTextColourPalette <- function (userCtx) {
+    palette <- userCtx$userTextColourPalette
+    if (is.null(palette)) {
+        palette <- userCtx$config$defaultTextPalette
+    }
+    palette
+}
+
+graphics.resetColourPalette <- function (userCtx) {
+    if ("userColourPalette" %in% names(userCtx)) {
+        rm("userColourPalette", envir=userCtx)
+    }
+    if ("userTextColourPalette" %in% names(userCtx)) {
+        rm("userTextColourPalette", envir=userCtx)
+    }
+    graphics.removeAllValuePalettes(userCtx)
+}
+
+graphics.setColourPalette <- function (userCtx, palette) {
+    userCtx$userColourPalette <- palette
+    userCtx$userTextColourPalette <- graphics.makeTextPalette(palette)
+    graphics.removeAllValuePalettes(userCtx)
+}
+
+graphics.removeAllValuePalettes <- function (userCtx) {
+    sampleSetNames <- names(userCtx$sampleSets)
+    if (length(sampleSetNames) > 0) {
+        for (i in 1 : length(sampleSetNames)) {
+            sampleSetName <- sampleSetNames[i]
+            sampleSet <- userCtx$sampleSets[[sampleSetName]]
+            sampleSet$valuePalettes <- new.env()
+            sampleSet$valueTextPalettes <- new.env()
+        }
+    }
+}
+
+graphics.makeTextPalette <- function (palette) {
+    rgbs <- t(grDevices::col2rgb(palette))
+    lum <- rgbs[,1]*0.299 + rgbs[,2]*0.587 + rgbs[,3]*0.114
+    textCol <- rep("black",nrow(rgbs))
+    textCol[which(lum<130)] <- "white"
+    textCol
 }

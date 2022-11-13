@@ -14,12 +14,11 @@ geno.initialize <- function (ctx, datasetName, loadFromCache=TRUE, store=TRUE) {
     
     if (loadFromCache & file.exists(genoDataFile)) {
         genoData <- readSampleData (genoDataFile)
-        ctx <- geno.setDatasetGenotypes (ctx, datasetName, genoData, store=FALSE)
+        geno.setDatasetGenotypes (ctx, datasetName, genoData, store=FALSE)
     } else {
         genoData <- geno.convertAllelesToGenos (ctx, dataset$barcodes)
-        ctx <- geno.setDatasetGenotypes (ctx, datasetName, genoData, store=store)
+        geno.setDatasetGenotypes (ctx, datasetName, genoData, store=store)
     }
-    ctx
 }
 
 geno.setDatasetGenotypes <- function (ctx, datasetName, genos, store=TRUE) {
@@ -30,8 +29,6 @@ geno.setDatasetGenotypes <- function (ctx, datasetName, genos, store=TRUE) {
         genoDataFile <- geno.getGenoFile (ctx, datasetName)
         writeSampleData(genos, genoDataFile)
     }
-    ctx[[datasetName]] <- dataset
-    ctx
 }
 
 #

@@ -18,7 +18,7 @@ loadGraphicAttributes(ctx, name, field, file, sheet)
 \item{sheet}{TBD}
 }
 \value{
-TBD
+The analysis context, augmented with the new sample set
 }
 \description{
 Graphical Attributes

@@ -8,8 +8,6 @@ meta.setDatasetMeta <- function (ctx, datasetName, meta, store=TRUE) {
         metaFile <- meta.getMetaDataFile(ctx, datasetName)
         writeSampleData(meta, metaFile)
     }
-    ctx[[datasetName]] <- dataset
-    ctx
 }
 
 meta.getMetaDataFile <- function (ctx, datasetName) {
@@ -106,21 +104,10 @@ meta.getValueCounts <- function (sampleMeta, colNames, params=NULL, excludeMulti
     if (is.null(colNames) || (length(colNames) == 0)) {
         return (c());
     }
-    aggregateCountMin <- 0
-    if (!is.null(params)) {
-        aggregateCountMin <- analysis.getParam ("map.aggregateCountMin", params)
-    }  							#; print(aggregateCountMin)
-    result <- list()
+    result <- c()
     for (mIdx in 1:length(colNames)) {
         colName <- colNames[mIdx]			#; print(colName)
-        vals <- sampleMeta[,colName]			#; print(vals)
-        vals <- vals[which(!(vals %in% c("-","<NA>")))]	#; print(vals)
-        if (excludeMultiValues) {
-            multi <- which(grepl(",", vals))		#; print(multi)
-            vals <- vals[-multi]			#; print(vals)
-        }
-        counts <- table(vals)				#; print(counts)
-        counts <- sort(counts, decreasing=TRUE)
+        counts <- meta.getColumnValueCounts (sampleMeta, colName, excludeMultiValues)
         nVals <- names(counts)
         valPairs <- paste(nVals, counts, sep=":")
         valPairStr <- paste(valPairs, collapse="; ")
@@ -130,6 +117,19 @@ meta.getValueCounts <- function (sampleMeta, colNames, params=NULL, excludeMulti
     names(result) <- colNames
     result
 }
+#
+meta.getColumnValueCounts <- function (sampleMeta, colName, excludeMultiValues=TRUE) {
+    vals <- sampleMeta[,colName]			#; print(vals)
+    vals <- vals[which(!(vals %in% c("-","<NA>")))]	#; print(vals)
+    if (excludeMultiValues) {
+        multi <- which(grepl(",", vals))		#; print(multi)
+        vals <- vals[-multi]			#; print(vals)
+    }
+    counts <- table(vals)				#; print(counts)
+    counts <- sort(counts, decreasing=TRUE)
+    counts
+}
+#
 #
 ###############################################################################
 # Metadata processing

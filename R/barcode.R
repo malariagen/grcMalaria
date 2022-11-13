@@ -28,7 +28,7 @@ barcode.setDatasetBarcodes <- function (ctx, datasetName, barcodes, store=TRUE) 
         barcodeSeqFile <- barcode.getBarcodeSeqFile (ctx, datasetName)
         barcode.writeFasta (barcodes, barcodeSeqFile)
     }
-    ctx[[datasetName]] <- dataset
+    #ctx[[datasetName]] <- dataset
     ctx
 }
 
@@ -45,7 +45,7 @@ barcode.initializeBarcodes <- function (ctx, datasetName, loadFromCache=TRUE) {
 
     if (loadFromCache & file.exists(barcodeDataFile)) {
         barcodeData <- readSampleData (barcodeDataFile)
-        ctx <- barcode.setDatasetBarcodes (ctx, datasetName, barcodeData, store=FALSE)
+        barcode.setDatasetBarcodes (ctx, datasetName, barcodeData, store=FALSE)
     } else {
         # Get barcode alleles, and discard samples that have too much missingness
         barcodeMeta <- config$barcodeMeta
@@ -75,7 +75,7 @@ barcode.initializeBarcodes <- function (ctx, datasetName, loadFromCache=TRUE) {
                            paste("filtered-snps_", minSnpTypability, "-samples_", minSampleTypability, sep=""))
         print(paste("Barcode alleles after filtering - Samples:", nrow(barcodeData), "x SNPs:", ncol(barcodeData)))
         #
-        ctx <- barcode.setDatasetBarcodes (ctx, datasetName, barcodeData, store=TRUE)
+        barcode.setDatasetBarcodes (ctx, datasetName, barcodeData, store=TRUE)
     }
 
     # Report missingness

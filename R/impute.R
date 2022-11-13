@@ -9,11 +9,12 @@
 #
 impute.createImputedDataset <- function (ctx, loadFromCache=TRUE) {
     print("Initializing Imputed Dataset")
-    ctx$imputed <- list(name="imputed")
+    imputedDs <- analysis.createContextDataset (ctx, "imputed")
+
     filteredDs <- ctx$filtered
     config     <- ctx$config
     
-    ctx <- meta.setDatasetMeta (ctx, "imputed", filteredDs$meta)
+    meta.setDatasetMeta (ctx, "imputed", filteredDs$meta)
     impBarcodeDataFile <- barcode.getBarcodeDataFile (ctx, "imputed")
     if (loadFromCache & file.exists(impBarcodeDataFile)) {
         impBarcodeData <- readSampleData (impBarcodeDataFile)
@@ -23,12 +24,11 @@ impute.createImputedDataset <- function (ctx, loadFromCache=TRUE) {
         barcodeMeta <- barcode.getMetadata(ctx, barcodeData)
         impBarcodeData <- impute.imputeBarcodes (barcodeData, barcodeMeta, filteredDs$distance)
     }
-    ctx <- barcode.setDatasetBarcodes (ctx, "imputed", impBarcodeData)
+    barcode.setDatasetBarcodes (ctx, "imputed", impBarcodeData)
 
     # Get the genotypes and distance matrix from imputed data
-    ctx <- geno.initialize(ctx, "imputed")
-    ctx <- distance.initialize(ctx, "imputed")
-    ctx
+    geno.initialize(ctx, "imputed")
+    distance.initialize(ctx, "imputed")
 }
 #
 impute.imputeBarcodes <- function (barcodeData, barcodeMeta, distData) {

@@ -99,8 +99,7 @@ initializeContext <- function (grcData, dir=".",
 #' #TBD
 #
 selectSampleSet <- function (ctx, sampleSetName, select) {
-    ctx <- analysis.selectSampleSet (ctx, sampleSetName, select)
-    ctx
+    analysis.selectSampleSet (ctx, sampleSetName, select)
 }
 
 #############################################################
@@ -148,7 +147,7 @@ mapLocations <- function (ctx, sampleSet,
         map.markerNames=showNames,
         plot.size=list(width=width,height=height)
     )
-    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/location", params=params)
+    analysis.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, tasks="map/location", params=params)
 }
 
 #############################################################
@@ -201,7 +200,7 @@ mapSampleCounts <- function (ctx, sampleSet, timePeriods=NULL,
         map.markerNames=showNames,
         plot.size=list(width=width,height=height)
     )
-    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/sampleCount", params=params)
+    analysis.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, tasks="map/sampleCount", params=params)
 }
 #
 #############################################################
@@ -248,7 +247,7 @@ mapDrugResistancePrevalence <- function (ctx, sampleSet, timePeriods=NULL,
         map.markerNames=showNames,
         plot.size=list(width=width,height=height)
     )
-    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/drug", params=params)
+    analysis.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, tasks="map/drug", params=params)
 }
 #
 #############################################################
@@ -289,7 +288,49 @@ mapMutationPrevalence <- function (ctx, sampleSet, timePeriods=NULL,
         map.markerNames=showNames,
         plot.size=list(width=width,height=height)
     )
-    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/mutation", params=params)
+    analysis.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, tasks="map/mutation", params=params)
+}
+                   
+#
+#############################################################
+#
+#' Map the proportion of alleles for a given mutation (including kelch1 and amplifications).
+#'
+#' @param ctx TBD
+#' @param sampleSet TBD
+#' @param timePeriods The list of time period object for partitioning samples into time-interval plots
+#' @param mutations TBD
+#' @param aggregate TBD
+#' @param minAggregateCount TBD
+#' @param showNames TBD
+#' @param markerSize TBD
+#' @param width The width (in inches) of the map image.
+#' @param height The height (in inches) of the map image.
+#'
+#' @return TBD
+#' @export
+#'
+#' @examples
+#'  #TBD
+mapAlleleProportions <- function (ctx, sampleSet, timePeriods=NULL,
+                   mutations="ALL",
+                   aggregate="Province", minAggregateCount=10,
+                   showNames=TRUE, markerSize=16,
+                   width=15, height=15) {
+
+    aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
+    timeIntervals <- parseTimeIntervals(timePeriods)
+    params <- list(
+        analysis.timeIntervals=timeIntervals,
+        analysis.measures=mutations,
+        aggegation.levels=aggLevels,
+        map.aggregateCountMin=minAggregateCount,
+        map.markerSize=markerSize,			# Use this for constant marker size
+        #map.markerSize=c(4,40),			# Use this for count-proportional marker size
+        map.markerNames=showNames,
+        plot.size=list(width=width,height=height)
+    )
+    analysis.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, tasks="map/alleleProp", params=params)
 }
                    
 #############################################################
@@ -332,7 +373,7 @@ mapDiversity <- function (ctx, sampleSet, timePeriods=NULL,
         map.diversity.markerColours=markerColours,
         plot.size=list(width=width,height=height)
     )
-    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/diversity", params=params)
+    analysis.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, tasks="map/diversity", params=params)
 }
 
 #############################################################
@@ -377,7 +418,7 @@ mapConnections <- function (ctx, sampleSet,
         plot.size=list(width=width,height=height)
     )
     aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
-    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/connect", params=params)
+    analysis.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, tasks="map/connect", params=params)
 }
 
 #############################################################
@@ -414,7 +455,7 @@ mapBarcodeFrequencies <- function (ctx, sampleSet,
         map.cluster.markerScale=markerScale,
         plot.size=list(width=width,height=height)
     )
-    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/barcodeFrequency", params=mapParams)
+    analysis.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, tasks="map/barcodeFrequency", params=mapParams)
 }
 
 #############################################################
@@ -444,8 +485,7 @@ findClusters <- function (ctx, sampleSet, clusterSet,
         cluster.method=clusteringMethod,
         cluster.minSize=minClusterSize
     )
-    ctx <- cluster.findClusters (ctx, sampleSetName=sampleSet, params=mapParams)
-    ctx
+    cluster.findClusters (ctx, sampleSetName=sampleSet, params=mapParams)
 }
 
 #############################################################
@@ -474,7 +514,7 @@ plotClusterGraph <- function (ctx, sampleSet, clusterSet,
         graph.weightPower=weightPower,
         plot.size=list(width=width,height=height)
     )
-    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="graph", params=mapParams)
+    analysis.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, tasks="graph", params=mapParams)
 }
 
 #############################################################
@@ -513,7 +553,7 @@ mapClusterSharing <- function (ctx, sampleSet, clusterSet,
         map.cluster.markerScale=markerScale,
         plot.size=list(width=width,height=height)
     )
-    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/clusterSharing", params=mapParams)
+    analysis.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, tasks="map/clusterSharing", params=mapParams)
 }
 
 #############################################################
@@ -550,7 +590,38 @@ mapClusterPrevalence <- function (ctx, sampleSet, clusterSet,
         map.cluster.markerScale=markerScale,
         plot.size=list(width=width,height=height)
     )
-    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks="map/clusterPrevalence", params=mapParams)
+    analysis.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, tasks="map/clusterPrevalence", params=mapParams)
+}
+
+#############################################################
+#
+#' Set to a user-defined colour palette
+#'
+#' @param ctx TBD
+#' @param palette TBD
+#'
+#' @return TBD
+#' @export
+#'
+#' @examples
+#'  #TBD
+setColourPalette <- function (ctx, palette) {
+    graphics.setColourPalette (ctx, palette)
+}
+
+#############################################################
+#
+#' Reset to the default colour palette, removing user-defined palettes
+#'
+#' @param ctx TBD
+#'
+#' @return TBD
+#' @export
+#'
+#' @examples
+#'  #TBD
+resetColourPalette <- function (ctx) {
+    graphics.resetColourPalette (ctx)
 }
 
 #############################################################
@@ -563,14 +634,13 @@ mapClusterPrevalence <- function (ctx, sampleSet, clusterSet,
 #' @param file TBD
 #' @param sheet TBD
 #'
-#' @return TBD
+#' @return The analysis context, augmented with the new sample set
 #' @export
 #'
 #' @examples
 #'  #TBD
 loadGraphicAttributes <- function (ctx, name, field, file, sheet) {
-    ctx <- graphics.loadAttributes (ctx, name, field, file, sheet)
-    ctx
+    graphics.loadAttributes (ctx, name, field, file, sheet)
 }
 
 #############################################################
@@ -597,7 +667,7 @@ plotPrincipalComponents <- function (ctx, sampleSet,
         plot.size=list(width=width,height=height)
     )
     task <- paste("pca", type, sep="/")
-    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks=task, params=plotParams)
+    analysis.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, tasks=task, params=plotParams)
 }
 
 #############################################################
@@ -624,5 +694,5 @@ plotTree <- function (ctx, sampleSet,
         plot.size=list(width=width,height=height)
     )
     task <- paste("tree", type, sep="/")
-    analysis.executeOnSampleSet (ctx=ctx, sampleSetName=sampleSet, tasks=task, params=plotParams)
+    analysis.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, tasks=task, params=plotParams)
 }

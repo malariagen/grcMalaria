@@ -14,7 +14,7 @@ setup.getConfig <- function (grc, dir, minSnpTypability, minSampleTypability) {
         minSnpTypability=minSnpTypability,
         minSampleTypability=minSampleTypability,
         defaultPalette=setup.getDefaultPalette(),
-        defaultTextPalette=setup.getDefaultTextColours()
+        defaultTextPalette=graphics.makeTextPalette(setup.getDefaultPalette())
     )
 
     # Merge the config with the species config
@@ -100,6 +100,9 @@ setup.getPfConfig <- function (version) {
         ),
         countColumns = c(
             "Pfkelch13"
+        ),
+        amplificationColumns = c(
+            "pm23-Amp", "mdr1-Amp"
         )
     )
     config
@@ -141,6 +144,8 @@ setup.getPvConfig <- function (version) {
             "mdr1_Y976F"
         ),
         countColumns = c(
+        ),
+        amplificationColumns = c(
         )
     )
     config
@@ -150,7 +155,7 @@ setup.getPvConfig <- function (version) {
 # Species Config Buildup
 # #####################################################################################
 setup.buildSpeciesConfig <- function (species, version, chrLengths, drugs,
-                     drugResistancePositions, drugResistanceMutations, countColumns) {
+                     drugResistancePositions, drugResistanceMutations, countColumns, amplificationColumns) {
     chromosomes = names(chrLengths)
     config <- list (
         species = species,
@@ -167,6 +172,8 @@ setup.buildSpeciesConfig <- function (species, version, chrLengths, drugs,
         drugs = drugs,
         drugResistancePositions = drugResistancePositions,
         drugResistanceMutations = drugResistanceMutations,
+        countColumns = countColumns,
+        amplificationColumns = amplificationColumns,
         cluster.stats.drugs = drugs,
         cluster.stats.mutations = drugResistanceMutations,
         cluster.stats.alleleCounts = countColumns
@@ -209,12 +216,4 @@ setup.getDefaultPalette <- function () {
         "brown"
     )
     c25Palette
-}
-
-setup.getDefaultTextColours <- function () {
-    rgbs <- t(grDevices::col2rgb(setup.getDefaultPalette()))
-    lum <- rgbs[,1]*0.299 + rgbs[,2]*0.587 + rgbs[,3]*0.114
-    textCol <- rep("black",nrow(rgbs))
-    textCol[which(lum<130)] <- "white"
-    textCol
 }
