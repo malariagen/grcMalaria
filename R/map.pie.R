@@ -191,25 +191,25 @@ pieMap.getAggUnitPieSizes <- function(aggUnitData, params) {
 #
 pieMap.checkAllelePropMeasures <- function(userCtx, sampleSetName, measures) {
     config <- userCtx$config 
-    allMeasures <- c(config$cluster.stats.alleleCounts, config$amplificationColumns, config$drugResistancePositions)		#; print(allMeasures)
+    allMeasures <- c(config$countColumns, config$amplificationColumns, config$drugResistancePositions)		#; print(allMeasures)
     if ("ALL" %in% measures) {
         measures <- allMeasures
-    } else {
-        #
-        # Check the measure name is valid and ensure the relevant colour palette is loaded measure name is valid
-        #
-        sampleSet <- userCtx$sampleSets[[sampleSetName]]
-        palettesList <- sampleSet$valuePalettes
-        for (i in 1 : length(measures)) {
-            measure <- measures[i]							#; print(measure)
-            if (!(measure %in% allMeasures)) {
-                stop(paste("Invalid allele for allele proportions:", measure))
-            }
-            p <- palettesList[[measure]]
-            if (is.null(p)) {
-                p <- pieMap.loadMeasurePalette (userCtx, sampleSetName, measure)	#; print(paste("Loading palette",measure))
-                palettesList[[measure]] <- p						#; print(palettesList[[measure]])
-            }
+    }
+    #
+    # Check the measure name is valid and ensure the relevant colour palette is loaded measure name is valid
+    #
+    sampleSet <- userCtx$sampleSets[[sampleSetName]]
+    palettesList <- sampleSet$valuePalettes
+    #for (i in 1 : 2) {
+    for (i in 1 : length(measures)) {
+        measure <- measures[i]							#; print(measure)
+        if (!(measure %in% allMeasures)) {
+            stop(paste("Invalid allele for allele proportions:", measure))
+        }
+        p <- palettesList[[measure]]						#; print(p)
+        if (is.null(p)) {
+            p <- pieMap.loadMeasurePalette (userCtx, sampleSetName, measure)	#; print(paste("Loading palette",measure))
+            palettesList[[measure]] <- p					#; print(palettesList[[measure]])
         }
     }
     measures
@@ -221,25 +221,48 @@ pieMap.getMeasurePalette  <- function(userCtx, sampleSetName, measure) {
     p
 }
 #
-pieMap.getMeasureAllValues <- function(userCtx, sampleSetName, measure) {
-    sampleSet <- userCtx$sampleSets[[sampleSetName]]
+pieMap.getMeasureAttributes <- function(config, measure) {
+    if (pieMap.isAminoPosition(config, measure)) {
+        posData <- meta.getPositionData (config, measure)
+        columnName <- posData$columnName
+        wtValue <- posData$ref
+    } else {
+        columnName <- measure
+        wtValue <- "WT"
+    }
+    list(wtValue=wtValue, columnName=columnName)
+}
+#
+pieMap.isAminoPosition <- function (config, measure) {
+    measure %in% config$drugResistancePositions
+}
+#
+pieMap.getMeasureAllValues <- function(ctx, sampleSetName, measure, excludeMultiValues=TRUE, wtFirst=TRUE) {
+    sampleSet <- ctx$sampleSets[[sampleSetName]]
     dataset <- sampleSet$ctx$unfiltered
-    sampleMeta <- dataset$meta				#; print(nrow(sampleMeta))
-    valueCounts <- meta.getColumnValueCounts (sampleMeta, measure, excludeMultiValues=TRUE)
+    sampleMeta <- dataset$meta					#; print(nrow(sampleMeta))
+    #	
+    attr <- pieMap.getMeasureAttributes (ctx$config, measure)	#; print(attr)
+    columnName <- attr$columnName
+    wtValue <- attr$wtValue
+    #
+    valueCounts <- meta.getColumnValueCounts (sampleMeta, columnName, excludeMultiValues)
     values <- names(valueCounts)
+    #
+    # Put WT allele as the first value for pie charts
+    #
+    if (wtFirst) {
+        if (wtValue %in% values) {
+            wtIdx <- which(values == wtValue)
+            wtValue <- values[wtIdx]
+            values <- c(wtValue, values[-wtIdx])
+        }
+    }
     values
 }
 #
 pieMap.loadMeasurePalette <- function(userCtx, sampleSetName, measure) {
     values <- pieMap.getMeasureAllValues (userCtx, sampleSetName, measure)	#; print(values)
-    #
-    # Put "WT" as the first value for pie charts
-    #
-    if ("WT" %in% values) {
-        wtIdx <- which(values == "WT")
-        wtValue <- values[wtIdx]
-        values <- c(wtValue, values[-wtIdx])
-    }
     userPalette <- graphics.getColourPalette (userCtx)
     measurePalette <- rep_len(userPalette, length(values))	#; print(measurePalette)
     names(measurePalette) <- values				#; print(measurePalette)
@@ -274,7 +297,8 @@ pieMap.buildCountData <- function(userCtx, datasetName, sampleSetName, aggLevel,
         aggMeta <- sampleMeta[which(aggIndex == aggUnitGid),]			#; print(nrow(aggMeta))
         
         # Get the allele counts
-        vCounts <- meta.getColumnValueCounts (aggMeta, measure, excludeMultiValues=TRUE)		#; print(vCounts)
+        attr <- pieMap.getMeasureAttributes (ctx$config, measure)
+        vCounts <- meta.getColumnValueCounts (aggMeta, attr$columnName, excludeMultiValues=TRUE)		#; print(vCounts)
         if (length(vCounts) == 0) {
             next
         }

@@ -70,7 +70,6 @@ cluster.findClusters <- function (userCtx, sampleSetName, params) {
     
     # Reference the cluster data from the context
     sampleSet$clusters[[clusterSetName]] <- clusterSetInfos	#; print(names(sampleSet$clusters))
-    userCtx
 }
 #
 # Retrieve the cluster data from the context
