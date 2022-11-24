@@ -17,7 +17,7 @@ pieMap.execute <- function(userCtx, datasetName, sampleSetName, interval, mapTyp
         print(paste("No samples found - skipping interval", interval$name))
         return()
     }
-    config <- userCtx$config
+    config <- userCtx$config								#;print(sampleMeta[,"Country"])
     
     # Get the output folders
     dataFolder <- getOutFolder(config, sampleSetName, c(paste("map", mapType, sep="-"), "data"))
@@ -51,9 +51,12 @@ pieMap.execute <- function(userCtx, datasetName, sampleSetName, interval, mapTyp
             selAggUnitIds <- unique(pieMapData$UnitId)
             selAggUnitData <- aggUnitData[which(aggUnitData$UnitId %in% selAggUnitIds),]		#; print(nrow(selAggUnitData))
             
-            # Compute marker sizes. 
-            pieSizes <- pieMap.getAggUnitPieSizes (selAggUnitData, params)				#; print(pieSizes); print(pieMapData$UnitId)
-            pieMapData$PieSize <- as.integer(pieSizes[pieMapData$UnitId])				#; print(pieMapData)
+            # Compute pie chart sizes. 
+	    pieSizes <- pieMap.getAggUnitPieSizes (selAggUnitData, params)		#; print(pieSizes); print(pieMapData$UnitId)
+	    pieMapData$PieSize <- as.numeric(pieSizes[pieMapData$UnitId])		#; print(pieMapData)
+            
+            # Compute label coordinates for the pie chart segments
+            pieMapData <- pieMap.computeLabelCoordinates (pieMapData, 1.2)		#; print(pieMapData)
 
             # Do the actual plot, starting with the background map
             mapPlot <- baseMapInfo$baseMap
@@ -81,30 +84,20 @@ pieMap.execute <- function(userCtx, datasetName, sampleSetName, interval, mapTyp
 
             # Now add the pie chart markers
             mapPlot <- mapPlot +
-                    ggforce::geom_arc_bar(data=pieMapData, stat="pie", inherit.aes=FALSE, 
-                                          ggplot2::aes(x0=Longitude, y0=Latitude, r0=0, r=(PieSize/100),
+                ggforce::geom_arc_bar(data=pieMapData, stat="pie", inherit.aes=FALSE, 
+                                          ggplot2::aes(x0=Longitude, y0=Latitude, r0=0, r=PieSize,
                                           fill=Allele, amount=AlleleCount),
                                           colour="gray25", show.legend=TRUE) +
-                    ggplot2::scale_fill_manual(values=valuePalette)
+                ggplot2::scale_fill_manual(values=valuePalette)
+                    
+            # Now add the pie slice labels
+            showAlleleCounts <- FALSE			# TBD
+            if (showAlleleCounts) {
+                mapPlot <- mapPlot +
+	            ggplot2::geom_text(data=pieMapData, ggplot2::aes(x=LabelX, y=LabelY, label=AlleleCount),
+	                               show.legend=FALSE)
+            }
 
-            # Now add the decorative elements
-if (FALSE) {
-            if (mapType=="location") {
-                valueLabels <- rep("", length(mValues))
-            } else {
-                valueLabels <- round(mValues, digits=2)
-            }
-            if (mapType=="sampleCount") {
-                mapPlot <- mapPlot +
-                           ggplot2::geom_text(data=selAggUnitData, ggplot2::aes_string(x="Longitude", y="Latitude", colour=colourAdmDivCol),
-                                              label=valueLabels, hjust=0.5, vjust=0.5, size=4.5, fontface="bold", show.legend=FALSE) +
-                           ggplot2::scale_colour_manual(values=admDivTextPalette)
-            } else {
-                mapPlot <- mapPlot +
-                           ggplot2::geom_text(data=selAggUnitData, ggplot2::aes_string(x="Longitude", y="Latitude"), 
-                                              label=valueLabels, hjust=0.5, vjust=0.5, size=4.5, fontface="bold")
-            }
-}            
             mapPlot <- mapPlot +
                        ggplot2::theme(plot.title = ggplot2::element_text(face = "bold",size = ggplot2::rel(1.2), hjust = 0.5),
                        panel.background = ggplot2::element_rect(colour = NA),
@@ -134,6 +127,36 @@ if (FALSE) {
 # Graphical rendition of site markers
 ################################################################################
 #
+pieMap.computeLabelCoordinates <- function(pieMapData, labelRadius=0.5) {		#; print(pieMapData)
+    resultDf <- NULL
+    aggUnitIds <- as.character(unique(pieMapData$UnitId))
+    for (uIdx in 1:length(aggUnitIds)) {
+        unitId <- aggUnitIds[uIdx]
+        unitData <- pieMapData[which(pieMapData$UnitId == unitId),]
+        unitData <- unitData[order(unitData$Order),]				#; print(unitData)
+        
+        counts <- unitData$AlleleCount
+        ctotal <- sum(counts)
+        counts <- c(0, cumsum(counts))
+        c1 <- counts[1:(length(counts)-1)]
+        c2 <- counts[2:length(counts)]
+        cmid <- (c1 + c2) / 2
+        angle <- 2 * pi * cmid / ctotal
+        lRadius <- unitData$PieSize * labelRadius
+
+        unitData$LabelX <- unitData$Longitude + (sin(angle) * lRadius)
+        unitData$LabelY <- unitData$Latitude  + (cos(angle) * lRadius)
+
+        if (is.null(resultDf)) {
+            resultDf <- unitData
+        } else {
+            resultDf <- rbind(resultDf, unitData)
+        }
+    }
+    resultDf									#; print(resultDf)
+}
+            
+
 pieMap.getAggUnitPieSizes <- function(aggUnitData, params) {
     # Compute pie chart sizes. 
     # If only one size was given in the config, then the markers will be constant size/
@@ -152,7 +175,8 @@ pieMap.getAggUnitPieSizes <- function(aggUnitData, params) {
     } else {
         markerSizes <- rep(mSizeParam, nrow(aggUnitData))
     }
-    markerSizes <- as.integer(markerSizes)
+    #markerSizes <- as.numeric(markerSizes)
+    markerSizes <- as.numeric(markerSizes / 100)		# The /100 is an arbitrary scaling factor, will fix later 
     names(markerSizes) <- aggUnitData$UnitId
     markerSizes								#; print(markerSizes)
 }

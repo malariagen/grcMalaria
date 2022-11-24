@@ -123,7 +123,9 @@ meta.getColumnValueCounts <- function (sampleMeta, colName, excludeMultiValues=T
     vals <- vals[which(!(vals %in% c("-","<NA>")))]	#; print(vals)
     if (excludeMultiValues) {
         multi <- which(grepl(",", vals))		#; print(multi)
-        vals <- vals[-multi]			#; print(vals)
+        if (length(multi) > 0) {
+            vals <- vals[-multi]			#; print(vals)
+        }
     }
     counts <- table(vals)				#; print(counts)
     counts <- sort(counts, decreasing=TRUE)
