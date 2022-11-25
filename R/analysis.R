@@ -4,20 +4,12 @@
 #
 analysis.createContext <- function (grcData, config) {
     newCtx <- new.env()
+
     newCtx$id         <- digest::digest(grcData, algo="md5")
+    newCtx$rootCtx    <- newCtx			# This is a root context (user-created)
     newCtx$config     <- config
     newCtx$sampleSets <- new.env()
     newCtx$userGraphicAttributes <- new.env()
-    
-    #newCtx <- list(
-    #    id         = digest::digest(grcData, algo="md5"),
-    #    config     = config,
-    #    sampleSets = list()
-    #)
-    #
-    # Include basic (Unfiltered) Data - complete but raw data - built upon initialization
-    # print("Initializing Unfiltered Dataset")
-    #newCtx$unfiltered <- list(name="unfiltered")
     
     print("Initializing Unfiltered Dataset")
     unfilteredDs <- analysis.createContextDataset (newCtx, "unfiltered")
@@ -84,6 +76,8 @@ analysis.createFilteredDataset <- function (ctx, loadFromCache=TRUE) {
 analysis.trimContext <- function (ctx, sampleNames) {
     #trimCtx <- list()
     trimCtx <- new.env()
+    trimCtx$rootCtx <- ctx$rootCtx 
+
     analysis.addTrimmedDatasetToContext (ctx, "unfiltered", sampleNames, trimCtx)
     if (!is.null(ctx$filtered)) {
         analysis.addTrimmedDatasetToContext (ctx, "filtered", sampleNames, trimCtx)
@@ -169,7 +163,6 @@ analysis.selectSampleSet <- function (userCtx, sampleSetName, select) {
     unfilteredCount <- length(sampleNames)
     filteredCount <- nrow(trimCtx$filtered$meta)
     print(paste0("Selected ", unfilteredCount, " samples for dataset '", sampleSetName, "', including ", filteredCount, " quality filtered samples"))
-    userCtx
 }
 #
 ###################################################################
@@ -181,8 +174,6 @@ analysis.executeOnSampleSet <- function(userCtx, sampleSetName, tasks, params) {
         stop(paste("Sample set not initialized:", sampleSetName))
     }
     print(paste("Analyzing sample set:", sampleSetName))
-    measures    <- analysis.getParamIfDefined ("analysis.measures", params)
-    aggregation <- analysis.getParamIfDefined ("aggegation.levels", params)
 
     # Execute computations and plots with different tasks
     for (tIdx in 1:length(tasks)) {
@@ -206,16 +197,7 @@ analysis.executeOnSampleSet <- function(userCtx, sampleSetName, tasks, params) {
             clusterGraph.execute (userCtx, sampleSetName, params)
 
         } else if (task == "map") {
-            interval <- NULL
-            if (method %in% c("drug", "mutation", "alleleProp", "diversity", "sampleCount", "location")) {
-                intervals <- params$analysis.timeIntervals
-                for (idx in 1:length(intervals)) {
-                    interval <- intervals[[idx]]
-                    map.execute(userCtx, sampleSetName, interval, method, aggregation, measures, params)
-                }
-            } else {
-                map.execute(userCtx, sampleSetName, interval, method, aggregation, measures, params)
-            }
+            map.execute (userCtx, sampleSetName, method, params)
 
         } else {
             stop(paste("Invalid analysis task:", task))

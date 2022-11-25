@@ -13,7 +13,31 @@ GID_COLUMNS     <- c("Country", "AdmDiv1_GID", "AdmDiv2_GID")
 # Common Routines for Map Generation.
 ################################################################################
 #
-map.execute <- function(userCtx, sampleSetName, interval, mapType, aggregation, measures, params) {		#;print(mapType) ;print(aggregation)
+map.execute <- function(userCtx, sampleSetName, mapType, params) {		#;print(mapType)
+
+    aggregation <- analysis.getParamIfDefined ("aggegation.levels", params)	#;print(aggregation)
+    measures    <- analysis.getParamIfDefined ("analysis.measures", params)	#;print(measures)
+    #
+    # ** Important for alleleProp maps, but we could do this for all maps **
+    # Check the measures specified are valid; and if they are, ensure we have colour palettes for these measures, creating them if necessary.
+    # For a given measure, all plots for this sample set use the same palette, otherwise the viewer will be confused when looking at multiple maps.
+    #
+    if (mapType %in% c("alleleProp")) {
+        measures <- pieMap.checkAllelePropMeasures (userCtx, sampleSetName, measures)
+    }
+    #
+    if (mapType %in% c("drug", "mutation", "alleleProp", "diversity", "sampleCount", "location")) {
+        intervals <- params$analysis.timeIntervals
+        for (idx in 1:length(intervals)) {
+            interval <- intervals[[idx]]
+            map.executeForInterval(userCtx, sampleSetName, interval, mapType, aggregation, measures, params)
+        }
+    } else {
+        map.executeForInterval(userCtx, sampleSetName, NULL, mapType, aggregation, measures, params)
+    }
+}
+
+map.executeForInterval <- function(userCtx, sampleSetName, interval, mapType, aggregation, measures, params) {		#;print(mapType) ;print(aggregation)
     if (is.null(interval)) {
         interval <- list(name=NULL, start=NULL, end=NULL)
     }
