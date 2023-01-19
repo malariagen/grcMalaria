@@ -96,15 +96,30 @@ barcode.validateBarcodeAlleles <- function (barcodeData, barcodeMeta) {
     if (ncol(barcodeData) != snpCount) {
         stop (paste("Number of barcode SNPs in the metadata (",snpCount,") does not match the length of the barcodes (",ncol(barcodeData),")",sep=""))
     }
+    ntAlleles <- c("A","C","G","T")
+    errorCount <- 0
     for (sIdx in 1:snpCount) {
-        snpMeta <- barcodeMeta[sIdx,]				#; print(snpMeta)
-        alleles <- c(snpMeta$Ref,snpMeta$Nonref,"X","N")	#; print(alleles)
         calls <- barcodeData[,sIdx]				#; print(calls)
-        badIdx <- which(!(calls %in% alleles))			#; print(badIdx)
+        snpMeta <- barcodeMeta[sIdx,]				#; print(snpMeta)
+        snpAlleles <- c(snpMeta$Ref,snpMeta$Nonref,"X","N")	#; print(snpAlleles)
+        badIdx <- which(!(calls %in% snpAlleles))		#; print(badIdx)
         if (length(badIdx) > 0) {
-            bad <- badIdx[1]
-            stop (paste("Bad allele found in SNP #",sIdx," in sample ",rownames(barcodeData)[bad],": found ",calls[bad,sIdx],sep=""))
+            errorCount <- errorCount+1
+            for (bIdx in 1:length(badIdx)) {
+                badAllele <- calls[bIdx,sIdx]
+                badSample <- rownames(barcodeData)[bIdx]
+                isNt <- (badAllele %in% ntAlleles)
+                if (isNt) {
+                    problem <- "Unexpected allele"
+                } else {
+                    problem <- "Invalid symbol"
+                }
+                cat (paste0(problem," found at SNP #",sIdx," in sample ",badSample,": found ",badAllele), fill=TRUE)
+            }
         }
+    }
+    if (errorCount > 0) {
+        stop ("Validation errors were detected in the barcodes, the process will be stopped.")
     }
 }
 #

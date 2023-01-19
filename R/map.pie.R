@@ -25,6 +25,7 @@ pieMap.execute <- function(userCtx, datasetName, sampleSetName, interval, mapTyp
     # Silly trick to make the package checker happy... :-(
     lon <- lat <- label <- NULL
     Longitude <- Latitude <- PieSize <- Allele <- AlleleCount <- NULL
+    LabelX <- LabelY <- NULL
     
     #
     # Now compute the aggregation units, the values to be plotted, and make the map
