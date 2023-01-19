@@ -113,11 +113,6 @@ writeLabelledData <- function(data, idLabel, outFilename) {
     utils::write.table(outData, file=outFilename, sep="\t", quote=FALSE, row.names=FALSE)
 }
 #
-filterSampleData <- function (data, sNames) {
-    data <- data[sNames,]
-    data
-}
-#
 # #####################################################################################
 #  Data I/O Utilities - read/write/filter samples matrices
 # #####################################################################################
@@ -139,11 +134,6 @@ writeMatrix <- function (matrixData, matrixDataFile) {
   matrixData <- cbind(names, matrixData)
   colnames(matrixData) <- c ("__Sample", names)
   utils::write.table(matrixData, file=matrixDataFile, sep="\t", quote=FALSE, row.names=FALSE)
-}
-#
-filterMatrix <- function (matrixData, sampleNames) {
-    matrixData <- matrixData[sampleNames,sampleNames]
-    matrixData
 }
 #
 # #####################################################################################
