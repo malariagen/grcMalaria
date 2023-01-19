@@ -39,7 +39,7 @@ connectMap.execute <- function(userCtx, datasetName, sampleSetName, mapType, bas
         for (mIdx in 1:length(measures)) {
             measure <- measures[mIdx]						#; print(measure)
             if (connectMap.filterThreshold (measure)) {
-                minValues <- as.numeric(analysis.getParam(paste("map.connect", measure, "min", sep="."), params))
+                minValues <- as.numeric(param.getParam(paste("map.connect", measure, "min", sep="."), params))
             } else {
                 minValues <- 0
             }									#; print(minValues)
@@ -78,7 +78,7 @@ connectMap.execute <- function(userCtx, datasetName, sampleSetName, mapType, bas
                     ggplot2::geom_point(aes_string2(x="Longitude", y="Latitude"), data=aggUnitData, size=4, shape=19, col="red")
     	    
                 # If we need to show aggregation unit names, we need to compute the label positioning and plot
-                showMarkerNames <- analysis.getParam ("map.markerNames", params)
+                showMarkerNames <- param.getParam ("map.markerNames", params)
                 if (showMarkerNames) {
                     lp <- map.computeLabelParams (aggUnitData, baseMapInfo)
                     mapPlot <- mapPlot +
@@ -97,7 +97,7 @@ connectMap.execute <- function(userCtx, datasetName, sampleSetName, mapType, bas
                                axis.title.x = ggplot2::element_text(vjust = -0.2))
     	    
     	        # Save to file. the size in inches is given in the config.
-    	        mapSize  <- analysis.getParam ("plot.size", params)
+    	        mapSize  <- param.getParam ("plot.size", params)
     	        plotFolder <- getOutFolder(ctx$config, sampleSetName, c(paste("map", mapType, sep="-"), "plots"))
                 aggLabel <- map.getAggregationLabels(aggLevel)
                 graphicFilenameRoot  <- paste(plotFolder, paste("map", sampleSetName, aggLabel, measure, sep="-"), sep="/")
@@ -123,7 +123,7 @@ connectMap.expandMeasures <- function(measures, params) {
     for (mIdx in 1:length(measures)) {
         measure <- measures[mIdx]
         if (measure == "similarity") {
-            levels <- as.numeric(analysis.getParam("map.connect.identity.min", params))
+            levels <- as.numeric(param.getParam("map.connect.identity.min", params))
             for (lIdx in 1 : length(levels)) {
                 measureStr <- paste("similarity-ge", format(levels[lIdx], digits=2, nsmall=2), sep="")
                 result <- c(result, measureStr)

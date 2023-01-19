@@ -50,7 +50,7 @@ tree.execute <- function(userCtx, sampleSetName, method, params) {
     #
     # Execute the plots
     #
-    plotList <- analysis.getParam ("plot.plotList", params)		#; print(plotList)
+    plotList <- param.getParam ("plot.plotList", params)		#; print(plotList)
     for (plotIdx in 1:length(plotList)) {
         plotDef <- plotList[[plotIdx]]
         plotDefName <- plotDef$name;
@@ -109,7 +109,7 @@ tree.execute <- function(userCtx, sampleSetName, method, params) {
         # Plot tree
         #
         treeName  <- paste("tree", plotName, sep="-")
-        plotSize <- analysis.getParam ("plot.size", params)		#; print(plotSize)
+        plotSize <- param.getParam ("plot.size", params)		#; print(plotSize)
         graphicFilenameRoot  <- paste(plotsFolder, treeName, sep="/")
         initializeGraphics (getGraphicsFilename (graphicFilenameRoot), 
                             widthInch=plotSize$width, heightInch=plotSize$height, resolution=300)

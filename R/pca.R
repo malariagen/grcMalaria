@@ -69,7 +69,7 @@ pca.execute <- function(userCtx, sampleSetName, method, params) {
     #
     # Get the plot definitions and execute them
     #
-    plotList <- analysis.getParam ("plot.plotList", params)		#; print(plotList)
+    plotList <- param.getParam ("plot.plotList", params)		#; print(plotList)
     for (plotIdx in 1:length(plotList)) {
         plotDef <- plotList[[plotIdx]]
         plotDefName <- plotDef$name
@@ -136,7 +136,7 @@ pca.plotPrincipalComponents <- function(plotName, sampleMeta, legendData,
         plotFilename  <- paste(plotFilename, pcCIdx, sep="_")
     }
     print(paste("Plotting ", plotFilename))
-    plotSize <- analysis.getParam ("plot.size", params)		#; print(plotSize)
+    plotSize <- param.getParam ("plot.size", params)		#; print(plotSize)
     graphicFilenameRoot  <- paste(plotsFolder, plotFilename, sep="/")
     initializeGraphics (getGraphicsFilename (graphicFilenameRoot), 
                         widthInch=plotSize$width, heightInch=plotSize$height, resolution=300)

@@ -7,7 +7,7 @@
 # clusterPrevalence has visualization type "cluster" to show the prevalence of the different clusters
 #
 clusterMap.execute <- function(userCtx, datasetName, sampleSetName, mapType, baseMapInfo, aggregation, measures, params) {
-    visTypes <- analysis.getParam ("map.cluster.visualizations", params)			#; print(visTypes)
+    visTypes <- param.getParam ("map.cluster.visualizations", params)			#; print(visTypes)
     for (vIdx in 1:length(visTypes)) {
         clusterMap.executeVisualization (userCtx, datasetName, sampleSetName, mapType, baseMapInfo, visTypes[vIdx], aggregation, measures, params)
     }
@@ -36,13 +36,13 @@ clusterMap.executeVisualization <- function(userCtx, datasetName, sampleSetName,
         aggUnitData <- info$aggUnitData <- map.getAggregationUnitData (ctx, datasetName, aggLevel, sampleSetName, mapType, params, dataFolder)	#; print(aggUnitData)
 
         # Work out a "standard" marker size (1/25 of the shortest side) and apply a scaling factor
-        scalingFactor <- analysis.getParam ("map.cluster.markerScale", params)			#; print(scalingFactor)
+        scalingFactor <- param.getParam ("map.cluster.markerScale", params)			#; print(scalingFactor)
         bbox <- baseMapInfo$anBB;
         minSide <- min(abs(bbox$yMax-bbox$yMin),abs(bbox$xMax-bbox$xMin))
         stdMarkerSize <- info$stdMarkerSize <- scalingFactor * minSide / 25			#; print(info$stdMarkerSize)
         
         # Compute the number of samples that correspond to this standard size
-        stdMarkerCountParam <- analysis.getParam ("map.cluster.markerSampleCount", params)	#; print(stdMarkerCountParam)
+        stdMarkerCountParam <- param.getParam ("map.cluster.markerSampleCount", params)	#; print(stdMarkerCountParam)
         stdMarkerCount <- 0
         if (is.numeric(stdMarkerCountParam)) {
             stdMarkerCount <- stdMarkerCountParam
@@ -63,7 +63,7 @@ clusterMap.executeVisualization <- function(userCtx, datasetName, sampleSetName,
 
         } else if (mapType %in% c("clusterSharing", "clusterPrevalence")) {
             # Get the cluster data
-            clusterSetName  <- analysis.getParam ("cluster.clusterSet.name", params)	#; print(clusterSetName)
+            clusterSetName  <- param.getParam ("cluster.clusterSet.name", params)	#; print(clusterSetName)
             clusterSetInfos <- cluster.getClustersSetFromContext (userCtx, sampleSetName, clusterSetName)
 
 	    # Process the clusters for different thresholds of min identity 
@@ -127,7 +127,7 @@ clusterMap.plotMap <- function (ctx, info, params) {
     # If we need to show aggregation unit names, we need to compute the label positioning and plot before the markers
     aggUnitData <- info$aggUnitData
     aggLevel <- info$aggLevel
-    showMarkerNames <- analysis.getParam ("map.markerNames", params)
+    showMarkerNames <- param.getParam ("map.markerNames", params)
     if (showMarkerNames) {
         lp <- map.computeLabelParams (aggUnitData, baseMapInfo)		#; print(lp)
         mapPlot <- mapPlot + 
@@ -183,7 +183,7 @@ clusterMap.plotMap <- function (ctx, info, params) {
                      axis.title.x=ggplot2::element_text(vjust=-0.2))
      
     # Save to file. the size in inches is given in the params.
-    mapSize  <- analysis.getParam ("plot.size", params)
+    mapSize  <- param.getParam ("plot.size", params)
 
     clusterSetLabel <- clusterSetInfo$clusterSetName
     aggLabel <- map.getAggregationLabels(aggLevel)

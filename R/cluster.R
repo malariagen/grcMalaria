@@ -12,9 +12,9 @@ cluster.findClusters <- function (userCtx, sampleSetName, params) {
     ctx       <- sampleSet$ctx
     config    <- ctx$config
 
-    clusterSetName    <- analysis.getParam ("cluster.clusterSet.name", params)	#; print(clusterSetName)
-    minIdentityLevels <- analysis.getParam ("cluster.identity.min", params) 	#; print(minIdentityLevels)
-    method            <- analysis.getParam ("cluster.method", params)		#; print(method)
+    clusterSetName    <- param.getParam ("cluster.clusterSet.name", params)	#; print(clusterSetName)
+    minIdentityLevels <- param.getParam ("cluster.identity.min", params) 	#; print(minIdentityLevels)
+    method            <- param.getParam ("cluster.method", params)		#; print(method)
     print(paste("Clustering Method:",method))
     
     clusterSetInfos <- list()
@@ -33,7 +33,7 @@ cluster.findClusters <- function (userCtx, sampleSetName, params) {
     
         # Sort clusters by descending size, and label them in order, appending the sequence number to the cluster set name
         clustersData <- clustersData[rev(order(clustersData$Count)),]		#; print(head(clustersData))
-        clusterSetName <- analysis.getParam ("cluster.clusterSet.name", params)	#; print(clusterSetName)
+        clusterSetName <- param.getParam ("cluster.clusterSet.name", params)	#; print(clusterSetName)
         clustersData$ClusterId <- paste(clusterSetName, 
                                         formatC(seq(1,nrow(clustersData)), width=3, format="d", flag="0"), sep="-")
         rownames(clustersData) <- clustersData$ClusterId			#; print(head(clustersData))
@@ -251,7 +251,7 @@ cluster.findAllNeighbourClusters <- function (gr, params) {
     nodeCnt <- length(igraph::V(wg))    		#; print(paste("nodeCnt",nodeCnt))
 
     # Identify all clusters with >= minCount samples
-    minCount <- analysis.getParam ("cluster.minSize", params)
+    minCount <- param.getParam ("cluster.minSize", params)
     clList <- list()
     while (nodeCnt > 0) {				#; print(nodeCnt)
         #
@@ -302,7 +302,7 @@ cluster.findGraphCommunities <- function (gr, method, params) {
     sampleNames <- names(igraph::V(gr))
     #names(nodeComms) <- sampleNames
     
-    minCount <- analysis.getParam ("cluster.minSize", params)
+    minCount <- param.getParam ("cluster.minSize", params)
     clList <- list()
     for (clIdx in 1:length(commIds)) {
         commId <- commIds[clIdx]

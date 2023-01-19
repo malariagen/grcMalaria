@@ -4,7 +4,7 @@
 #
 impute.createImputedDataset <- function (ctx, loadFromCache=TRUE) {
     print("Initializing Imputed Dataset")
-    imputedDs <- analysis.createContextDataset (ctx, "imputed")
+    imputedDs <- context.createContextDataset (ctx, "imputed")
 
     filteredDs <- ctx$filtered
     config     <- ctx$config

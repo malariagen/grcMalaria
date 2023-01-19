@@ -2,8 +2,8 @@
 # Task Parameters retrieval, with defaults
 ###################################################################
 #
-analysis.getParam <- function (paramName, paramList) {
-    value <- analysis.defaultParams[[paramName]]
+param.getParam <- function (paramName, paramList) {
+    value <- param.defaultParams[[paramName]]
     if (!is.null(paramList)) {
         if (!is.null(paramList[[paramName]])) {
             value <- paramList[[paramName]]
@@ -12,14 +12,14 @@ analysis.getParam <- function (paramName, paramList) {
     value
 }
 #
-analysis.getParamIfDefined <- function (paramName, paramList) {
+param.getParamIfDefined <- function (paramName, paramList) {
     if (paramName %in% names(paramList)) {
-        return (analysis.getParam(paramName, paramList))
+        return (param.getParam(paramName, paramList))
     }
     return (NULL)
 }
 #
-analysis.defaultParams <- list (
+param.defaultParams <- list (
     graph.connectIdentityMin=0.4,
     graph.layoutAlgorithm="fr",
     graph.weightPower=2,

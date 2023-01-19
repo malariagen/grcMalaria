@@ -13,7 +13,7 @@ markerMap.execute <- function(userCtx, datasetName, sampleSetName, interval, map
         
     # Get the context and trim it by time interval
     sampleSet <- userCtx$sampleSets[[sampleSetName]]
-    ctx <- analysis.trimContextByTimeInterval (sampleSet$ctx, interval)
+    ctx <- context.trimContextByTimeInterval (sampleSet$ctx, interval)
     if (is.null(ctx)) {
         print(paste("No samples found- skipping interval", interval$name))
         return()
@@ -48,7 +48,7 @@ markerMap.execute <- function(userCtx, datasetName, sampleSetName, interval, map
 
         # For sample count markers, the colour may be based on a different admin division level from the aggregation
         if (mapType %in% c("sampleCount","location")) {
-	    colourAdmDivLevel <- analysis.getParam ("map.markerColourAggLevel", params)		#; print(colourAdmDivLevel) # should be 0 or 1
+	    colourAdmDivLevel <- param.getParam ("map.markerColourAggLevel", params)		#; print(colourAdmDivLevel) # should be 0 or 1
 	    colourAdmDivTitle <- ADM_DIV_LABELS[colourAdmDivLevel+1]				#; print(colourAdmDivCol)
 	    colourAdmDivCol <- GID_COLUMNS[colourAdmDivLevel+1]					#; print(colourAdmDivCol)
 	    colourAdmDivs <- aggUnitData[,colourAdmDivCol]					#; print(colourAdmDivs)
@@ -78,7 +78,7 @@ markerMap.execute <- function(userCtx, datasetName, sampleSetName, interval, map
             mapPlot <- baseMapInfo$baseMap
             
             # If we need to show aggregation unit names, we need to compute the label positioning and plot before the markers
-            showMarkerNames <- analysis.getParam ("map.markerNames", params)
+            showMarkerNames <- param.getParam ("map.markerNames", params)
             if (showMarkerNames) {
                 lp <- map.computeLabelParams (selAggUnitData, baseMapInfo)
                 mapPlot <- mapPlot + 
@@ -99,7 +99,7 @@ markerMap.execute <- function(userCtx, datasetName, sampleSetName, interval, map
             mValues <- selAggUnitData[,measure]
 
             if (mapType=="diversity") {
-                markerColours <- analysis.getParam ("map.diversity.markerColours", params)
+                markerColours <- param.getParam ("map.diversity.markerColours", params)
                 # Two marker colours can be specified to create a gradient. If a single marker colour is 
                 # specified, then create a gradient from white to that colour.
                 if (length(markerColours) == 1) {
@@ -129,7 +129,7 @@ markerMap.execute <- function(userCtx, datasetName, sampleSetName, interval, map
 	                                  data=selAggUnitData, size=pointSizes, shape=21, stroke=2) +
 	              ggplot2::scale_fill_gradientn(limits=c(0,1), colours=c("green3","orange2","red3","red3"), values=c(0, 0.2, 0.75, 1))
             } else if (mapType=="mutation") {
-                markerColours <- analysis.getParam ("map.prevalence.markerColours", params)
+                markerColours <- param.getParam ("map.prevalence.markerColours", params)
                 # Two marker colours can be specified to create a gradient. If a single marker colour is 
                 # specified, then create a gradient from white to that colour.
                 if (length(markerColours) == 1) {
@@ -167,7 +167,7 @@ markerMap.execute <- function(userCtx, datasetName, sampleSetName, interval, map
                        axis.title.x = ggplot2::element_text(vjust = -0.2))
 	    
             # Save to file. the size in inches is given in the config.
-            mapSize  <- analysis.getParam ("plot.size", params)
+            mapSize  <- param.getParam ("plot.size", params)
             plotFolder <- getOutFolder(ctx$config, sampleSetName, c(paste("map", mapType, sep="-"), "plots"))
             aggLabel <- map.getAggregationLabels(aggLevel)
             if (mapType=="sampleCount") {
@@ -191,7 +191,7 @@ markerMap.getAggUnitMarkerSizes <- function(aggUnitData, params) {
     # If only one size was given in the config, then the markers will be constant size/
     # If there are two sizes, then merkers will be sized proportional to the number of samples, with the smaller
     # size representing 1 sample, and the larger size representing the numer of samples in the largest aggregation
-    mSizeParam <- analysis.getParam ("map.markerSize", params)
+    mSizeParam <- param.getParam ("map.markerSize", params)
     if (length(mSizeParam) > 1) {
         minSize  <- mSizeParam[1]
         maxSize  <- mSizeParam[2]

@@ -15,8 +15,8 @@ GID_COLUMNS     <- c("Country", "AdmDiv1_GID", "AdmDiv2_GID")
 #
 map.execute <- function(userCtx, sampleSetName, mapType, params) {		#;print(mapType)
 
-    aggregation <- analysis.getParamIfDefined ("aggegation.levels", params)	#;print(aggregation)
-    measures    <- analysis.getParamIfDefined ("analysis.measures", params)	#;print(measures)
+    aggregation <- param.getParamIfDefined ("aggegation.levels", params)	#;print(aggregation)
+    measures    <- param.getParamIfDefined ("analysis.measures", params)	#;print(measures)
     #
     # ** Important for alleleProp maps, but we could do this for all maps **
     # Check the measures specified are valid; and if they are, ensure we have colour palettes for these measures, creating them if necessary.
@@ -289,7 +289,7 @@ map.getAggregationUnitData <- function(plotCtx, datasetName, aggLevel, analysisN
     aggIndex <- map.getAggregationUnitIds (aggLevel, sampleMeta)
 
     # Get all aggregation units, in order, and keep only those that have enough samples
-    aggregateCountMin <- analysis.getParam ("map.aggregateCountMin", params)
+    aggregateCountMin <- param.getParam ("map.aggregateCountMin", params)
     aggUnitCounts <- table(aggIndex)
     aggUnitGids <- names(aggUnitCounts[aggUnitCounts >= aggregateCountMin])	#; print(aggUnitGids)
     aggUnitGids <- aggUnitGids[order(aggUnitGids)]				#; print(aggUnitGids)

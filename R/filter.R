@@ -2,9 +2,9 @@
 # Filtered Data, with high-missingness barcodes removed
 ###################################################################
 #
-analysis.createFilteredDataset <- function (ctx, loadFromCache=TRUE) {
+filter.createFilteredDataset <- function (ctx, loadFromCache=TRUE) {
     print("Initializing Filtered Dataset")
-    filteredDs <- analysis.createContextDataset (ctx, "filtered")
+    filteredDs <- context.createContextDataset (ctx, "filtered")
     #ctx$filtered <- list(name="filtered")
     #filteredDs   <- ctx$filtered
     
@@ -25,7 +25,7 @@ analysis.createFilteredDataset <- function (ctx, loadFromCache=TRUE) {
         barcode.initializeBarcodes (ctx, "filtered")
         # Trim the metadata to cover the barcodes selected
         sampleNames   <- rownames(ctx$filtered$barcodes)
-        filteredMeta  <- filterSampleData (ctx$unfiltered$meta, sampleNames)
+        filteredMeta  <- filter.filterSampleData (ctx$unfiltered$meta, sampleNames)
         meta.setDatasetMeta (ctx, "filtered", filteredMeta)
     }
 
@@ -34,12 +34,12 @@ analysis.createFilteredDataset <- function (ctx, loadFromCache=TRUE) {
     distance.initialize(ctx, "filtered")
 }
 #
-filterSampleData <- function (data, sNames) {
+filter.filterSampleData <- function (data, sNames) {
     data <- data[sNames,]
     data
 }
 #
-#filterMatrix <- function (matrixData, sampleNames) {
+#filter.filterMatrix <- function (matrixData, sampleNames) {
 #    matrixData <- matrixData[sampleNames,sampleNames]
 #    matrixData
 #}

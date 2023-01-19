@@ -6,7 +6,7 @@ pieMap.execute <- function(userCtx, datasetName, sampleSetName, interval, mapTyp
 
     # Get the context and trim it by time interval
     sampleSet <- userCtx$sampleSets[[sampleSetName]]
-    plotCtx <- analysis.trimContextByTimeInterval (sampleSet$ctx, interval)		#; print(interval$name)
+    plotCtx <- context.trimContextByTimeInterval (sampleSet$ctx, interval)		#; print(interval$name)
     if (is.null(plotCtx)) {
         print(paste("No samples found- skipping interval", interval$name))
         return()
@@ -57,7 +57,7 @@ pieMap.execute <- function(userCtx, datasetName, sampleSetName, interval, mapTyp
             mapPlot <- baseMapInfo$baseMap
             
             # If we need to show aggregation unit names, we need to compute the label positioning and plot before the markers
-            showMarkerNames <- analysis.getParam ("map.markerNames", params)
+            showMarkerNames <- param.getParam ("map.markerNames", params)
             if (showMarkerNames) {
                 lp <- map.computeLabelParams (selAggUnitData, baseMapInfo)
                 mapPlot <- mapPlot + 
@@ -102,7 +102,7 @@ pieMap.execute <- function(userCtx, datasetName, sampleSetName, interval, mapTyp
                        axis.title.x = ggplot2::element_text(vjust = -0.2))
 	    
             # Save to file. the size in inches is given in the config.
-            mapSize  <- analysis.getParam ("plot.size", params)
+            mapSize  <- param.getParam ("plot.size", params)
             plotFolder <- getOutFolder(userCtx$config, sampleSetName, c(paste("map", mapType, sep="-"), "plots"))
             aggLabel <- map.getAggregationLabels(aggLevel)
             if (mapType=="sampleCount") {
@@ -157,7 +157,7 @@ pieMap.getAggUnitPieSizes <- function(aggUnitData, params) {
     # If only one size was given in the config, then the markers will be constant size/
     # If there are two sizes, then merkers will be sized proportional to the number of samples, with the smaller
     # size representing 1 sample, and the larger size representing the numer of samples in the largest aggregation
-    mSizeParam <- analysis.getParam ("map.markerSize", params)		#; print(mSizeParam)
+    mSizeParam <- param.getParam ("map.markerSize", params)		#; print(mSizeParam)
     if (length(mSizeParam) > 1) {
         minSize  <- mSizeParam[1]
         maxSize  <- mSizeParam[2]

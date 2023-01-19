@@ -12,7 +12,7 @@ clusterGraph.execute <- function (userCtx, sampleSetName, params) {
     dataFolder <- getOutFolder(ctx$config, sampleSetName, c("graph", "data"))
 
     # Get the cluster data
-    clusterSetName  <- analysis.getParam ("cluster.clusterSet.name", params)	#; print(clusterSetName)
+    clusterSetName  <- param.getParam ("cluster.clusterSet.name", params)	#; print(clusterSetName)
     clusterSetInfos <- cluster.getClustersSetFromContext (userCtx, sampleSetName, clusterSetName)
     
     # Process the clusters for different thresholds of min identity 
@@ -151,7 +151,7 @@ clusterGraph.getEdgeWidth <- function(weights) {
 #
 #
 clusterGraph.getLayout <- function (gr, params) {
-    layoutAlgo <- analysis.getParam ("graph.layoutAlgorithm", params)
+    layoutAlgo <- param.getParam ("graph.layoutAlgorithm", params)
     if (layoutAlgo == "fr") {
         layout <- igraph::layout_with_fr(gr)
     } else if (layoutAlgo == "kk") {
@@ -194,7 +194,7 @@ clusterGraph.buildGraph <- function (distance, clusterSetInfo, clustersOnly, par
     nodeData <- clusterGraph.buildNodeData (nodeNames, clusterData)
 
     # Trim data to include only the nodes that are connected by edges; but make sure we preserve all clusters
-    #minIdentity <- analysis.getParam ("graph.connectIdentityMin", params)
+    #minIdentity <- param.getParam ("graph.connectIdentityMin", params)
     minConnectIdentity <- minIdentity / 2
     #minConnectIdentity <- 0
     edgeData <- clusterGraph.getWeightedEdgeData (distData, minConnectIdentity, params)
@@ -283,7 +283,7 @@ clusterGraph.getWeightedEdgeData <- function (distData, minIdentity, params) {
     # Get a table of pairwise distance/identity values for all pairs of samples that meet the threshold
     pairData <- clusterGraph.getPairwiseIdentityData (distData, minIdentity, params)
     # Compute the link weights
-    power <- analysis.getParam ("graph.weightPower", params)
+    power <- param.getParam ("graph.weightPower", params)
     pairData$weight <- 100 * (pairData$Identity^power)
     pairData
 }
