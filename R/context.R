@@ -2,7 +2,7 @@
 # Root Context - Contains all data needed from analysis
 ###################################################################
 #
-context.createContext <- function (grcData, config) {
+context.createRootContext <- function (grcData, config) {
     newCtx <- new.env()
 
     newCtx$id         <- digest::digest(grcData, algo="md5")
@@ -11,18 +11,20 @@ context.createContext <- function (grcData, config) {
     newCtx$sampleSets <- new.env()
     newCtx$userGraphicAttributes <- new.env()
     
-    print("Initializing Unfiltered Dataset")
-    unfilteredDs <- context.createContextDataset (newCtx, "unfiltered")
-
-    meta.setDatasetMeta(newCtx, "unfiltered", grcData, store=TRUE)
-    print(paste("Loaded metadata - Samples:", nrow(newCtx$unfiltered$meta)))
-    
+    context.createUnfilteredDataset (newCtx, grcData)
     filter.createFilteredDataset(newCtx)
     impute.createImputedDataset(newCtx)
     newCtx
 }
 #
-context.createContextDataset <- function (ctx, datasetName) {
+context.createUnfilteredDataset <- function (ctx, grcData) {
+    print("Initializing Unfiltered Dataset")
+    unfilteredDs <- context.createDataset (ctx, "unfiltered")
+    meta.setDatasetMeta(ctx, "unfiltered", grcData, store=TRUE)
+    print(paste("Loaded metadata - Samples:", nrow(ctx$unfiltered$meta)))
+}
+#
+context.createDataset <- function (ctx, datasetName) {
     ds <- new.env()
     ds$name <- datasetName
     ctx[[datasetName]] <- ds
@@ -74,7 +76,7 @@ context.addTrimmedDatasetToContext <- function (ctx, datasetName, sampleNames, t
     sampleNames <- sampleNames[which(sampleNames %in% dsSampleNames)]
     #
     #trimCtx[[datasetName]] <- list(name=dataset$name)
-    context.createContextDataset (trimCtx, dataset$name)
+    context.createDataset (trimCtx, dataset$name)
 
     meta.setDatasetMeta (trimCtx, datasetName, dataset$meta[sampleNames,], store=FALSE)
     if (!is.null(dataset$barcodes)) {

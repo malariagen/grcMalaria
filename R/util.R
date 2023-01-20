@@ -90,10 +90,20 @@ readExcelData <- function (xFile, xSheet) {
 #  Data I/O Utilities - read/write/filter samples tables data
 # #####################################################################################
 #
+grcMalaria.stored.data <- NULL
+#
+fileExists <- function (dataFilename, ext) {
+    file.exists(paste0(dataFilename,ext))
+}
+#
+rdaFileExists <- function (dataFilename) {
+    fileExists (dataFilename, ".rda") 
+}
+#
 # Read sample data file (first column is an id)
 #
-readSampleData <- function (dataFile) {
-    data <- utils::read.table(dataFile, as.is=TRUE, header=TRUE, quote="", sep="\t", check.names=FALSE)
+readSampleData <- function (dataFilename, ext=".tab") {
+    data <- utils::read.table(paste0(dataFilename,ext), as.is=TRUE, header=TRUE, quote="", sep="\t", check.names=FALSE)
     sampleNames <- data[,1]
     rownames(data) <- sampleNames
     data <- data[,-1]
@@ -101,16 +111,26 @@ readSampleData <- function (dataFile) {
     data
 }
 #
-# Write sample data table file
-#
-writeSampleData <- function(sampleData, outFilename) {
-    writeLabelledData (sampleData, "__Sample", outFilename)
+readRdaSampleData <- function (dataFilename, ext=".rda") {
+    load(file=paste0(dataFilename,ext))
+    grcMalaria.stored.data
 }
 #
-writeLabelledData <- function(data, idLabel, outFilename) {
+# Write sample data table file
+#
+writeSampleData <- function(sampleData, dataFilename, ext=".tab") {
+    writeLabelledData (sampleData, "__Sample", paste0(dataFilename,ext))
+}
+#
+writeLabelledData <- function(data, idLabel, dataFilename) {
     outData <- cbind(rownames(data), data)
     colnames(outData) <- c(idLabel,colnames(data))
-    utils::write.table(outData, file=outFilename, sep="\t", quote=FALSE, row.names=FALSE)
+    utils::write.table(outData, file=dataFilename, sep="\t", quote=FALSE, row.names=FALSE)
+}
+#
+writeRdaSampleData <- function(sampleData, dataFilename, ext=".rda") {
+    grcMalaria.stored.data <- sampleData
+    save(grcMalaria.stored.data, file=paste0(dataFilename,ext), compress=TRUE, compression_level=9)
 }
 #
 # #####################################################################################
@@ -129,11 +149,21 @@ readMatrix <- function (matrixDataFile) {
     data
 }
 #
+readRdaMatrix <- function (matrixDataFile) {
+    load(file=paste0(matrixDataFile,".rda"))
+    grcMalaria.stored.data
+}
+#
 writeMatrix <- function (matrixData, matrixDataFile) {
   names <- colnames(matrixData)
   matrixData <- cbind(names, matrixData)
   colnames(matrixData) <- c ("__Sample", names)
   utils::write.table(matrixData, file=matrixDataFile, sep="\t", quote=FALSE, row.names=FALSE)
+}
+#
+writeRdaMatrix <- function(matrixData, outFilename) {
+    grcMalaria.stored.data <- matrixData
+    save(grcMalaria.stored.data, file=paste0(outFilename,".rda"), compress=TRUE, compression_level=9)
 }
 #
 # #####################################################################################

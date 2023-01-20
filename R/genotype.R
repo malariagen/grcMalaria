@@ -2,7 +2,7 @@
 # Declarations: sample data and metadata
 ################################################################################
 geno.getGenoFile <- function (ctx, datasetName) {
-    genoFile  <- getContextCacheFile(ctx, datasetName, "genotypes", "sampleGenotypes.tab")
+    genoFile  <- getContextCacheFile(ctx, datasetName, "genotypes", "sampleGenotypes")
     genoFile
 }
 
@@ -12,8 +12,8 @@ geno.initialize <- function (ctx, datasetName, loadFromCache=TRUE, store=TRUE) {
 
     genoDataFile <- geno.getGenoFile (ctx, datasetName)
     
-    if (loadFromCache & file.exists(genoDataFile)) {
-        genoData <- readSampleData (genoDataFile)
+    if (loadFromCache & rdaFileExists(genoDataFile)) {
+        genoData <- readRdaSampleData (genoDataFile)
         geno.setDatasetGenotypes (ctx, datasetName, genoData, store=FALSE)
     } else {
         genoData <- geno.convertAllelesToGenos (ctx, dataset$barcodes)
@@ -27,7 +27,7 @@ geno.setDatasetGenotypes <- function (ctx, datasetName, genos, store=TRUE) {
     dataset$genos <- genos
     if (store) {
         genoDataFile <- geno.getGenoFile (ctx, datasetName)
-        writeSampleData(genos, genoDataFile)
+        writeRdaSampleData(genos, genoDataFile)
     }
 }
 

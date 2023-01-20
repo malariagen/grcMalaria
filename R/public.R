@@ -74,7 +74,7 @@ initializeContext <- function (grcData, dir=".",
     options(stringsAsFactors=FALSE)
 
     config <- setup.getConfig (grcData, dir, minSnpTypability, minSampleTypability)
-    ctx <- context.createContext (grcData$data, config)
+    ctx <- context.createRootContext (grcData$data, config)
     ctx
 }
 

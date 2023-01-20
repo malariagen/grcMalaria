@@ -4,15 +4,15 @@
 #
 impute.createImputedDataset <- function (ctx, loadFromCache=TRUE) {
     print("Initializing Imputed Dataset")
-    imputedDs <- context.createContextDataset (ctx, "imputed")
+    imputedDs <- context.createDataset (ctx, "imputed")
 
     filteredDs <- ctx$filtered
     config     <- ctx$config
     
     meta.setDatasetMeta (ctx, "imputed", filteredDs$meta)
     impBarcodeDataFile <- barcode.getBarcodeDataFile (ctx, "imputed")
-    if (loadFromCache & file.exists(impBarcodeDataFile)) {
-        impBarcodeData <- readSampleData (impBarcodeDataFile)
+    if (loadFromCache & rdaFileExists(impBarcodeDataFile)) {
+        impBarcodeData <- readRdaSampleData (impBarcodeDataFile)
         print(paste("Loaded imputed barcodes - Samples:", nrow(impBarcodeData), "x SNPs:", ncol(impBarcodeData)))
     } else {
         barcodeData <- filteredDs$barcodes

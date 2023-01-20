@@ -2,11 +2,11 @@
 # Caching data files
 ################################################################################
 barcode.getBarcodeDataFile <- function (ctx, datasetName) {
-    dataFile <- getContextCacheFile(ctx, datasetName, "barcode", "barcodeAlleles.tab")
+    dataFile <- getContextCacheFile(ctx, datasetName, "barcode", "barcodeAlleles")
     dataFile
 }
 barcode.getBarcodeSeqFile <- function (ctx, datasetName) {
-    seqFile  <- getContextCacheFile(ctx, datasetName, "barcode", "barcodeSeqs.tab")
+    seqFile  <- getContextCacheFile(ctx, datasetName, "barcode", "barcodeSeqs")
     seqFile
 }
 
@@ -24,7 +24,7 @@ barcode.setDatasetBarcodes <- function (ctx, datasetName, barcodes, store=TRUE) 
     dataset$barcodes <- barcodes
     if (store) {
         barcodeDataFile <- barcode.getBarcodeDataFile (ctx, datasetName)
-        writeSampleData(barcodes, barcodeDataFile)
+        writeRdaSampleData(barcodes, barcodeDataFile)
         barcodeSeqFile <- barcode.getBarcodeSeqFile (ctx, datasetName)
         barcode.writeFasta (barcodes, barcodeSeqFile)
     }
@@ -43,8 +43,8 @@ barcode.initializeBarcodes <- function (ctx, datasetName, loadFromCache=TRUE) {
 
     barcodeDataFile <- barcode.getBarcodeDataFile (ctx, datasetName)
 
-    if (loadFromCache & file.exists(barcodeDataFile)) {
-        barcodeData <- readSampleData (barcodeDataFile)
+    if (loadFromCache & rdaFileExists(barcodeDataFile)) {
+        barcodeData <- readRdaSampleData (barcodeDataFile)
         barcode.setDatasetBarcodes (ctx, datasetName, barcodeData, store=FALSE)
     } else {
         # Get barcode alleles, and discard samples that have too much missingness
@@ -220,5 +220,5 @@ barcode.writeFasta <- function(allelesData, genosFilename) {
     seq <- paste (strData[mIdx,], collapse='')
     txt <- c(txt, header, seq)
   }
-  writeLines(txt, genosFilename)
+  writeLines(txt, paste0(genosFilename,".fasta"))
 }

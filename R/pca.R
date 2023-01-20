@@ -60,7 +60,7 @@ pca.execute <- function(userCtx, sampleSetName, method, params) {
     #
     pcaVarData <- data.frame(pcNames, varExplained[1:length(pcNames)])
     colnames(pcaVarData) <- c("PC","VarianceExplained")
-    pcaVarFilename  <- paste(dataFolder, pca.getDataFileName("-varExplained", sampleSetName, method), sep="/")
+    pcaVarFilename  <- paste(dataFolder, paste0(pca.getDataFileName("-varExplained", sampleSetName, method),".tab"), sep="/")
     utils::write.table(pcaVarData, file=pcaVarFilename, sep="\t", quote=FALSE, row.names=FALSE)
     #
     # Attach the PCA results to the metadata
@@ -110,7 +110,7 @@ pca.execute <- function(userCtx, sampleSetName, method, params) {
 }
 
 pca.getDataFileName <- function(suffix, sampleSetName, method) {
-    fn <- paste("pca", suffix, "-", sampleSetName, "-", method, ".tab", sep="")
+    fn <- paste("pca", suffix, "-", sampleSetName, "-", method, sep="")
     fn
 }
 

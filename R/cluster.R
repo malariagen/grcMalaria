@@ -50,12 +50,12 @@ cluster.findClusters <- function (userCtx, sampleSetName, params) {
 
         # Write out sample/cluster association
         memberData <- cluster.getMemberData (clustersData)
-        memberDataFile <- paste0(dataFolder, "/clusterMembers", dataFileSuffix, ".tab")
+        memberDataFile <- paste0(dataFolder, "/clusterMembers", dataFileSuffix)
         writeSampleData(memberData, memberDataFile)
 
         # Write out cluster stats
         statsData <- cluster.getClusterStats (ctx, clustersData, memberData)
-        statsDataFile <- paste0(dataFolder, "/clusterStats", dataFileSuffix, ".tab")
+        statsDataFile <- paste0(dataFolder, "/clusterStats", dataFileSuffix)
         writeSampleData(statsData, statsDataFile)
         
         # Keep the cluster info for storing in the context

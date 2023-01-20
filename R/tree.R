@@ -71,7 +71,7 @@ tree.execute <- function(userCtx, sampleSetName, method, params) {
         #
         # Write out the plot data (facilitate debug)
         #
-        plotMetadataFilename  <- paste0(dataFolder, "/", "plotData-", plotName, ".tab")
+        plotMetadataFilename  <- paste0(dataFolder, "/", "plotData-", plotName)
         writeSampleData(plotMetadata, plotMetadataFilename)
         #
         # Do the plots

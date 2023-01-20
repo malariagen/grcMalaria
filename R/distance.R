@@ -2,15 +2,15 @@
 # Caching data files
 ################################################################################
 distance.getDistanceDataFile <- function (ctx, datasetName) {
-    dataFile <- getContextCacheFile(ctx, datasetName, "distance", "sampleDistance.tab")
+    dataFile <- getContextCacheFile(ctx, datasetName, "distance", "sampleDistance")
     dataFile
 }
 
 distance.initialize <- function (ctx, datasetName, loadFromCache=TRUE, store=TRUE) {
     distDataFile <- distance.getDistanceDataFile(ctx, datasetName)
     dataset <- ctx[[datasetName]]
-    if (loadFromCache & file.exists(distDataFile)) {
-        distData <- readMatrix(distDataFile)
+    if (loadFromCache & rdaFileExists(distDataFile)) {
+        distData <- readRdaMatrix(distDataFile)
         distance.setDatasetDistance(ctx, datasetName, distData, store=FALSE)
         print(paste("Loaded", dataset$name, "distance matrix - Samples:", nrow(distData)))
     } else {
@@ -26,7 +26,7 @@ distance.setDatasetDistance <- function (ctx, datasetName, distance, store=TRUE)
     dataset$distance <- distance
     if (store) {
         distDataFile <- distance.getDistanceDataFile(ctx, datasetName)
-        writeMatrix(distance, distDataFile)
+        writeRdaMatrix(distance, distDataFile)
     }
 }
 

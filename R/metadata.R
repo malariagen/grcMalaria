@@ -6,12 +6,12 @@ meta.setDatasetMeta <- function (ctx, datasetName, meta, store=TRUE) {
     dataset$meta <- meta
     if (store) {
         metaFile <- meta.getMetaDataFile(ctx, datasetName)
-        writeSampleData(meta, metaFile)
+        writeRdaSampleData(meta, metaFile)
     }
 }
 
 meta.getMetaDataFile <- function (ctx, datasetName) {
-    metaFile <- getContextCacheFile(ctx, datasetName, "meta", "sampleMeta.tab")
+    metaFile <- getContextCacheFile(ctx, datasetName, "meta", "sampleMeta")
     metaFile
 }
 

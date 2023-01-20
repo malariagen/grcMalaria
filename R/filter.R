@@ -4,9 +4,7 @@
 #
 filter.createFilteredDataset <- function (ctx, loadFromCache=TRUE) {
     print("Initializing Filtered Dataset")
-    filteredDs <- context.createContextDataset (ctx, "filtered")
-    #ctx$filtered <- list(name="filtered")
-    #filteredDs   <- ctx$filtered
+    filteredDs <- context.createDataset (ctx, "filtered")
     
     unfilteredDs <- ctx$unfiltered
     config       <- ctx$config
@@ -14,10 +12,10 @@ filter.createFilteredDataset <- function (ctx, loadFromCache=TRUE) {
     filteredMetaFile        <- meta.getMetaDataFile(ctx, "filtered")
     filteredBarcodeFile     <- barcode.getBarcodeDataFile(ctx, "filtered")
 
-    if (loadFromCache & file.exists(filteredMetaFile) & file.exists(filteredBarcodeFile)) {
-        meta <- readSampleData (filteredMetaFile)		#; print(colnames(meta))
+    if (loadFromCache & rdaFileExists(filteredMetaFile) & rdaFileExists(filteredBarcodeFile)) {
+        meta <- readRdaSampleData (filteredMetaFile)		#; print(colnames(meta))
         meta.setDatasetMeta (ctx, "filtered", meta, store=FALSE)
-        barcodeData <- readSampleData (filteredBarcodeFile)
+        barcodeData <- readRdaSampleData (filteredBarcodeFile)
         barcode.setDatasetBarcodes (ctx, "filtered", barcodeData, store=FALSE)
         print(paste("Loaded filtered barcodes - Samples:", nrow(barcodeData), "x SNPs:", ncol(barcodeData)))
     } else {
