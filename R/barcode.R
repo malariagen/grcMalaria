@@ -106,7 +106,7 @@ barcode.validateBarcodeAlleles <- function (barcodeData, barcodeMeta) {
         if (length(badIdx) > 0) {
             errorCount <- errorCount+1
             for (bIdx in 1:length(badIdx)) {
-                badAllele <- calls[bIdx,sIdx]
+                badAllele <- calls[bIdx]
                 badSample <- rownames(barcodeData)[bIdx]
                 isNt <- (badAllele %in% ntAlleles)
                 if (isNt) {
