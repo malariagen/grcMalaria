@@ -466,6 +466,7 @@ mapBarcodeFrequencies <- function (ctx, sampleSet,
 #' @param sampleSet TBD
 #' @param clusterSet TBD
 #' @param minIdentity TBD
+#' @param impute TBD
 #' @param clusteringMethod TBD
 #' @param minClusterSize TBD
 #'
@@ -475,13 +476,14 @@ mapBarcodeFrequencies <- function (ctx, sampleSet,
 #' @examples
 #'  #TBD
 findClusters <- function (ctx, sampleSet, clusterSet,
-                   minIdentity=1.0,
+                   minIdentity=1.0, impute=TRUE,
                    clusteringMethod="allNeighbours", 
                    minClusterSize=10) {
 
     mapParams <- list(
         cluster.clusterSet.name=clusterSet,
         cluster.identity.min=minIdentity,
+        cluster.impute=impute,
         cluster.method=clusteringMethod,
         cluster.minSize=minClusterSize
     )

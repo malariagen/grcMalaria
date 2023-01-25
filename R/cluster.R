@@ -14,6 +14,7 @@ cluster.findClusters <- function (userCtx, sampleSetName, params) {
 
     clusterSetName    <- param.getParam ("cluster.clusterSet.name", params)	#; print(clusterSetName)
     minIdentityLevels <- param.getParam ("cluster.identity.min", params) 	#; print(minIdentityLevels)
+    imputeBarcodes    <- param.getParam ("cluster.impute", params)		#; print(imputeBarcodes)
     method            <- param.getParam ("cluster.method", params)		#; print(method)
     print(paste("Clustering Method:",method))
     
@@ -26,7 +27,7 @@ cluster.findClusters <- function (userCtx, sampleSetName, params) {
         # TODO - At the moment, only graph-based clustering methods are implemented, but this may be extended later.
         clustersData <- NULL
         if (method %in% cluster.graphMethods) {
-            clustersData <- cluster.findClustersFromGraph (ctx, clusterSetName, method, minIdentity, params)
+            clustersData <- cluster.findClustersFromGraph (ctx, clusterSetName, method, minIdentity, imputeBarcodes, params)
         } else {
             stop (paste("Invalid method specified in parameter 'cluster.method':", method))
         }
@@ -129,7 +130,6 @@ cluster.getClusterPalette <- function(ctx, clusterIds) {
 # Descriptive data about the clusters (e.g. prevalence of mutations, etc.)
 #
 cluster.getClusterStats <- function(ctx, clustersData, clusterMembers) {
-    dataset <- ctx$imputed
     config <- ctx$config
 
     clNames <- rownames(clustersData)			#; print(head(clustersData))	#; print(clNames)
@@ -142,7 +142,7 @@ cluster.getClusterStats <- function(ctx, clustersData, clusterMembers) {
         
         # Get the metadata for this cluster
         clSampleNames <- clusterMembers$Sample[which(clusterMembers$Cluster==clName)]
-        clSampleMeta <- dataset$meta[clSampleNames,]
+        clSampleMeta <- ctx$unfiltered$meta[clSampleNames,]
         
         # Get the sample count first
         statsCols <- "Count"
@@ -198,8 +198,11 @@ cluster.getClusterStatsText <- function(clusterStats, clustersName) {
 cluster.graphCommunityMethods <- c("louvain")
 cluster.graphMethods          <- c("allNeighbours", cluster.graphCommunityMethods)
 
-cluster.findClustersFromGraph <- function (ctx, clusterSetName, method, minIdentity, params) {
+cluster.findClustersFromGraph <- function (ctx, clusterSetName, method, minIdentity, imputeBarcodes, params) {
     dataset <- ctx$imputed
+    if (!imputeBarcodes) {
+        dataset <- ctx$filtered
+    }
     config <- ctx$config
 
     # Get a table of pairwise distance/identity values for all pairs of samples that meet the threshold

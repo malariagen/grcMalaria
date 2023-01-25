@@ -9,6 +9,7 @@ findClusters(
   sampleSet,
   clusterSet,
   minIdentity = 1,
+  impute = TRUE,
   clusteringMethod = "allNeighbours",
   minClusterSize = 10
 )
@@ -21,6 +22,8 @@ findClusters(
 \item{clusterSet}{TBD}
 
 \item{minIdentity}{TBD}
+
+\item{impute}{TBD}
 
 \item{clusteringMethod}{TBD}
 
