@@ -96,7 +96,7 @@ barcode.validateBarcodeAlleles <- function (barcodeData, barcodeMeta) {
     if (ncol(barcodeData) != snpCount) {
         stop (paste("Number of barcode SNPs in the metadata (",snpCount,") does not match the length of the barcodes (",ncol(barcodeData),")",sep=""))
     }
-    ntAlleles <- c("A","C","G","T")
+    validAlleles <- c("A","C","G","T","X","N")
     errorCount <- 0
     for (sIdx in 1:snpCount) {
         calls <- barcodeData[,sIdx]				#; print(calls)
@@ -104,16 +104,16 @@ barcode.validateBarcodeAlleles <- function (barcodeData, barcodeMeta) {
         snpAlleles <- c(snpMeta$Ref,snpMeta$Nonref,"X","N")	#; print(snpAlleles)
         badIdx <- which(!(calls %in% snpAlleles))		#; print(badIdx)
         if (length(badIdx) > 0) {
-            errorCount <- errorCount+1
             for (bIdx in 1:length(badIdx)) {
                 badAllele <- calls[bIdx]
                 badSampleIdx <- badIdx[bIdx]
                 badSample <- rownames(barcodeData)[badSampleIdx]
-                isNt <- (badAllele %in% ntAlleles)
+                isNt <- (badAllele %in% validAlleles)
                 if (isNt) {
-                    problem <- "Unexpected allele"
+                    problem <- "Warning: Unexpected allele"
                 } else {
-                    problem <- "Invalid symbol"
+                    errorCount <- errorCount+1
+                    problem <- "Error: Invalid symbol"
                 }
                 cat (paste0(problem," found at SNP #",sIdx," in sample ",badSample,": found ",badAllele), fill=TRUE)
             }
@@ -127,7 +127,7 @@ barcode.validateBarcodeAlleles <- function (barcodeData, barcodeMeta) {
 # Convert barcodes into a dataframe of alleles, filtering both samples and barcode SNPs by typability
 #
 barcode.getAllelesFromBarcodes <- function(sampleMetadata, barcodeColumnName, barcodeMeta) {	#;print (head(barcodeMeta))
-    barcodes <- as.character(sampleMetadata[,barcodeColumnName])
+    barcodes <- toupper(as.character(sampleMetadata[,barcodeColumnName]))
     names(barcodes) <- rownames(sampleMetadata)
 
     # Eliminate all samples without barcode
