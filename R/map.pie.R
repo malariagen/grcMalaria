@@ -2,121 +2,113 @@
 # Map Aggregated Measure Analysis
 ###############################################################################
 #
-pieMap.execute <- function(userCtx, datasetName, sampleSetName, interval, mapType, baseMapInfo, aggregation, measures, params) {
-
-    # Get the context and trim it by time interval
-    sampleSet <- userCtx$sampleSets[[sampleSetName]]
-    plotCtx <- context.trimContextByTimeInterval (sampleSet$ctx, interval)		#; print(interval$name)
-    if (is.null(plotCtx)) {
-        print(paste("No samples found- skipping interval", interval$name))
-        return()
-    }											#; print(str(plotCtx))
-    dataset <- plotCtx[[datasetName]]
-    sampleMeta <- dataset$meta								#; print(nrow(sampleMeta))
+pieMap.executeMap <- function(map) {
+    mapMaster   <- map$master
+    mapType     <- mapMaster$type
+    measure     <- map$measure
+    interval    <- map$interval
+    #
+    datasetName <- map$datasetName
+    sampleSet   <- mapMaster$sampleSet
+    userCtx     <- mapMaster$userCtx
+    params      <- mapMaster$params
+    config      <- userCtx$config
+    #
+    # Get the context, trimmed by time interval
+    #
+    ctx        <- map$mapCtx				#; print(str(ctx))
+    dataset    <- ctx[[datasetName]]
+    sampleMeta <- dataset$meta
     if (nrow(sampleMeta)==0) {
         print(paste("No samples found - skipping interval", interval$name))
         return()
     }
-    config <- userCtx$config								#;print(sampleMeta[,"Country"])
-    
+    #
+    baseMapInfo <- mapMaster$baseMapInfo
+    #
     # Get the output folders
-    dataFolder <- getOutFolder(config, sampleSetName, c(paste("map", mapType, sep="-"), "data"))
-    
+    #
+    dataFolder <- mapMaster$dataFolder
+    plotFolder <- mapMaster$plotFolder
+    #
     # Silly trick to make the package checker happy... :-(
-    lon <- lat <- label <- NULL
-    Longitude <- Latitude <- PieSize <- Allele <- AlleleCount <- NULL
-    LabelX <- LabelY <- NULL
-    
+    lon <- lat <- label <- Longitude <- Latitude <- PieSize <- Allele <- AlleleCount <- LabelX <- LabelY <- NULL
     #
     # Now compute the aggregation units, the values to be plotted, and make the map
+    # Get the aggregated data for the aggregation units
     #
-    for (aggIdx in 1:length(aggregation)) {
-        aggLevel <- as.integer(aggregation[aggIdx])        						#; print(aggLevel)
-        aggLevelIdx <- aggLevel + 1
-
-        # Get the aggregated data for the aggregation units
-        aggUnitData <- map.getAggregationUnitData (plotCtx, datasetName, aggLevel, sampleSetName, mapType, params, dataFolder)	#; print(aggUnitData)
-
-        for (mIdx in 1:length(measures)) {
-            measure <- measures[mIdx]		           									#; print(measure)
-            pieMapData <- pieMap.buildCountData (plotCtx, datasetName, sampleSetName, aggLevel, aggUnitData, measure)		#; print(pieMapData)
-	    
-            # Select the aggregation units to be plotted
-            # In this case, those that have allele count data for the measure being plotted
-            selAggUnitIds <- unique(pieMapData$UnitId)
-            selAggUnitData <- aggUnitData[which(aggUnitData$UnitId %in% selAggUnitIds),]		#; print(nrow(selAggUnitData))
-            
-            # Compute pie chart sizes. 
-	    pieSizes <- pieMap.getAggUnitPieSizes (selAggUnitData, params)		#; print(pieSizes); print(pieMapData$UnitId)
-	    pieMapData$PieSize <- as.numeric(pieSizes[pieMapData$UnitId])		#; print(pieMapData)
-            
-            # Compute label coordinates for the pie chart segments
-            pieMapData <- pieMap.computeLabelCoordinates (pieMapData, 1.2)		#; print(pieMapData)
-
-            # Do the actual plot, starting with the background map
-            mapPlot <- baseMapInfo$baseMap
-            
-            # If we need to show aggregation unit names, we need to compute the label positioning and plot before the markers
-            showMarkerNames <- param.getParam ("map.markerNames", params)
-            if (showMarkerNames) {
-                lp <- map.computeLabelParams (selAggUnitData, baseMapInfo)
-                mapPlot <- mapPlot + 
-                    ggrepel::geom_label_repel(data=lp, ggplot2::aes(x=lon, y=lat, label=label), 
-                                              size=4.5, fontface="bold", color="darkgray",
-                                              hjust=lp$just, vjust=0.5, nudge_x=lp$x, nudge_y=lp$y, label.padding=grid::unit(0.2, "lines"))
-            }
-            
-            # This function replaces aes_strng() allowing the use of column names with dashes
-            fn_aesString <- get("aes_string", asNamespace("ggplot2"))
-            aes_string2 <- function(...){
-                args <- lapply(list(...), function(x) sprintf("`%s`", x))
-                #do.call(aes_string, args)
-                do.call(fn_aesString, args)
-            }
-
-            # Now add the markers, coloured according to the palette 
-            valuePalette <- pieMap.getMeasurePalette (plotCtx, sampleSetName, measure)
-
-            # Now add the pie chart markers
-            mapPlot <- mapPlot +
-                ggforce::geom_arc_bar(data=pieMapData, stat="pie", inherit.aes=FALSE, 
-                                          ggplot2::aes(x0=Longitude, y0=Latitude, r0=0, r=PieSize,
-                                          fill=Allele, amount=AlleleCount),
-                                          colour="gray25", show.legend=TRUE) +
-                ggplot2::scale_fill_manual(values=valuePalette)
-                    
-            # Now add the pie slice labels
-            showAlleleCounts <- FALSE			# TBD
-            if (showAlleleCounts) {
-                mapPlot <- mapPlot +
-	            ggplot2::geom_text(data=pieMapData, ggplot2::aes(x=LabelX, y=LabelY, label=AlleleCount),
-	                               show.legend=FALSE)
-            }
-
-            mapPlot <- mapPlot +
-                       ggplot2::theme(plot.title = ggplot2::element_text(face = "bold",size = ggplot2::rel(1.2), hjust = 0.5),
+    aggLevel <- as.integer(map$aggregation)     				#; print(aggLevel)   
+    aggUnitData <- map$aggUnitData						#; print(aggUnitData)
+    #
+    # Select the aggregation units to be plotted
+    # In this case, those that have allele count data for the measure being plotted
+    #
+    pieMapData <- pieMap.buildCountData (ctx, datasetName, sampleSet$name, aggLevel, aggUnitData, measure)	#; print(pieMapData)
+    selAggUnitIds <- unique(pieMapData$UnitId)
+    selAggUnitData <- aggUnitData[which(aggUnitData$UnitId %in% selAggUnitIds),]				#; print(nrow(selAggUnitData))
+    #
+    # Compute pie chart sizes.
+    #
+    pieSizes <- pieMap.getAggUnitPieSizes (selAggUnitData, params)		#; print(pieSizes); print(pieMapData$UnitId)
+    pieMapData$PieSize <- as.numeric(pieSizes[pieMapData$UnitId])		#; print(pieMapData)
+    #
+    # Compute label coordinates for the pie chart segments
+    #
+    pieMapData <- pieMap.computeLabelCoordinates (pieMapData, 1.2)		#; print(pieMapData)
+    #
+    # Do the actual plot, starting with the background map
+    #
+    mapPlot <- baseMapInfo$baseMap
+    #
+    # If we need to show aggregation unit names, we need to compute the label positioning 
+    # and plot before the markers
+    #
+    showMarkerNames <- param.getParam ("map.markerNames", params)
+    if (showMarkerNames) {
+        lp <- map.computeLabelParams (selAggUnitData, baseMapInfo)
+        mapPlot <- mapPlot + 
+            ggrepel::geom_label_repel(data=lp, ggplot2::aes(x=lon, y=lat, label=label), 
+                                      size=4.5, fontface="bold", color="darkgray",
+                                      hjust=lp$just, vjust=0.5, nudge_x=lp$x, nudge_y=lp$y, label.padding=grid::unit(0.2, "lines"))
+    }
+    #
+    # Now add the markers, coloured according to the palette
+    #
+    valuePalette <- pieMap.getMeasurePalette (ctx, sampleSet$name, measure)
+    #
+    # Now add the pie chart markers
+    #
+    mapPlot <- mapPlot +
+        ggforce::geom_arc_bar(data=pieMapData, stat="pie", inherit.aes=FALSE, 
+                              ggplot2::aes(x0=Longitude, y0=Latitude, r0=0, r=PieSize, fill=Allele, amount=AlleleCount),
+                              colour="gray25", show.legend=TRUE) +
+        ggplot2::scale_fill_manual(values=valuePalette)
+    #
+    # Now add the pie slice labels
+    #
+    showAlleleCounts <- FALSE			# TBD
+    if (showAlleleCounts) {
+        mapPlot <- mapPlot +
+	    ggplot2::geom_text(data=pieMapData, ggplot2::aes(x=LabelX, y=LabelY, label=AlleleCount),
+	                       show.legend=FALSE)
+    }
+    #
+    #
+    #
+    mapPlot <- mapPlot +
+        ggplot2::theme(plot.title = ggplot2::element_text(face = "bold",size = ggplot2::rel(1.2), hjust = 0.5),
                        panel.background = ggplot2::element_rect(colour = NA),
                        plot.background = ggplot2::element_rect(colour = NA),
                        axis.title = ggplot2::element_text(face = "bold",size = ggplot2::rel(1)),
                        axis.title.y = ggplot2::element_text(angle=90,vjust =2),
                        axis.title.x = ggplot2::element_text(vjust = -0.2))
-	    
-            # Save to file. the size in inches is given in the config.
-            mapSize  <- param.getParam ("plot.size", params)
-            plotFolder <- getOutFolder(userCtx$config, sampleSetName, c(paste("map", mapType, sep="-"), "plots"))
-            aggLabel <- map.getAggregationLabels(aggLevel)
-            if (mapType=="sampleCount") {
-                aggLabel <- paste(aggLabel, datasetName, sep="-")
-            }												#;print(aggLabel)
-            graphicFilenameRoot  <- paste(plotFolder, paste("map", sampleSetName, aggLabel, measure, sep="-"), sep="/")
-            if (!is.null(interval$name)) {
-                graphicFilenameRoot  <- paste(graphicFilenameRoot, interval$name, sep="-")		#;print(graphicFilenameRoot)
-            }
-            ggplot2::ggsave(plot=mapPlot, filename=paste(graphicFilenameRoot,"png",sep="."), device="png", width=mapSize$width, height=mapSize$height, units="in", dpi=300)
-        }
-    }
+    #
+    # Save to file. the size in inches is given in the config
+    #
+    mapSize  <- param.getParam ("plot.size", params)
+    ggplot2::ggsave(plot=mapPlot, filename=map$plotFile, device="png", 
+                    width=mapSize$width, height=mapSize$height, units="in", dpi=300)
 }
-
 #
 ###############################################################################
 # Graphical rendition of site markers
@@ -184,7 +176,7 @@ pieMap.getAggUnitPieSizes <- function(aggUnitData, params) {
 # If they are, ensure we have colour palettes for these measures, creating them if necessary.
 # For a given measure, all plots for this sample set use the same palette, otherwise the viewer will be confused when looking at multiple maps.
 #
-pieMap.checkAllelePropMeasures <- function(ctx, sampleSetName, measures) {
+pieMap.resolveMeasures <- function(ctx, sampleSetName, measures) {
     userCtx <- ctx$rootCtx
     config <- userCtx$config 
     allMeasures <- c(config$countColumns, config$amplificationColumns, config$drugResistancePositions)		#; print(allMeasures)

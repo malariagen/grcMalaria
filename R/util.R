@@ -1,9 +1,18 @@
 #
-# Utility to make a label corresponding to a minimum identity level (e.g. 0.55 -> "ge0.55")
+# Utilities to make a label corresponding to a minimum identity level (e.g. 0.55 -> "ge0.55")
+# and vice versa
 #
-getMinIdentityLabel <- function (minIdentity) {
-    minIdentityLabel <- paste("ge", format(minIdentity, digits=2, nsmall=2), sep="")
+MIN_IDENTITY_PREFIX <- "ge"
+getMinIdentityLabel <- function (minIdentity, prefix=MIN_IDENTITY_PREFIX) {
+    minIdentityLabel <- paste(prefix, format(minIdentity, digits=2, nsmall=2), sep="")
     minIdentityLabel
+}
+getMinIdentityFromLabel <- function (minIdentityLabel, prefix=MIN_IDENTITY_PREFIX) {
+    if (!startsWith(minIdentityLabel, prefix)) {
+        return (NA)					#; print("Incorrect prefix")
+    }
+    minIdentity <- substring(minIdentityLabel,nchar(prefix)+1)		#; print(level)
+    as.numeric(minIdentity)
 }
 
 # #####################################################################################
@@ -175,7 +184,7 @@ writeRdaMatrix <- function(matrixData, outFilename) {
 parseTimeIntervals <- function (timePeriods) {
     intervals <- list()
     if (is.null(timePeriods)) {
-         intervals[[1]] <- list(NULL)
+         intervals[[1]] <- getDefaultTimeInterval()
     } else {
         for (tpIdx in 1 : length(timePeriods)) {
              tp <- timePeriods[[tpIdx]]
@@ -193,4 +202,20 @@ parseTimeIntervals <- function (timePeriods) {
         }
     }
     intervals
+}
+#
+getDefaultTimeInterval <- function () {
+    list(name=NULL, start=NULL, end=NULL)
+}
+#
+# #####################################################################################
+#  ggplot2 support functions
+# #####################################################################################
+#
+# This function replaces aes_strng() allowing the use of column names with dashes
+#
+fn_aesString <- get("aes_string", asNamespace("ggplot2"))
+aes_string2 <- function(...){
+    args <- lapply(list(...), function(x) sprintf("`%s`", x))
+    do.call(fn_aesString, args)
 }

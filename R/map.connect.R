@@ -11,136 +11,132 @@ connectMap.getConnectednessMeasures <- function() {
 # Map Aggregated Measure Analysis
 ################################################################################
 #
-connectMap.execute <- function(userCtx, datasetName, sampleSetName, mapType, baseMapInfo, aggregation, measures, params) {
-    sampleSet <- userCtx$sampleSets[[sampleSetName]]
-    ctx <- sampleSet$ctx
-    dataset <- ctx[[datasetName]]
-    
-    # Get the output folders
-    dataOutFolder <- getOutFolder(ctx$config, sampleSetName, c(paste("map", mapType, sep="-"), "data"))
-    # Get the sample metadata
+connectMap.executeMap <- function(map) {
+
+    mapMaster   <- map$master
+    mapType     <- mapMaster$type
+    measure     <- map$measure
+    interval    <- map$interval
+    #
+    datasetName <- map$datasetName
+    sampleSet   <- mapMaster$sampleSet
+    userCtx     <- mapMaster$userCtx
+    params      <- mapMaster$params
+    config      <- userCtx$config
+    #
+    # Get the context, trimmed by time interval
+    #
+    ctx        <- map$mapCtx				#; print(str(ctx))
+    dataset    <- ctx[[datasetName]]
     sampleMeta <- dataset$meta
-    
-    # If "similarity" is one of the measures, remove it and add one measure for each similarity threshold (e.g. "similarity-ge0.80")
-    measures <- connectMap.expandMeasures(measures, params)
-    
+    if (nrow(sampleMeta)==0) {
+        print(paste("No samples found - skipping interval", interval$name))
+        return()
+    }
+    #
+    baseMapInfo <- mapMaster$baseMapInfo
+    #
+    # Get the output folders
+    #
+    dataFolder <- mapMaster$dataFolder
+    plotFolder <- mapMaster$plotFolder
+    #
     # Silly trick to make the package checker happy... :-(
     lon <- lat <- label <- NULL
-
+    #
     # Now compute the aggregation units, the values to be plotted, and make the map
-    for (aggIdx in 1:length(aggregation)) {
-        aggLevel <- as.integer(aggregation[aggIdx])        					#; print(aggLevel)
-        aggLevelIdx <- aggLevel + 1
-
-        # Get the aggregated data for the aggregation units
-        aggUnitData <- map.getAggregationUnitData (ctx, datasetName, aggLevel, sampleSetName, mapType, params, dataOutFolder)	#; print(aggUnitData)
-        aggUnitPairData <- connectMap.estimateMeasures (ctx, datasetName, sampleSetName, aggLevel, aggUnitData, mapType, measures, params, dataOutFolder)	#; print(aggUnitPairData)
-
-        for (mIdx in 1:length(measures)) {
-            measure <- measures[mIdx]						#; print(measure)
-            if (connectMap.filterThreshold (measure)) {
-                minValues <- as.numeric(param.getParam(paste("map.connect", measure, "min", sep="."), params))
-            } else {
-                minValues <- 0
-            }									#; print(minValues)
-            for (mvIdx in 1:length(minValues)) {
-                minValue <- minValues[mvIdx]
-            
-                # Select the aggregation unit pairs to be plotted
-                # In this case, those thatwith value above the threshold
-                mValues <- aggUnitPairData[,measure]
-                selAggUnitPairData <- aggUnitPairData[which(mValues > minValue),]
-                
-                # Sort the pairs so that higher values get plotted last
-                mValues <- selAggUnitPairData[,measure]
-                selAggUnitPairData <- selAggUnitPairData[order(mValues),]
-                
-                # Do the actual plot, starting with the background map
-                mapPlot <- baseMapInfo$baseMap
-                
-                # This function replaces aes_strng() allowing the use of column names with dashes
-                fn_aesString <- get("aes_string", asNamespace("ggplot2"))
-                aes_string2 <- function(...){
-                    args <- lapply(list(...), function(x) sprintf("`%s`", x))
-                    #do.call(aes_string, args)
-                    do.call(fn_aesString, args)
-                }
-                
-                # Now plot the connections
-                mapPlot <- mapPlot +
-                    ggplot2::geom_curve(aes_string2(x="Lon1", y="Lat1", xend="Lon2", yend="Lat2", size=measure, colour=measure),
-                                        data=selAggUnitPairData, curvature=0.2, alpha=0.75) +
-                    ggplot2::scale_size_continuous(guide="none", range=c(0.25, 4)) +          					# scale for edge widths
-                    ggplot2::scale_colour_gradientn(colours=c("skyblue1","midnightblue"))
-                
-                # Now add the markers
-                mapPlot <- mapPlot +
-                    ggplot2::geom_point(aes_string2(x="Longitude", y="Latitude"), data=aggUnitData, size=4, shape=19, col="red")
-    	    
-                # If we need to show aggregation unit names, we need to compute the label positioning and plot
-                showMarkerNames <- param.getParam ("map.markerNames", params)
-                if (showMarkerNames) {
-                    lp <- map.computeLabelParams (aggUnitData, baseMapInfo)
-                    mapPlot <- mapPlot +
-                        ggrepel::geom_label_repel(ggplot2::aes(x=lon, y=lat, label=label), data=lp, size=4.5, fontface="bold", color="darkgray",
-                                                  hjust=lp$just, vjust=0.5, nudge_x=lp$x, nudge_y=lp$y, label.padding=grid::unit(0.2, "lines"))
-                }
-                	    
-                # Now add the decorative elements
-                mapPlot <- mapPlot +
-                           ggplot2::theme(
-                               plot.title = ggplot2::element_text(face = "bold",size = ggplot2::rel(1.2), hjust = 0.5),
-                               panel.background = ggplot2::element_rect(colour = NA),
-                               plot.background = ggplot2::element_rect(colour = NA),
-                               axis.title = ggplot2::element_text(face = "bold", size = ggplot2::rel(1)),
-                               axis.title.y = ggplot2::element_text(angle = 90,vjust = 2),
-                               axis.title.x = ggplot2::element_text(vjust = -0.2))
-    	    
-    	        # Save to file. the size in inches is given in the config.
-    	        mapSize  <- param.getParam ("plot.size", params)
-    	        plotFolder <- getOutFolder(ctx$config, sampleSetName, c(paste("map", mapType, sep="-"), "plots"))
-                aggLabel <- map.getAggregationLabels(aggLevel)
-                graphicFilenameRoot  <- paste(plotFolder, paste("map", sampleSetName, aggLabel, measure, sep="-"), sep="/")
-                if (connectMap.filterThreshold (measure)) {
-    	            graphicFilenameRoot  <- paste(graphicFilenameRoot, paste("ge", format(minValue, digits=2, nsmall=2), sep=""), sep="-")
-                }
-                ggplot2::ggsave(plot=mapPlot, filename=paste(graphicFilenameRoot,"png",sep="."), device="png", 
-                                width=mapSize$width, height=mapSize$height, units="in", dpi=300)
-            }
-        }
+    # Get the aggregated data for the aggregation units
+    # Get the connectedness measure data for the aggregation unit pairs
+    #
+    aggLevel <- as.integer(map$aggregation)     				#; print(aggLevel)   
+    aggUnitData <- map$aggUnitData						#; print(aggUnitData)
+    aggUnitPairData <- map$aggUnitPairData					#; print(aggUnitPairData)
+    #
+    #
+    #
+    mValues <- aggUnitPairData[,measure]					#; print(measure); 
+    selAggUnitPairData <- aggUnitPairData					#; print(nrow(selAggUnitPairData))
+    #
+    # If we're basing connectedness on mean distance, get the threshold below which we must remove the pairs
+    # and select the aggregation unit pairs to be plotted
+    #
+    minValue <- 0
+    if (startsWith(measure, "meanDistance")) {
+        minValue <- connectMap.getMeasureLevel (measure, "meanDistance-ge")	#; print(minValue)
+        selAggUnitPairData <- aggUnitPairData[which(mValues > minValue),]	#; print(nrow(selAggUnitPairData))
     }
+    #
+    # Sort the pairs so that higher values get plotted last
+    #
+    mValues <- selAggUnitPairData[,measure]
+    selAggUnitPairData <- selAggUnitPairData[order(mValues),]
+    #
+    # Do the actual plot, starting with the background map
+    #
+    mapPlot <- baseMapInfo$baseMap
+    #
+    # Now plot the connections
+    #
+    mapPlot <- mapPlot +
+        ggplot2::geom_curve(aes_string2(x="Lon1", y="Lat1", xend="Lon2", yend="Lat2", size=measure, colour=measure),
+                            data=selAggUnitPairData, curvature=0.2, alpha=0.75) +
+        ggplot2::scale_size_continuous(guide="none", range=c(0.25, 4)) +          					# scale for edge widths
+        ggplot2::scale_colour_gradientn(colours=c("skyblue1","midnightblue"))
+    #
+    # Now add the markers
+    #
+    mapPlot <- mapPlot +
+        ggplot2::geom_point(aes_string2(x="Longitude", y="Latitude"), data=aggUnitData, size=4, shape=19, col="red")
+    #
+    # If we need to show aggregation unit names, we need to compute the label positioning and plot
+    #
+    showMarkerNames <- param.getParam ("map.markerNames", params)
+    if (showMarkerNames) {
+        lp <- map.computeLabelParams (aggUnitData, baseMapInfo)
+        mapPlot <- mapPlot +
+            ggrepel::geom_label_repel(ggplot2::aes(x=lon, y=lat, label=label), data=lp, size=4.5, fontface="bold", color="darkgray",
+                                      hjust=lp$just, vjust=0.5, nudge_x=lp$x, nudge_y=lp$y, label.padding=grid::unit(0.2, "lines"))
+    }
+    #
+    # Now add the decorative elements
+    #
+    mapPlot <- mapPlot +
+        ggplot2::theme(plot.title = ggplot2::element_text(face = "bold",size = ggplot2::rel(1.2), hjust = 0.5),
+                       panel.background = ggplot2::element_rect(colour = NA),
+                       plot.background = ggplot2::element_rect(colour = NA),
+                       axis.title = ggplot2::element_text(face = "bold", size = ggplot2::rel(1)),
+                       axis.title.y = ggplot2::element_text(angle = 90,vjust = 2),
+                       axis.title.x = ggplot2::element_text(vjust = -0.2))
+    #
+    # Save to file. the size in inches is given in the config
+    #
+    mapSize  <- param.getParam ("plot.size", params)
+    ggplot2::ggsave(plot=mapPlot, filename=map$plotFile, device="png", 
+                    width=mapSize$width, height=mapSize$height, units="in", dpi=300)
 }
 
-connectMap.filterThreshold  <- function(measure) {
-    measure %in% c("meanDistance")
-}
-
-connectMap.expandMeasures <- function(measures, params) {
-    result <- c()
+connectMap.resolveMeasures <- function(measures, params) {		#; print(measures)
     if ("ALL" %in% measures) {
         measures <- connectMap.getConnectednessMeasures()
-    }
+    }									#; print(measures)
+    expanded <- c()
     for (mIdx in 1:length(measures)) {
         measure <- measures[mIdx]
         if (measure == "similarity") {
             levels <- as.numeric(param.getParam("map.connect.identity.min", params))
-            for (lIdx in 1 : length(levels)) {
-                measureStr <- paste("similarity-ge", format(levels[lIdx], digits=2, nsmall=2), sep="")
-                result <- c(result, measureStr)
-            }
+            prefix <- "similarity-ge"
+        } else if (measure == "meanDistance") {
+            levels <- as.numeric(param.getParam("map.connect.meanDistance.min", params))
+            prefix <- "meanDistance-ge"
         } else {
-            result <- c(result, measure)
+            stop(paste("Invalid measure of connectedness:",measure))
         }
-    }
-    result
-}
-
-connectMap.getMeasureLevel <- function(measure, prefix) {
-    if (!startsWith(measure, prefix)) {
-        return (NA)				#; print("Incorrect prefix")
-    }
-    level <- substring(measure,nchar(prefix)+1)	#; print(level)
-    as.numeric(level)
+        for (lIdx in 1 : length(levels)) {
+            measureStr <- paste(prefix, format(levels[lIdx], digits=2, nsmall=2), sep="")
+            expanded <- c(expanded, measureStr)
+        }
+    }									#; print(expanded)
+    expanded
 }
 
 connectMap.estimateMeasures <- function (ctx, datasetName, sampleSetName, aggLevel, aggUnitData, mapType, measures, params, dataFolder)	{
@@ -192,7 +188,7 @@ connectMap.estimateMeasures <- function (ctx, datasetName, sampleSetName, aggLev
 
     aggUnitPairData
 }
-
+#
 connectMap.estimateDistMeasures <- function (distData, measures) {
     result <- c()
     dist <- unlist(distData)
@@ -202,13 +198,21 @@ connectMap.estimateDistMeasures <- function (distData, measures) {
             level <- connectMap.getMeasureLevel (measure, "similarity-ge")	#; print(level)
             maxDist = 1.0 - level						#; print(maxDist)
             value <- length(which(dist <= maxDist)) / length(dist)
-        } else if (measure == "meanDistance") {
-            value <- 1 - mean(dist) 
+        } else if (startsWith(measure, "meanDistance")) {
+            value <- 1 - mean(dist)
         } else {
             stop(paste("Invalid distance connectedness measure:", measure))
         }
         result <- c(result, value)
     }
     result
+}
+#
+connectMap.getMeasureLevel <- function(measure, prefix) {
+    if (!startsWith(measure, prefix)) {
+        return (NA)				#; print("Incorrect prefix")
+    }
+    level <- substring(measure,nchar(prefix)+1)	#; print(level)
+    as.numeric(level)
 }
 

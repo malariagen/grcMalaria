@@ -2,294 +2,230 @@
 # Map Cluster Analysis
 ################################################################################
 #
-# We use visualization types to specify different graphic renditions from the same analyses:
-# barcodeFrequency has visualization types "pie" and "bar" (pie and bar markers)
-# clusterPrevalence has visualization type "cluster" to show the prevalence of the different clusters
+CLUSTER_MAP_PREFIX <- "clusterPrevalence-ge"
 #
-clusterMap.execute <- function(userCtx, datasetName, sampleSetName, mapType, baseMapInfo, aggregation, measures, params) {
-    visTypes <- param.getParam ("map.cluster.visualizations", params)			#; print(visTypes)
-    for (vIdx in 1:length(visTypes)) {
-        clusterMap.executeVisualization (userCtx, datasetName, sampleSetName, mapType, baseMapInfo, visTypes[vIdx], aggregation, measures, params)
-    }
-}
-#
-clusterMap.executeVisualization <- function(userCtx, datasetName, sampleSetName, mapType, baseMapInfo, visType, aggregation, measures, params) {
-    sampleSet <- userCtx$sampleSets[[sampleSetName]]
-    ctx <- sampleSet$ctx
-    dataset <- ctx[[datasetName]]
-    
-    # Create the information object, used to create the plot
-    # Start by getting the output folders
-    dataFolder <- getOutFolder(ctx$config, sampleSetName, c(paste("map", mapType, sep="-"), "data"))
-    info <- list(dataFolder=dataFolder)
-
-    info$sampleSetName <- sampleSetName;    info$mapType <- mapType;    info$visType <- visType
-    info$plotTitle <- sampleSetName
-    info$baseMapInfo <- baseMapInfo
-
-    # Now compute the aggregation units, the values to be plotted, and make the map
-    for (aggIdx in 1:length(aggregation)) {
-        aggLevel <- info$aggLevel <- as.integer(aggregation[aggIdx])    			#; print(aggLevel)
-        aggLevelIdx <- aggLevel + 1
-
-        # Get the aggregated data for the aggregation units
-        aggUnitData <- info$aggUnitData <- map.getAggregationUnitData (ctx, datasetName, aggLevel, sampleSetName, mapType, params, dataFolder)	#; print(aggUnitData)
-
-        # Work out a "standard" marker size (1/25 of the shortest side) and apply a scaling factor
-        scalingFactor <- param.getParam ("map.cluster.markerScale", params)			#; print(scalingFactor)
-        bbox <- baseMapInfo$anBB;
-        minSide <- min(abs(bbox$yMax-bbox$yMin),abs(bbox$xMax-bbox$xMin))
-        stdMarkerSize <- info$stdMarkerSize <- scalingFactor * minSide / 25			#; print(info$stdMarkerSize)
-        
-        # Compute the number of samples that correspond to this standard size
-        stdMarkerCountParam <- param.getParam ("map.cluster.markerSampleCount", params)	#; print(stdMarkerCountParam)
-        stdMarkerCount <- 0
-        if (is.numeric(stdMarkerCountParam)) {
-            stdMarkerCount <- stdMarkerCountParam
-        } else if (stdMarkerCountParam == "mean") {
-            stdMarkerCount <- mean(as.numeric(aggUnitData$SampleCount))				#; print(aggUnitData$SampleCount)
-        } else if (stdMarkerCountParam == "none") {
-            stdMarkerCount <- 0
-        } else {
-            stop(paste("Invalid map.stdMarkerCount value:", stdMarkerCountParam))        
-        }											#; print(stdPieCount)
-        stdMarkerCount <- info$stdMarkerCount <- as.numeric(stdMarkerCount)			#; print(info$stdMarkerCount)
-        
-        # Do the actual plotting by calling the function we've just defined.
-        if (mapType=="barcodeFrequency") {
-            # Get the sample counts data
-	    info$clusterCountData <- clusterMap.buildCountData (aggLevel, aggUnitData, dataset, params)	#; print(head(info$clusterCountData)
-            clusterMap.plotMap (ctx, info, params)
-
-        } else if (mapType %in% c("clusterSharing", "clusterPrevalence")) {
-            # Get the cluster data
-            clusterSetName  <- param.getParam ("cluster.clusterSet.name", params)	#; print(clusterSetName)
-            clusterSetInfos <- cluster.getClustersSetFromContext (userCtx, sampleSetName, clusterSetName)
-
-	    # Process the clusters for different thresholds of min identity 
-            setCount <- length(clusterSetInfos)
-            for (idIdx in 1:setCount) {
-                clusterSetInfo <- clusterSetInfos[[idIdx]]
-                if (is.null(clusterSetInfo$clusters)) {	# No clusters present at this identity level
-                    next
-                }
-
-                # We have clusters, determine how they are shared between aggregation units
-                clusterData <- clusterSetInfo$clusters
-                clusterShareData <- clusterMap.buildSharedCountData (aggLevel, aggUnitData,
-                                               clusterData, dataset$meta, params)	#; print(head(clusterShareData))
-                info$clusterShareData <- clusterShareData
-                info$minIdentity <- clusterSetInfo$minIdentity				#; print(info$minIdentity)
-            
-                # Construct a palette using the default palette, recycling it if there are too many clusters
-                # and adding white as the last colour for class "Other" (samples not belionging to a cluster)
-                clusterIds <- unique(as.character(clusterShareData$Cluster))		#; print(clusterIds)
-                clusterPalette <- cluster.getClusterPalette (ctx, clusterIds)		#; print(clusterPalette)
-                info$palette <- clusterPalette
-
-                if (visType == "cluster") {
-                    # Produce a set of per-cluster maps to show where the cluster circulates
-                    for (clIdx in 1:length(clusterIds)) {				#; print(clIdx)	        
-                        cluster <- clusterIds[clIdx]					#; print(cluster)
-                        if (cluster == "Other") {
-                            next
-                        }
-                        info$cluster <- cluster
-                        info$plotTitle <- paste(sampleSetName, "-", cluster);
-                        info$clusterSetInfo <- clusterSetInfo
-                        clClusterShareData <- clusterShareData[which(clusterShareData$Cluster == cluster),]
-                        info$clusterShareData <- clClusterShareData			#; print(nrow(clClusterShareData))
-                        clAggUnits <- as.character(clClusterShareData$UnitId)		#; print(clAggUnits)
-                        info$aggUnitData <- aggUnitData[clAggUnits,]			#; print(nrow(info$aggUnitData))
-                        clusterMap.plotMap (ctx, info, params)
-                    }
-                } else {
-                    # Create the plot with the cluster sharing markers (pies or bars)
-                    clusterMap.plotMap (ctx, info, params)
-                }
-            }
-        }
-    }
-}
-#
-# This function cotains the maincode to produce the map plot.
-# It will plot the same background map, with different types of markers accordong to map and visualization options
-# It has been separated so it can be called multiple times in the case of cluster sharing
-clusterMap.plotMap <- function (ctx, info, params) {
-
-    # Start with the background map
-    baseMapInfo <- info$baseMapInfo
-    mapPlot <- baseMapInfo$baseMap
-    
-    # Silly trick to make the package checker happy... :-(
-    lon <- lat <- label <- x <- y <- alpha <- NULL
-    
-    # If we need to show aggregation unit names, we need to compute the label positioning and plot before the markers
-    aggUnitData <- info$aggUnitData
-    aggLevel <- info$aggLevel
-    showMarkerNames <- param.getParam ("map.markerNames", params)
-    if (showMarkerNames) {
-        lp <- map.computeLabelParams (aggUnitData, baseMapInfo)		#; print(lp)
-        mapPlot <- mapPlot + 
-                   ggplot2::geom_point(ggplot2::aes(x=lon, y=lat), data=lp, colour="red") +
-                   ggrepel::geom_label_repel(ggplot2::aes(x=lon, y=lat, label=label), data=lp,
-                                    fill="black", size=4.5, fontface="bold", color="darkgray", show.legend=FALSE,
-                                    hjust=lp$just, vjust=0.5, nudge_x=lp$x, nudge_y=lp$y, label.padding=grid::unit(0.2, "lines"))
-    }
-
-    # Now add the markers
-    mapType <- info$mapType
-    visType <- info$visType
-    stdMarkerCount <- info$stdMarkerCount
-    stdMarkerSize <- info$stdMarkerSize
-    if (mapType %in% c("clusterSharing", "clusterPrevalence")) {
-        clusterShareData <- info$clusterShareData
-        palette <- info$palette
-    }
-    
-    clusterSetInfo <- info$clusterSetInfo
-    if (info$mapType=="barcodeFrequency") {
-        clusterCountData <- info$clusterCountData
-        mapPlot <- clusterMap.addFreqMarkers (mapPlot, visType, clusterCountData, aggUnitData, stdMarkerCount, stdMarkerSize)
-    } else if (info$mapType=="clusterPrevalence") {
-        cluster <- info$cluster			
-        clusterStats <- clusterSetInfo$stats
-        clusterInfoText <- cluster.getClusterStatsText(clusterStats, cluster)		#; print(clusterInfoText)
-            
-        mapPlot <- clusterMap.addConnections (mapPlot, visType, cluster, clusterShareData, palette, stdMarkerCount, stdMarkerSize)
-            
-        # Dirty trick so we can show an annotation with cluster info above the legends.
-        # We "plot" a couple of points, and create a ficticious alpha legend containing the cluster info text.
-        bb <- baseMapInfo$anBB
-        dummydf <- data.frame(x=c(bb$xMin,bb$xMin), y=c(bb$yMax,bb$yMax), alpha=c(0.1, 0.11))
-        mapPlot <- mapPlot +
-                   ggplot2::geom_point(ggplot2::aes(x=x, y=y, alpha=as.numeric(alpha), size=0.01), data=dummydf) +
-                   ggplot2::scale_alpha_continuous(cluster, breaks=c(0.1, 0.11), labels=c(clusterInfoText,""), 
-                                                   guide=ggplot2::guide_legend(order=1,keywidth=0, keyheight=0.01, nrow=1,
-                                                   override.aes=list(shape=NA,fill=NA,size=0.01)))
-
-    } else if (info$mapType=="clusterSharing") {
-        mapPlot <- clusterMap.addShareMarkers (mapPlot, visType, clusterShareData, palette, aggUnitData, stdMarkerCount, stdMarkerSize)
-    }
-    
-    # Now add the decorative elements
-    mapPlot <- mapPlot +
-    	       ggplot2::labs(title=info$plotTitle, subtitle="")+
-               ggplot2::theme(plot.title=ggplot2::element_text(face="bold", size=ggplot2::rel(1.2), hjust=0.5),
-                     panel.background=ggplot2::element_rect(colour=NA),
-                     plot.background=ggplot2::element_rect(colour=NA),
-                     axis.title=ggplot2::element_text(face="bold",size=ggplot2::rel(1)),
-                     axis.title.y=ggplot2::element_text(angle=90,vjust=2),
-                     axis.title.x=ggplot2::element_text(vjust=-0.2))
-     
-    # Save to file. the size in inches is given in the params.
-    mapSize  <- param.getParam ("plot.size", params)
-
-    clusterSetLabel <- clusterSetInfo$clusterSetName
-    aggLabel <- map.getAggregationLabels(aggLevel)
-    levelLabel <- getMinIdentityLabel(info$minIdentity)
-    mapLabel <- mapType
-    if (visType != "cluster") {
-        mapLabel <- paste(mapType, visType, sep="-")
-    }
-    plotSubFolders <- c(paste("map", mapType, sep="-"), "plots", clusterSetLabel)
-    plotFilename <- paste("map", info$sampleSetName, aggLabel, mapLabel, levelLabel, sep="-")
-    if (info$mapType == "clusterPrevalence") {
-        plotSubFolders <- c(plotSubFolders, levelLabel, aggLabel)
-        plotFilename <- paste(plotFilename, info$cluster, sep="-")
-    }
-    plotFolder <- getOutFolder(ctx$config, info$sampleSetName, plotSubFolders)
-    graphicFilename  <- paste(plotFolder, paste(plotFilename,"png",sep="."), sep="/")
-    ggplot2::ggsave(plot=mapPlot, filename=graphicFilename, device="png", width=mapSize$width, height=mapSize$height, units="in", dpi=300)
-}
-
-###############################################################################
-# Haplotype Frequency Markers plotting 
 ################################################################################
 #
-clusterMap.addFreqMarkers <- function (mapPlot, visType, countData, aggUnitData, stdMarkerCount, stdMarkerSize) {
-    if (visType=="bar") {
-        mapPlot <- clusterMap.addFreqBars (mapPlot, countData, aggUnitData, stdMarkerCount, stdMarkerSize)
-    } else if (visType=="pie") {
-        mapPlot <- clusterMap.addFreqPies (mapPlot, countData, aggUnitData, stdMarkerCount, stdMarkerSize)
-    }
-    mapPlot
-}
+clusterMap.executeMap <- function (map) {
 
-clusterMap.addFreqPies <- function (mapPlot, countData, aggUnitData, stdMarkerCount, stdMarkerSize) {
+    mapMaster   <- map$master
+    mapType     <- mapMaster$type
+    measure     <- map$measure
+    interval    <- map$interval
+    #
+    datasetName <- map$datasetName
+    sampleSet   <- mapMaster$sampleSet
+    userCtx     <- mapMaster$userCtx
+    params      <- mapMaster$params
+    config      <- userCtx$config
+    #
+    # Get the context, trimmed by time interval
+    #
+    ctx        <- map$mapCtx				#; print(str(ctx))
+    dataset    <- ctx[[datasetName]]
+    sampleMeta <- dataset$meta
+    if (nrow(sampleMeta)==0) {
+        print(paste("No samples found - skipping interval", interval$name))
+        return()
+    }
+    #
+    baseMapInfo <- mapMaster$baseMapInfo
+    #
+    # Get the output folders
+    #
+    dataFolder <- mapMaster$dataFolder
+    plotFolder <- mapMaster$plotFolder
+    #
     # Silly trick to make the package checker happy... :-(
-    Longitude <- Latitude <- Haplo <- ClusterCount <- SampleCount <-NULL
-
-    # Now add the pie chart markers
-    if (stdMarkerCount==0) {
-        mapPlot <- mapPlot +
-                   ggforce::geom_arc_bar(ggplot2::aes(x0=Longitude, y0=Latitude, r0=0, r=stdMarkerSize, 
-                                         fill=Haplo, amount=ClusterCount),
-                             data=countData, stat="pie", inherit.aes=FALSE,
-                             #colour="gray25", stroke=0.5, fill="white", show.legend=FALSE)
-                             colour="gray25", fill="white", show.legend=FALSE)
-    } else {
-        mapPlot <- mapPlot +
-                   ggforce::geom_arc_bar(ggplot2::aes(x0=Longitude, y0=Latitude, r0=0, r=stdMarkerSize*sqrt(SampleCount/stdMarkerCount), 
-                                         fill=Haplo, amount=ClusterCount),
-                             data=countData, stat="pie", inherit.aes=FALSE,
-                             #colour="gray25", stroke=0.5, fill="white", show.legend=FALSE)
-                             colour="gray25", fill="white", show.legend=FALSE)
+    lon <- lat <- label <- x <- y <- alpha <- NULL
+    #
+    # Parse the measure to get the cluster name and the minIdentity level
+    #
+    mParts <- clusterMap.parseMeasure (measure)					#; print(measure)
+    minIdentity <- mParts$minIdentity						#; print(minIdentity)
+    clusterId <- mParts$clusterId						#; print(clusterId)		
+    #
+    # Now compute the aggregation units, the values to be plotted, and make the map
+    # Get the aggregated data for the aggregation units
+    #
+    aggLevel <- as.integer(map$aggregation)     				#; print(aggLevel)   
+    aggUnitData <- map$aggUnitData						#; print(aggUnitData)
+    #    
+    # Get the cluster data
+    #
+    clusterSetLabel  <- getMinIdentityLabel (minIdentity)
+    clusterSet       <- mapMaster$clusterSets[[clusterSetLabel]]
+    clusterSetName   <- clusterSet$clusterSetName
+    clusterData      <- clusterSet$clusters
+    #
+    clusterShareData <- clusterMap.getUnitClusterCountData (clusterData, sampleMeta, aggLevel, aggUnitData, params)    #TODO - rename to aggClusterCountData
+											#; print(clusterShareData)
+    clusterPalette <- mapMaster$clusterSetPalettes[[clusterSetLabel]]
+    clusterInfoText <- cluster.getClusterStatsText(clusterSet$stats, clusterId)		#; print(clusterInfoText)
+    #
+    #
+    #
+    clusterShareData <- clusterShareData[which(clusterShareData$Cluster == clusterId),]	#; print(head(clusterShareData))
+    selAggUnitIds <- as.character(clusterShareData$UnitId)
+    selAggUnitData <- aggUnitData[selAggUnitIds,]					#; print(nrow(selAggUnitData))
+    #
+    # Do the actual plot, starting with the background map
+    #
+    mapPlot <- baseMapInfo$baseMap
+    #
+    # If we need to show aggregation unit names, we need to compute the label positioning 
+    # and plot before the markers
+    #
+    showMarkerNames <- param.getParam ("map.markerNames", params)
+    if (showMarkerNames) {
+        lp <- map.computeLabelParams (selAggUnitData, baseMapInfo)		#; print(lp)
+        mapPlot <- mapPlot + 
+            ggplot2::geom_point(ggplot2::aes(x=lon, y=lat), data=lp, colour="red") +
+            ggrepel::geom_label_repel(ggplot2::aes(x=lon, y=lat, label=label), data=lp,
+                                      fill="black", size=4.5, fontface="bold", color="darkgray", show.legend=FALSE,
+                                      hjust=lp$just, vjust=0.5, nudge_x=lp$x, nudge_y=lp$y, label.padding=grid::unit(0.2, "lines"))
     }
-    mapPlot
-}
-
-clusterMap.addFreqBars <- function (mapPlot, countData, aggUnitData, stdMarkerCount, stdMarkerSize) {
-
-    # Get all aggregation unit ids, in descending order of sample count
-    aggUnitData <- aggUnitData[order(-aggUnitData$SampleCount),]
-    aggUnitGids <- rownames(aggUnitData)							#; print(aggUnitGids)
-    freqBarData <- NULL
-    for (aIdx in 1:length(aggUnitGids)) {
-        aggUnitGid <- aggUnitGids[aIdx]
-        sampleCount <- aggUnitData$SampleCount[aIdx]
-        
-        # Determine the desired size of the marker
-        if (stdMarkerCount==0) {
-            mHeight <- 2 * stdMarkerSize
-        } else {
-            mHeight <- 2 * stdMarkerSize*sqrt(sampleCount/stdMarkerCount)
-        }
-        mWidth <- mHeight / 2 
-        
-        # Determine the height representing one sample
-        sHeight <- mHeight / sampleCount
-        
-        # Determine the starting coords (lower left corner)
-        y0 <- aggUnitData$Latitude[aIdx] - (mHeight/2)
-        x1 <- aggUnitData$Longitude[aIdx] - (mWidth/2)
-        x2 <- aggUnitData$Longitude[aIdx] + (mWidth/2)
-        
-        # Get all the clusters for this unit, ordered by sample count
-        unitClusterData <- countData[which(countData$UnitId==aggUnitGid),]
-        unitClusterData <- unitClusterData[order(unitClusterData$ClusterCount),]
-        unitRowCount <- nrow(unitClusterData)
-        
-        # For each cluster, work out the y boundaries
-        y2 <- vector(mode="numeric", length=unitRowCount)
-        y <- y0
-        for (i in 1:unitRowCount) {
-           y <- y + (unitClusterData$ClusterCount[i] * sHeight)
-           y2[i] <- y
-        }
-        y1 <- c(y0, y2[1:(unitRowCount-1)])
-        x1 <- rep(x1, unitRowCount)
-        x2 <- rep(x2, unitRowCount)
-        unitBarData <- cbind(unitClusterData, x1=x1, x2=x2, y1=y1, y2=y2)
-        freqBarData <- rbind(freqBarData, unitBarData)
-    }				
-    #print(freqBarData)
+    #
+    #
+    #
+    mapPlot <- clusterMap.addConnections (mapPlot, clusterId, clusterShareData, clusterPalette)
+    #        
+    # Dirty trick so we can show an annotation with cluster info above the legends.
+    # We "plot" a couple of points, and create a ficticious alpha legend containing the cluster info text.
+    #
+    bb <- baseMapInfo$anBB
+    dummydf <- data.frame(x=c(bb$xMin,bb$xMin), y=c(bb$yMax,bb$yMax), alpha=c(0.1, 0.11))
     mapPlot <- mapPlot +
-               ggplot2::geom_rect(ggplot2::aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2), data=freqBarData, inherit.aes=FALSE,
-                                  colour="gray25", size=0.5, fill="white", show.legend=FALSE)
-    mapPlot
+        ggplot2::geom_point(ggplot2::aes(x=x, y=y, alpha=as.numeric(alpha), size=0.01), data=dummydf) +
+        ggplot2::scale_alpha_continuous(clusterId, breaks=c(0.1, 0.11), labels=c(clusterInfoText,""), 
+                                        guide=ggplot2::guide_legend(order=1,keywidth=0, keyheight=0.01, nrow=1,
+                                         override.aes=list(shape=NA,fill=NA,size=0.01)))
+    #
+    # Now add the decorative elements
+    #
+    plotTitle <- paste(sampleSet$name, "-", clusterId);
+    mapPlot <- mapPlot +
+    	ggplot2::labs(title=plotTitle, subtitle="")+
+        ggplot2::theme(plot.title=ggplot2::element_text(face="bold", size=ggplot2::rel(1.2), hjust=0.5),
+                       panel.background=ggplot2::element_rect(colour=NA),
+                       plot.background=ggplot2::element_rect(colour=NA),
+                       axis.title=ggplot2::element_text(face="bold",size=ggplot2::rel(1)),
+                       axis.title.y=ggplot2::element_text(angle=90,vjust=2),
+                       axis.title.x=ggplot2::element_text(vjust=-0.2))
+    #
+    # Save to file. the size in inches is given in the config
+    #
+    mapSize  <- param.getParam ("plot.size", params)
+    ggplot2::ggsave(plot=mapPlot, filename=map$plotFile, device="png", 
+                    width=mapSize$width, height=mapSize$height, units="in", dpi=300)
 }
+#
+################################################################################
+#
+clusterMap.resolveMeasures <- function(clusterSets) {
+    expanded <- c()
+    minIdentityLabels <- names(clusterSets)
+    setCount <- length(minIdentityLabels)
+    for (idIdx in 1:setCount) {
+        minIdentityLabel <- minIdentityLabels[idIdx]
+        minIdentity <- getMinIdentityFromLabel (minIdentityLabel)
+        clusterSet <- clusterSets[[minIdentityLabel]]
+        clusterData <- clusterSet$clusters
+        clusterIds <- as.character(clusterData$ClusterId)
+        measureLabels <- paste(getMinIdentityLabel(minIdentity, prefix=CLUSTER_MAP_PREFIX), 
+                               clusterIds, sep="/")				#; print(measureLabels)
+        expanded <- c(expanded, measureLabels)
+    }										#; print(expanded)
+    expanded
+}
+#
+################################################################################
+#
+clusterMap.parseMeasure <- function(measure) {
+    prefix <- CLUSTER_MAP_PREFIX
+    if (!startsWith(measure, prefix)) {
+        return (NULL)				#; print("Incorrect prefix")
+    }
+    suffix <- substring(measure,nchar(prefix)+1)
+    sParts <- unlist(strsplit(suffix, "/"))
+    list(minIdentity=as.numeric(sParts[1]), clusterId=sParts[2])
+}
+#
+################################################################################
+# 
+# For each cluster set, construct a palette using the default palette, recycling colours if there are too 
+# many clusters, adding white as the last colour for class "Other" (samples not belionging to a cluster)
+#
+clusterMap.getClusterSetsPalettes <- function (ctx, clusterSets) {
+    palettes <- list()
+    minIdentityLabels <- names(clusterSets)
+    setCount <- length(minIdentityLabels)
+    for (idIdx in 1:setCount) {
+        minIdentityLabel <- minIdentityLabels[idIdx]
+        clusterSet <- clusterSets[[minIdentityLabel]]
+        clusterData <- clusterSet$clusters
+        clusterIds <- as.character(clusterData$ClusterId)
+	palettes[[minIdentityLabel]] <- cluster.getClusterPalette (ctx, clusterIds)
+    }										#; print(expanded)
+    palettes
+}
+#
+################################################################################
+#
+#
+#
+clusterMap.getUnitClusterCountData <- function(clusterData, sampleMeta, aggLevel, aggUnitData, params) {
+    #
+    # Get the subgraph membership file for this identity threshold, which is created by the clusteing code
+    # (shared with the "graph" analysis task)
+    #
+    memberData <- cluster.getMemberData (clusterData)
 
+    clusterData <- clusterData[order(clusterData$Cluster),]
+    
+    clusterIds <- as.character(clusterData$Cluster)						#; print(clusterIds)
+    memberData <- memberData[which(memberData$Cluster %in% clusterIds),]
+    memberIds      <- memberData$Sample								#; print(memberIds)
+    memberClusters <- memberData$Cluster							#; print(memberClusters)
+   
+    # Assign cluster Ids to the sample metadata
+    sampleNames <- rownames(sampleMeta)
+    sampleCluster <- rep("-", length(sampleNames))
+    names(sampleCluster) <- sampleNames
+    sampleCluster[memberIds] <- memberClusters
+    sampleMeta$Cluster <- sampleCluster
+    
+    # Get all aggregation unit ids
+    aggUnitGids <- rownames(aggUnitData)							#; print(aggUnitGids); print(nrow(sampleMeta))
+    
+    # Create aggregation index for each sample (the id of the aggregation unit where the sample originates)
+    aggIndex <- map.getAggregationUnitIds (aggLevel, sampleMeta)
+
+    # Get the data for all aggregation units
+    countData <- NULL
+    for (aIdx in 1:length(aggUnitGids)) {
+        # Get the sample data to be aggregated for this unit
+        aggUnitGid <- aggUnitGids[aIdx]
+        unitMeta <- sampleMeta[which(aggIndex == aggUnitGid),]					#; print(nrow(unitMeta))
+        clUnitMeta <- unitMeta[which(unitMeta$Cluster != "-"),]
+        unitGroupCounts <- table(clUnitMeta$Cluster)
+        unitGroupCounts <- unitGroupCounts[order(-unitGroupCounts)]
+        unitGroupNum <- length(unitGroupCounts)+1
+
+        unitData <- aggUnitData[aIdx,]
+        df <- data.frame(matrix(unitData,ncol=ncol(aggUnitData),nrow=unitGroupNum,byrow=TRUE))
+        colnames(df) <- colnames(aggUnitData)
+        df$Cluster <- c(names(unitGroupCounts), "Other")
+        df$ClusterCount <- c(unitGroupCounts, nrow(unitMeta)-nrow(clUnitMeta))
+        df$ClusterProp <- df$ClusterCount / unitData$SampleCount
+        countData <- rbind(countData, df)
+    }
+    countData$Cluster <- factor(countData$Cluster)
+    countData$Latitude <- as.numeric(countData$Latitude)
+    countData$Longitude <- as.numeric(countData$Longitude)
+    countData$SampleCount <- as.numeric(countData$SampleCount)
+    countData
+}
 #
 # For each aggregation unit, we get a count of each unique cluster, ordered in descending count
 #
@@ -327,172 +263,21 @@ clusterMap.buildCountData <- function(aggLevel, aggUnitData, dataset, params) {
     countData$SampleCount <- as.numeric(countData$SampleCount)
     countData
 }
-
-###############################################################################
-# Haplotype Sharing Markers plotting 
-################################################################################
 #
-clusterMap.addShareMarkers <- function (mapPlot, visType, clusterShareData, clusterPalette, aggUnitData, stdMarkerCount, stdMarkerSize) {
-    # Do th actual marker plotting for the twp types of markers
-    if (visType=="bar") {
-        mapPlot <- clusterMap.addShareBars (mapPlot, clusterShareData, clusterPalette, aggUnitData, stdMarkerCount, stdMarkerSize)
-    } else if (visType=="pie") {
-        mapPlot <- clusterMap.addSharePies (mapPlot, clusterShareData, clusterPalette, aggUnitData, stdMarkerCount, stdMarkerSize)
-    }
-    mapPlot
-}
-
-clusterMap.addSharePies <- function (mapPlot, clusterShareData, clusterPalette, aggUnitData, stdMarkerCount, stdMarkerSize) {
-    # Silly trick to make the package checker happy... :-(
-    Longitude <- Latitude <- Cluster <- ClusterCount <- SampleCount <-NULL
-
-    # Now add the pie chart markers
-    if (stdMarkerCount==0) {
-        mapPlot <- mapPlot +
-                   ggforce::geom_arc_bar(ggplot2::aes(x0=Longitude, y0=Latitude, r0=0, r=stdMarkerSize, 
-                                         fill=Cluster, amount=ClusterCount),
-                                data=clusterShareData, stat="pie", inherit.aes=FALSE,
-                                #colour="gray25", stroke=0.5, show.legend=FALSE) +
-                                colour="gray25", show.legend=FALSE) +
-                   ggplot2::scale_fill_manual(values=clusterPalette)
-    } else {
-        mapPlot <- mapPlot +
-                   ggforce::geom_arc_bar(ggplot2::aes(x0=Longitude, y0=Latitude, r0=0, r=stdMarkerSize*sqrt(SampleCount/stdMarkerCount), 
-                                         fill=Cluster, amount=ClusterCount),
-                                data=clusterShareData, stat="pie", inherit.aes=FALSE,
-                                #colour="gray25", stroke=0.5, show.legend=FALSE) +
-                                colour="gray25", show.legend=FALSE) +
-                   ggplot2::scale_fill_manual(values=clusterPalette)
-    }
-    mapPlot
-}
-
-
-clusterMap.addShareBars <- function (mapPlot, clusterShareData, clusterPalette, aggUnitData, stdMarkerCount, stdMarkerSize) {
-
-    # Get all aggregation unit ids, in descending order of sample count
-    aggUnitData <- aggUnitData[order(-aggUnitData$SampleCount),]
-    
-    aggUnitGids <- rownames(aggUnitData)							#; print(aggUnitGids)
-    freqBarData <- NULL
-    for (aIdx in 1:length(aggUnitGids)) {
-        aggUnitGid <- aggUnitGids[aIdx]
-        sampleCount <- aggUnitData$SampleCount[aIdx] 
-        
-        # Determine the desired size of the marker
-        if (stdMarkerCount==0) {
-            mHeight <- 2 * stdMarkerSize
-        } else {
-            mHeight <- 2 * stdMarkerSize*sqrt(sampleCount/stdMarkerCount)
-        }
-        mWidth <- mHeight / 2 
-        
-        # Determine the height representing one sample
-        sHeight <- mHeight / sampleCount
-        
-        # Determine the starting coords (lower left corner)
-        y0 <- aggUnitData$Latitude[aIdx] - (mHeight/2)
-        x1 <- aggUnitData$Longitude[aIdx] - (mWidth/2)
-        x2 <- aggUnitData$Longitude[aIdx] + (mWidth/2)
-        
-        # Get all the cluster for this unit, ordered by name
-        unitClusterData <- clusterShareData[which(clusterShareData$UnitId==aggUnitGid),]	#; print(unitClusterData)
-        unitClusters <- as.character(unitClusterData$Cluster)					#; print(unitClusters)
-        unitClusterData <- unitClusterData[order(unitClusters, decreasing=TRUE),]		#; print(unitClusterData)
-        unitRowCount <- nrow(unitClusterData)
-        
-        # For each cluster, worh out the y boundaries
-        y2 <- vector(mode="numeric", length=unitRowCount)
-        y <- y0
-        for (i in 1:unitRowCount) {
-           y <- y + (unitClusterData$ClusterCount[i] * sHeight)
-           y2[i] <- y
-        }
-        y1 <- c(y0, y2[1:(unitRowCount-1)])
-        x1 <- rep(x1, unitRowCount)
-        x2 <- rep(x2, unitRowCount)
-        unitBarData <- cbind(unitClusterData, x1=x1, x2=x2, y1=y1, y2=y2)
-        freqBarData <- rbind(freqBarData, unitBarData)
-    }												#; print(freqBarData)
-    
-    # Silly trick to make the package checker happy... :-(
-    Cluster <- NULL
-
-    # Got the dataframe for drawing all the rectangles, now do the drawing and colouring
-    mapPlot <- mapPlot +
-               ggplot2::geom_rect(ggplot2::aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2, fill=Cluster), 
-                                  data=freqBarData, inherit.aes=FALSE,
-                                  colour="gray25", size=0.5, show.legend=FALSE) +
-               ggplot2::scale_fill_manual(values=clusterPalette)
-    mapPlot
-}
-
-clusterMap.buildSharedCountData <- function(aggLevel, aggUnitData, clusterData, sampleMeta, params) {
-#clusterMap.buildSharedCountData <- function(aggLevel, aggUnitData, clusterData, sampleMeta, maxGroups, params) {
-    # Get the subgraph membership file for this identity threshold, which is created by the clusteing code
-    # (shared with the "graph" analysis task)
-    memberData <- cluster.getMemberData (clusterData)
-
-    clusterData <- clusterData[order(clusterData$Cluster),]
-    #if (nrow(clusterData) > maxGroups) {
-    #    clusterData <- clusterData[1:maxGroups,]
-    #}
-    clusterIds <- as.character(clusterData$Cluster)						#; print(clusterIds)
-    memberData <- memberData[which(memberData$Cluster %in% clusterIds),]
-    memberIds      <- memberData$Sample								#; print(memberIds)
-    memberClusters <- memberData$Cluster							#; print(memberClusters)
-   
-    # Assign cluster Ids to the sample metadata
-    sampleNames <- rownames(sampleMeta)
-    sampleCluster <- rep("-", length(sampleNames))
-    names(sampleCluster) <- sampleNames
-    sampleCluster[memberIds] <- memberClusters
-    sampleMeta$Cluster <- sampleCluster
-    
-    # Get all aggregation unit ids
-    aggUnitGids <- rownames(aggUnitData)							#; print(aggUnitGids)
-    
-    # Create aggregation index for each sample (the id of the aggregation unit where the sample originates)
-    aggIndex <- map.getAggregationUnitIds (aggLevel, sampleMeta)
-
-    # Get the data for all aggregation units
-    countData <- NULL
-    for (aIdx in 1:length(aggUnitGids)) {
-        # Get the sample data to be aggregated for this unit
-        aggUnitGid <- aggUnitGids[aIdx]
-        unitMeta <- sampleMeta[which(aggIndex == aggUnitGid),]					#; print(nrow(unitMeta))
-        clUnitMeta <- unitMeta[which(unitMeta$Cluster != "-"),]
-        unitGroupCounts <- table(clUnitMeta$Cluster)
-        unitGroupCounts <- unitGroupCounts[order(-unitGroupCounts)]
-        unitGroupNum <- length(unitGroupCounts)+1
-
-        unitData <- aggUnitData[aIdx,]
-        df <- data.frame(matrix(unitData,ncol=ncol(aggUnitData),nrow=unitGroupNum,byrow=TRUE))
-        colnames(df) <- colnames(aggUnitData)
-        df$Cluster <- c(names(unitGroupCounts), "Other")
-        df$ClusterCount <- c(unitGroupCounts, nrow(unitMeta)-nrow(clUnitMeta))
-        df$ClusterProp <- df$ClusterCount / unitData$SampleCount
-        countData <- rbind(countData, df)
-    }
-    countData$Cluster <- factor(countData$Cluster)
-    countData$Latitude <- as.numeric(countData$Latitude)
-    countData$Longitude <- as.numeric(countData$Longitude)
-    countData$SampleCount <- as.numeric(countData$SampleCount)
-    countData
-}
-
 ###############################################################################
 # Maps of connections between Haplotype Sharing sites plotting 
 ################################################################################
 #
-clusterMap.addConnections <- function (mapPlot, visType, cluster, clusterShareData, clusterPalette, stdMarkerCount, stdMarkerSize) {
+clusterMap.addConnections <- function (mapPlot, clusterId, clusterShareData, clusterPalette) {
+    #
     # Work out the values to display for every marker (the fractional prevalence)
-    mValues <- as.numeric(clusterShareData$ClusterProp)			#; print(cluster); print(clusterShareData)
+    #
+    mValues <- as.numeric(clusterShareData$ClusterProp)			#; print(clusterId) #; print(clusterShareData)
     valueLabels <- round(mValues, digits=2)
     
     # Work out size, colour and colour gradient for the markers
-    pointSizes <- 16
-    clusterColour <- clusterPalette[cluster]
+    pointSizes <- 16							#; print(clusterPalette)
+    clusterColour <- clusterPalette[clusterId]				#; print(clusterColour)
     mMax <- max(mValues); scaleMax <- round(mMax,digits=1); scaleMax <- ifelse(scaleMax<mMax, scaleMax+0.1, scaleMax)
     mMin <- min(mValues); scaleMin <- round(mMin,digits=1); scaleMin <- ifelse(scaleMin>mMin, scaleMin-0.1, scaleMin)  #; print(paste(scaleMin, scaleMax))
 
@@ -533,6 +318,7 @@ clusterMap.addConnections <- function (mapPlot, visType, cluster, clusterShareDa
         Lon1 <- Lat1 <- Lon2 <- Lat2 <- Weight <- NULL
 	
         # Now plot the connections
+        #print(aggUnitPairData); #print(nrow(aggUnitPairData)); print(colnames(aggUnitPairData))
         mapPlot <- mapPlot +
                    ggplot2::geom_curve(ggplot2::aes(x=Lon1, y=Lat1, xend=Lon2, yend=Lat2, size=Weight, colour=Weight),	# draw edges as arcs
                                data=aggUnitPairData, curvature=0.2, alpha=0.75) +
