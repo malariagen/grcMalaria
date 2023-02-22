@@ -530,7 +530,7 @@ map.getAggregationUnitIds <- function(aggLevel, sampleMeta) {	#; print(sampleMet
 ################################################################################
 #
 map.getGeoTables <- function () {
-    map.geoTables	# From the .rda file
+    grcMalariaGeodata::getGeoTables()	# From the .rda file
 }
 map.iso2ToIso3 <- function (iso2Countries) {
     geo <- map.getGeoTables()
