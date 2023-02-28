@@ -101,23 +101,12 @@ clusterMap.executeMap <- function (map) {
                                         guide=ggplot2::guide_legend(order=1,keywidth=0, keyheight=0.01, nrow=1,
                                          override.aes=list(shape=NA,fill=NA,size=0.01)))
     #
-    # Now add the decorative elements
-    #
     plotTitle <- paste(sampleSet$name, "-", clusterId);
-    mapPlot <- mapPlot +
-    	ggplot2::labs(title=plotTitle, subtitle="")+
-        ggplot2::theme(plot.title=ggplot2::element_text(face="bold", size=ggplot2::rel(1.2), hjust=0.5),
-                       panel.background=ggplot2::element_rect(colour=NA),
-                       plot.background=ggplot2::element_rect(colour=NA),
-                       axis.title=ggplot2::element_text(face="bold",size=ggplot2::rel(1)),
-                       axis.title.y=ggplot2::element_text(angle=90,vjust=2),
-                       axis.title.x=ggplot2::element_text(vjust=-0.2))
+    mapPlot <- mapPlot + ggplot2::labs(title=plotTitle, subtitle="")
     #
-    # Save to file. the size in inches is given in the config
+    # Return map plot for completion and saving to file
     #
-    mapSize  <- param.getParam ("plot.size", params)
-    ggplot2::ggsave(plot=mapPlot, filename=map$plotFile, device="png", 
-                    width=mapSize$width, height=mapSize$height, units="in", dpi=300)
+    mapPlot
 }
 #
 ################################################################################
@@ -320,7 +309,7 @@ clusterMap.addConnections <- function (mapPlot, clusterId, clusterShareData, clu
         # Now plot the connections
         #print(aggUnitPairData); #print(nrow(aggUnitPairData)); print(colnames(aggUnitPairData))
         mapPlot <- mapPlot +
-                   ggplot2::geom_curve(ggplot2::aes(x=Lon1, y=Lat1, xend=Lon2, yend=Lat2, size=Weight, colour=Weight),	# draw edges as arcs
+                   ggplot2::geom_curve(ggplot2::aes(x=Lon1, y=Lat1, xend=Lon2, yend=Lat2, linewidth=Weight, colour=Weight),	# draw edges as arcs
                                data=aggUnitPairData, curvature=0.2, alpha=0.75) +
                    ggplot2::scale_size_continuous(guide="none", range=c(0.25, 4)) +          			# scale for edge widths
                    ggplot2::scale_colour_gradientn(name="Sharing", colours=c(weakHaploColour,clusterColour))

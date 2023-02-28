@@ -39,7 +39,7 @@ markerMap.executeMap <- function(map) {
     plotFolder <- mapMaster$plotFolder
     #
     # Silly trick to make the package checker happy... :-(
-    lon <- lat <- label <- NULL
+    lon <- lat <- Latitude <- Longitude <- label <- NULL
     #
     # Now compute the aggregation units, the values to be plotted, and make the map
     # Get the aggregated data for the aggregation units
@@ -113,21 +113,21 @@ markerMap.executeMap <- function(map) {
         mMax <- max(mValues); scaleMax <- round(mMax,digits=1); scaleMax <- ifelse(scaleMax<mMax, scaleMax+0.1, scaleMax)
         mMin <- min(mValues); scaleMin <- round(mMin,digits=1); scaleMin <- ifelse(scaleMin>mMin, scaleMin-0.1, scaleMin)  #; print(paste(scaleMin, scaleMax))
         mapPlot <- mapPlot +
-        ggplot2::geom_point(data=selAggUnitData, aes_string2(x="Longitude", y="Latitude", fill=measure), size=pointSizes, shape=21, stroke=2) +
+        ggplot2::geom_point(data=selAggUnitData, ggplot2::aes(x=Longitude, y=Latitude, fill=!!rlang::sym(measure)), size=pointSizes, shape=21, stroke=2) +
         ggplot2::scale_fill_gradientn(limits=c(scaleMin,scaleMax), colours=markerColours, values=c(0,1))
     } else if (mapType=="sampleCount") {
         mapPlot <- mapPlot +
-            ggplot2::geom_point(data=selAggUnitData, aes_string2(x="Longitude", y="Latitude", fill=colourAdmDivCol),
+            ggplot2::geom_point(data=selAggUnitData, ggplot2::aes(x=Longitude, y=Latitude, fill=!!colourAdmDivCol),
 	                        size=pointSizes, shape=21, stroke=2) +
             ggplot2::scale_fill_manual(values=admDivPalette, labels=admDivPaletteLabels, name=colourAdmDivTitle,
                                        guide=ggplot2::guide_legend(override.aes=list(size=3,stroke=0.5)))
     }  else if (mapType=="location") {
         mapPlot <- mapPlot +
-            ggplot2::geom_point(data=selAggUnitData, aes_string2(x="Longitude", y="Latitude", fill=colourAdmDivCol),
+            ggplot2::geom_point(data=selAggUnitData, ggplot2::aes(x=Longitude, y=Latitude, fill=!!colourAdmDivCol),
 	                        size=pointSizes, shape=21, stroke=2)
     } else if (mapType=="drug") {
         mapPlot <- mapPlot +
-            ggplot2::geom_point(aes_string2(x="Longitude", y="Latitude", fill=measure), 
+            ggplot2::geom_point(ggplot2::aes(x=Longitude, y=Latitude, fill=!!rlang::sym(measure)), 
 	                        data=selAggUnitData, size=pointSizes, shape=21, stroke=2) +
             ggplot2::scale_fill_gradientn(limits=c(0,1), colours=c("green3","orange2","red3","red3"), values=c(0, 0.2, 0.75, 1))
     } else if (mapType=="mutation") {
@@ -141,36 +141,27 @@ markerMap.executeMap <- function(map) {
         }
         scaleMin <- 0; scaleMax <- 1
         mapPlot <- mapPlot +
-            ggplot2::geom_point(aes_string2(x="Longitude", y="Latitude", fill=measure), 
+            ggplot2::geom_point(ggplot2::aes(x=Longitude, y=Latitude, fill=!!rlang::sym(measure)), 
 	                        data=selAggUnitData, size=pointSizes, shape=21, stroke=2) +
             ggplot2::scale_fill_gradientn(limits=c(scaleMin,scaleMax), colours=markerColours, values=c(0,1))
     }
     #	    
-    # Now add the decorative elements
+    # Show the values in the markers
     #
     if (mapType=="sampleCount") {
         mapPlot <- mapPlot +
-            ggplot2::geom_text(data=selAggUnitData, ggplot2::aes_string(x="Longitude", y="Latitude", colour=colourAdmDivCol),
+            ggplot2::geom_text(data=selAggUnitData, ggplot2::aes(x=Longitude, y=Latitude, colour=!!colourAdmDivCol),
                                               label=valueLabels, hjust=0.5, vjust=0.5, size=4.5, fontface="bold", show.legend=FALSE) +
             ggplot2::scale_colour_manual(values=admDivTextPalette)
     } else {
         mapPlot <- mapPlot +
-            ggplot2::geom_text(data=selAggUnitData, ggplot2::aes_string(x="Longitude", y="Latitude"), 
+            ggplot2::geom_text(data=selAggUnitData, ggplot2::aes(x=Longitude, y=Latitude), 
                                               label=valueLabels, hjust=0.5, vjust=0.5, size=4.5, fontface="bold")
     }
-    mapPlot <- mapPlot +
-        ggplot2::theme(plot.title = ggplot2::element_text(face = "bold",size = ggplot2::rel(1.2),hjust = 0.5),
-                           panel.background = ggplot2::element_rect(colour = NA),
-                           plot.background = ggplot2::element_rect(colour = NA),
-                           axis.title = ggplot2::element_text(face = "bold",size = ggplot2::rel(1)),
-                           axis.title.y = ggplot2::element_text(angle=90,vjust =2),
-                           axis.title.x = ggplot2::element_text(vjust = -0.2))
     #
-    # Save to file. the size in inches is given in the config
+    # Return map plot for completion and saving to file
     #
-    mapSize  <- param.getParam ("plot.size", params)
-    ggplot2::ggsave(plot=mapPlot, filename=map$plotFile, device="png", 
-                    width=mapSize$width, height=mapSize$height, units="in", dpi=300)
+    mapPlot
 }
 #
 ###############################################################################

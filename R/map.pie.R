@@ -93,21 +93,9 @@ pieMap.executeMap <- function(map) {
 	                       show.legend=FALSE)
     }
     #
+    # Return map plot for completion and saving to file
     #
-    #
-    mapPlot <- mapPlot +
-        ggplot2::theme(plot.title = ggplot2::element_text(face = "bold",size = ggplot2::rel(1.2), hjust = 0.5),
-                       panel.background = ggplot2::element_rect(colour = NA),
-                       plot.background = ggplot2::element_rect(colour = NA),
-                       axis.title = ggplot2::element_text(face = "bold",size = ggplot2::rel(1)),
-                       axis.title.y = ggplot2::element_text(angle=90,vjust =2),
-                       axis.title.x = ggplot2::element_text(vjust = -0.2))
-    #
-    # Save to file. the size in inches is given in the config
-    #
-    mapSize  <- param.getParam ("plot.size", params)
-    ggplot2::ggsave(plot=mapPlot, filename=map$plotFile, device="png", 
-                    width=mapSize$width, height=mapSize$height, units="in", dpi=300)
+    mapPlot
 }
 #
 ###############################################################################

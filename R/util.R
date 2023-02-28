@@ -207,15 +207,3 @@ parseTimeIntervals <- function (timePeriods) {
 getDefaultTimeInterval <- function () {
     list(name=NULL, start=NULL, end=NULL)
 }
-#
-# #####################################################################################
-#  ggplot2 support functions
-# #####################################################################################
-#
-# This function replaces aes_strng() allowing the use of column names with dashes
-#
-fn_aesString <- get("aes_string", asNamespace("ggplot2"))
-aes_string2 <- function(...){
-    args <- lapply(list(...), function(x) sprintf("`%s`", x))
-    do.call(fn_aesString, args)
-}

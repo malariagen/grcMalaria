@@ -42,7 +42,6 @@ map.execute <- function(userCtx, sampleSetName, mapType, params) {		#;print(mapT
             aggLevels <- mapMaster$aggregations
             for (aIdx in 1:length(aggLevels)) {
                 aggLevel <- as.integer(aggLevels[aIdx])				#; print(paste("aggLevel:",aggLevel))
-                aggLevelIdx <- aggLevel+1
                 aggUnitData <- map.getAggregationUnitData (mapCtx, datasetName, aggLevel, sampleSetName, 
 		                   mapType, params, mapMaster$dataFolder)	#; print(aggUnitData)
                 measures    <- mapMaster$measures				#; print(paste(length(measures),"measures:",measures))
@@ -85,25 +84,43 @@ map.execute <- function(userCtx, sampleSetName, mapType, params) {		#;print(mapT
     #
     # Now create the map plots one by one
     #
+    mapSize  <- param.getParam ("plot.size", params)
     for (mIdx in 1:length(maps)) {
         map <- maps[[mIdx]]
+        #
+        # Create the map plot
+        #
+        mapPlot <- NULL
         if (map.isMarkerMap(mapType)) {
-            markerMap.executeMap (map)
+            mapPlot <- markerMap.executeMap (map)
         } else if (mapType=="alleleProp") {
-            pieMap.executeMap (map)
+            mapPlot <- pieMap.executeMap (map)
         } else if (mapType=="connect") {
-            connectMap.executeMap (map)
+            mapPlot <- connectMap.executeMap (map)
         } else if (mapType=="clusterPrevalence") {
-            clusterMap.executeMap (map)
+            mapPlot <- clusterMap.executeMap (map)
         } else if (mapType=="clusterSharing") {
-            clusterShareMap.executeMap (map)
-        } else if (mapType=="clusterSharing") {
-            clusterShareMap.executeMap (map)
+            mapPlot <- clusterShareMap.executeMap (map)
         } else if (mapType=="barcodeFrequency") {
-            barcodeFreqMap.executeMap (map)
+            mapPlot <- barcodeFreqMap.executeMap (map)
         } else {
             stop(paste("Invalid map type:", mapType))
         }
+        #
+        # Add the "look and feel" elements to the map plot
+        #
+        mapPlot <- mapPlot +
+            ggplot2::theme(plot.title       = ggplot2::element_text(face = "bold",size = ggplot2::rel(1.2), hjust = 0.5),
+                           panel.background = ggplot2::element_rect(colour = NA),
+                           plot.background  = ggplot2::element_rect(colour = NA),
+                           axis.title       = ggplot2::element_text(face = "bold",size = ggplot2::rel(1)),
+                           axis.title.y     = ggplot2::element_text(angle=90, vjust =2),
+                           axis.title.x     = ggplot2::element_text(vjust = -0.2))
+        #
+        # Save to file. The size in inches is given in the config.
+        #
+        ggplot2::ggsave(plot=mapPlot, filename=map$plotFile, device="png", 
+                        width=mapSize$width, height=mapSize$height, units="in", dpi=300)
     }
 }
 #
@@ -115,7 +132,7 @@ map.isMarkerMap <- function(mapType) {						#;print(mapType)
 # Master object for generating the maps
 ################################################################################
 #
-map.createMapMaster <- function (userCtx, sampleSetName, mapType, params) {
+map.createMapMaster <- function (userCtx, sampleSetName, mapType, params) {		#; print(names(params))
     #
     # Make a template config to be used for each time slice interval
     #
@@ -183,7 +200,7 @@ map.createMapMaster <- function (userCtx, sampleSetName, mapType, params) {
             measures <- clusterShareMap.resolveMeasures (mapMaster$clusterSets, params)
         }
     } else if (mapType=="barcodeFrequency") {
-        measures <- barcodeFreqMap.resolveMeasures (params)
+        measures <- barcodeFreqMap.resolveMeasures (mapMaster$clusterSets, params)		#; print(names(params))
     }
     mapMaster$measures <- measures					#; print(paste(length(measures),"measures:",measures))
     #
@@ -284,39 +301,42 @@ map.buildBaseMap <- function(mapMaster) {
     # Get the boundaries for all provinces (AdmDiv1) needed for this map, and calculate the bounding box
     #
     sl <- sp::Line(cbind(c(1,2,3),c(3,2,2)))	# This loads the sp package, or else we get an error later
-    #
     geo <- map.getGeoTables()
     adm1Spdf <- NULL
     xMin <- 1000; xMax <- -1000; yMin <- 1000; yMax <- -1000
     for (cIdx in 1:length(countries)) {
-        cl <- unitList[[cIdx]]					#; print(cl);
         #
-        # Filter to get the provinces for this country (used for drawing province boundaries)
+        # Get the list of units (provinces) in this country
         #
-        cAdm1Lines <- geo$admDiv1.lines[[cl$iso2]]
+        cUnitList <- unitList[[cIdx]]					#; print(cUnitList);
+        cIso2 <- cUnitList$iso2
+        #
+        # Get the provinces for this country (used for drawing province boundaries)
+        #
+        cAdm1Lines <- geo$admDiv1.lines[[cIso2]]
         #
         # Filter to select the provinces we need in the present analysis (used to define a bounding box)
         #
-        anAdm1GIDs <- cl$adm1GIDs						#; print(adm1GIDs)
+        anAdm1GIDs <- cUnitList$adm1GIDs				#; print(adm1GIDs)
         anAdm1Lines <- cAdm1Lines[cAdm1Lines@data$GADM_GID_1 %in% anAdm1GIDs,]
-        for (idx in 1:nrow(anAdm1Lines)) {			#; print (anAdm1Lines@polygons[[idx]])
+        for (idx in 1:nrow(anAdm1Lines)) {				#; print (anAdm1Lines@polygons[[idx]])
             #
             # Get the bounding box for the province
             # (a 2-column matrix; the first column has the minimum, the second the maximum values; rows represent the spatial dimensions)
             #
-            bbx <- sp::bbox(anAdm1Lines@polygons[[idx]])	#; print(bbx) 
+            bbx <- sp::bbox(anAdm1Lines@polygons[[idx]])		#; print(bbx) 
             xMin <- min(xMin,bbx[1,1]); xMax <- max(xMax,bbx[1,2]); yMin <- min(yMin,bbx[2,1]); yMax <- max(yMax,bbx[2,2])	#; print(c(xMin,xMax,yMin,yMax)) 
         }
         #
         # Append the data to those of other countries
         #
-        cl$gadmAdm1Data <- anAdm1Lines
+        cUnitList$gadmAdm1Data <- anAdm1Lines
         if (is.null(adm1Spdf)) {
-            adm1Spdf <- anAdm1Lines
+            adm1Spdf <- cAdm1Lines
         } else {
-            adm1Spdf <- rbind(adm1Spdf, anAdm1Lines)
+            adm1Spdf <- rbind(adm1Spdf, cAdm1Lines)
         }
-    }
+    }    
     adm1_df <- suppressMessages(ggplot2::fortify(adm1Spdf))	#; print(colnames(adm1Spdf@data)); print(colnames(adm1_df))
     #
     # Construct the bounding box for this analysis
@@ -364,10 +384,10 @@ map.buildBaseMap <- function(mapMaster) {
     if (!is.null(lakes) & (nrow(lakes)>0)) {
         lakes_df <- suppressMessages(ggplot2::fortify(lakes))		#; print(colnames(lakes))
     }
-    
+    #
     # Silly trick to make the package checker happy... :-(
     long <- lat <- group <- NULL
-
+    #
     baseBorderThickness <- map.getBordersThickness (anBB)
     #
     # Construct a base plot for completing subsequent maps
@@ -378,18 +398,18 @@ map.buildBaseMap <- function(mapMaster) {
                                   fill=map.colour.land, col=NA) +
     	    ggplot2::labs(x="Longitude", y="Latitude") +
     	    ggplot2::geom_polygon(data=adm1_df, ggplot2::aes(x=long, y=lat, group=group),
-    	                          fill=NA, col=map.colour.border.admdiv1, size=baseBorderThickness) +
+    	                          fill=NA, col=map.colour.border.admdiv1, linewidth=baseBorderThickness) +
             ggplot2::geom_polygon(data=adm0_df, ggplot2::aes(x=long, y=lat, group=group), 
-                                  fill=NA, col=map.colour.border.country, size=(1.5*baseBorderThickness))
+                                  fill=NA, col=map.colour.border.country, linewidth=(1.5*baseBorderThickness))
     if (!is.null(river_df)) {	                         
         baseMapPlot <- baseMapPlot +
     	    ggplot2::geom_path(data=river_df, ggplot2::aes(x=long, y=lat, group=group), 
-    	                       col=map.colour.river, size=1)
+    	                       col=map.colour.river, linewidth=1)
     }
     if (!is.null(lakes_df)) {	                         
         baseMapPlot <- baseMapPlot +
     	    ggplot2::geom_polygon(data=lakes_df, ggplot2::aes(x=long, y=lat, group=group), 
-    	                          fill=map.colour.river, col=map.colour.river, size=baseBorderThickness)
+    	                          fill=map.colour.river, col=map.colour.river, linewidth=baseBorderThickness)
     }
     baseMapPlot <- baseMapPlot +
     	    ggplot2::theme(panel.background=ggplot2::element_rect(fill=map.colour.sea))
@@ -444,7 +464,7 @@ map.getAdmDivNames <- function(gids) {		#; print(gids)
     geo <- map.getGeoTables()
     admDivs <- geo$admDivs			#; print(admDivs)
     admDivs <- admDivs[gids,]
-    admDivNames <- admDivs$AdmDivName
+    admDivNames <- admDivs$Name
     admDivNames
 }
 #
@@ -458,7 +478,6 @@ map.getAggregationUnitData <- function(plotCtx, datasetName, aggLevel, analysisN
     barcodeData  <- dataset$barcodes[validSamples,]
     distData     <- dataset$distance[validSamples,validSamples]
 
-    aggLevelIdx <- aggLevel + 1
     adminLevelCols  <- map.getAggregationColumns()
 
     # Create aggregation unit id; this is the GID, unique for each aggregation unit 
@@ -473,6 +492,7 @@ map.getAggregationUnitData <- function(plotCtx, datasetName, aggLevel, analysisN
     # Get the data for all aggregation units
     aggUnitCnames <- c("UnitId", "Country", "AdmDivName", "AdmDiv1_GID", "AdmDiv2_GID", "Latitude", "Longitude", "SampleCount")
     aggUnitData <- matrix(nrow=0, ncol=length(aggUnitCnames))
+
     geo <- map.getGeoTables()
     admDivs <- geo$admDivs
     for (aIdx in 1:length(aggUnitGids)) {
@@ -487,8 +507,18 @@ map.getAggregationUnitData <- function(plotCtx, datasetName, aggLevel, analysisN
         #
         # Get the admin division values from the first sample of this unit
         #
-        admDiv <- admDivs[which(admDivs$GID==aggUnitGid),]			#; print(admDiv)
-        cValues <- c(aggUnitGid, admDiv$Country, admDiv$AdmDivName, admDiv$AdmDiv1_GID, admDiv$AdmDiv2_GID, 
+        #admDiv <- admDivs[which(admDivs$GID==aggUnitGid),]			#; print(admDiv)
+        admDiv <- admDivs[aggUnitGid,]						#; print(admDiv)
+        if (aggLevel == 1) {
+            admDiv1_GID <- aggUnitGid
+            admDiv2_GID <- "-"
+        } else if (aggLevel == 2) {
+            admDiv1_GID <- admDiv$Parent
+            admDiv2_GID <- aggUnitGid
+        } else {
+            stop (paste("Unsupported aggregation level."))
+        }									#; print(paste(admDiv1_GID, admDiv2_GID))
+        cValues <- c(aggUnitGid, admDiv$Country, admDiv$Name, admDiv1_GID, admDiv2_GID, 
                      admDiv$Latitude, admDiv$Longitude, nrow(aggSamplesMeta))	#; print(cValues)
         aggUnitData <- rbind(aggUnitData, cValues)
     }

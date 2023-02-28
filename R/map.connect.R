@@ -42,7 +42,7 @@ connectMap.executeMap <- function(map) {
     plotFolder <- mapMaster$plotFolder
     #
     # Silly trick to make the package checker happy... :-(
-    lon <- lat <- label <- NULL
+    lon <- lat <- Latitude <- Longitude <- Lon1 <- Lon2 <- Lat1 <- Lat2 <- label <- NULL
     #
     # Now compute the aggregation units, the values to be plotted, and make the map
     # Get the aggregated data for the aggregation units
@@ -78,7 +78,7 @@ connectMap.executeMap <- function(map) {
     # Now plot the connections
     #
     mapPlot <- mapPlot +
-        ggplot2::geom_curve(aes_string2(x="Lon1", y="Lat1", xend="Lon2", yend="Lat2", size=measure, colour=measure),
+        ggplot2::geom_curve(ggplot2::aes(x=Lon1, y=Lat1, xend=Lon2, yend=Lat2, linewidth=!!rlang::sym(measure), colour=!!rlang::sym(measure)),
                             data=selAggUnitPairData, curvature=0.2, alpha=0.75) +
         ggplot2::scale_size_continuous(guide="none", range=c(0.25, 4)) +          					# scale for edge widths
         ggplot2::scale_colour_gradientn(colours=c("skyblue1","midnightblue"))
@@ -86,7 +86,7 @@ connectMap.executeMap <- function(map) {
     # Now add the markers
     #
     mapPlot <- mapPlot +
-        ggplot2::geom_point(aes_string2(x="Longitude", y="Latitude"), data=aggUnitData, size=4, shape=19, col="red")
+        ggplot2::geom_point(ggplot2::aes(x=Longitude, y=Latitude), data=aggUnitData, size=4, shape=19, col="red")
     #
     # If we need to show aggregation unit names, we need to compute the label positioning and plot
     #
@@ -98,21 +98,9 @@ connectMap.executeMap <- function(map) {
                                       hjust=lp$just, vjust=0.5, nudge_x=lp$x, nudge_y=lp$y, label.padding=grid::unit(0.2, "lines"))
     }
     #
-    # Now add the decorative elements
+    # Return map plot for completion and saving to file
     #
-    mapPlot <- mapPlot +
-        ggplot2::theme(plot.title = ggplot2::element_text(face = "bold",size = ggplot2::rel(1.2), hjust = 0.5),
-                       panel.background = ggplot2::element_rect(colour = NA),
-                       plot.background = ggplot2::element_rect(colour = NA),
-                       axis.title = ggplot2::element_text(face = "bold", size = ggplot2::rel(1)),
-                       axis.title.y = ggplot2::element_text(angle = 90,vjust = 2),
-                       axis.title.x = ggplot2::element_text(vjust = -0.2))
-    #
-    # Save to file. the size in inches is given in the config
-    #
-    mapSize  <- param.getParam ("plot.size", params)
-    ggplot2::ggsave(plot=mapPlot, filename=map$plotFile, device="png", 
-                    width=mapSize$width, height=mapSize$height, units="in", dpi=300)
+    mapPlot
 }
 
 connectMap.resolveMeasures <- function(measures, params) {		#; print(measures)

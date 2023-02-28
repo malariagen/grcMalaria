@@ -38,7 +38,7 @@ barcodeFreqMap.executeMap <- function (map) {
     #
     # Parse the measure to get the visualization type and the minIdentity level
     #
-    visType <- barcodeFreqMap.getVisualizationTypeFromMeasure (measure)	#; print(visType)
+    visType <- barcodeFreqMap.getVisualizationTypeFromMeasure (measure)		#; print(visType)
     #
     # Now compute the aggregation units, the values to be plotted, and make the map
     # Get the aggregated data for the aggregation units
@@ -73,33 +73,21 @@ barcodeFreqMap.executeMap <- function (map) {
                                       hjust=lp$just, vjust=0.5, nudge_x=lp$x, nudge_y=lp$y, label.padding=grid::unit(0.2, "lines"))
     }
     #
-    # Now add the markers
+    # Now add the markers and title
     #
     mapPlot <- barcodeFreqMap.addFreqMarkers (mapPlot, visType, clusterCountData, aggUnitData, stdMarkerCount, stdMarkerSize)
+    mapPlot <- mapPlot + ggplot2::labs(title=plotTitle, subtitle="")
     #
-    # Now add the decorative elements
+    # Return map plot for completion and saving to file
     #
-    mapPlot <- mapPlot +
-    	       ggplot2::labs(title=plotTitle, subtitle="")+
-               ggplot2::theme(plot.title=ggplot2::element_text(face="bold", size=ggplot2::rel(1.2), hjust=0.5),
-                     panel.background=ggplot2::element_rect(colour=NA),
-                     plot.background=ggplot2::element_rect(colour=NA),
-                     axis.title=ggplot2::element_text(face="bold",size=ggplot2::rel(1)),
-                     axis.title.y=ggplot2::element_text(angle=90,vjust=2),
-                     axis.title.x=ggplot2::element_text(vjust=-0.2))
-    #
-    # Save to file. the size in inches is given in the config
-    #
-    mapSize  <- param.getParam ("plot.size", params)
-    ggplot2::ggsave(plot=mapPlot, filename=map$plotFile, device="png", 
-                    width=mapSize$width, height=mapSize$height, units="in", dpi=300)
+    mapPlot
 }
 #
 ################################################################################
 #
 # We use visualization types to specify different graphic renditions from the same analyses: "pie" or "bar" markers
 #
-barcodeFreqMap.resolveMeasures <- function(clusterSets, params) {
+barcodeFreqMap.resolveMeasures <- function(clusterSets, params) {		#; print(names(params))
     visTypes <- param.getParam ("map.cluster.visualizations", params)		#; print(visTypes) # "pie" or "bar"
     measureLabels <- paste("barcodeFrequency", visTypes, sep="/")		#; print(measureLabels)
     measureLabels
