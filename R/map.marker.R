@@ -44,8 +44,8 @@ markerMap.executeMap <- function(map) {
     # Now compute the aggregation units, the values to be plotted, and make the map
     # Get the aggregated data for the aggregation units
     #
-    aggLevel <- as.integer(map$aggregation)     				#; print(aggLevel)   
-    aggUnitData <- map$aggUnitData						#; print(aggUnitData)
+    aggLevel <- as.integer(map$aggregation)     		#; print(aggLevel)   
+    aggUnitData <- map$aggUnitData				#; print(aggUnitData)
     #
     # For sample count markers, the colour may be based on a different admin division level from the aggregation
     #
@@ -59,7 +59,7 @@ markerMap.executeMap <- function(map) {
         admDivPalette <- rep_len(colPalette, length.out=length(colourGids))
         admDivTextPalette <- graphics.makeTextPalette (admDivPalette)		
         names(admDivPalette) <- names(admDivTextPalette) <- colourGids			#; print(admDivPalette); print(admDivTextPalette)
-        admDivPaletteLabels  <- map.getAdmDivNames (colourGids)				#; print(admDivPaletteLabels)
+        admDivPaletteLabels  <- map.getAdmDivNamesFromMeta (colourAdmDivLevel, sampleMeta)	#; print(admDivPaletteLabels)
     }
     #
     # Select the aggregation units to be plotted (all, in the case of location markers)
@@ -67,8 +67,8 @@ markerMap.executeMap <- function(map) {
     #
     selAggUnitData <- aggUnitData
     if (mapType != "location") {
-        vals <- aggUnitData[,measure]					#; print(vals)
-        selAggUnitData <- aggUnitData[which(!is.na(vals)),]		#; print(nrow(selAggUnitData))
+        vals <- aggUnitData[,measure]				#; print(vals)
+        selAggUnitData <- aggUnitData[which(!is.na(vals)),]	#; print(nrow(selAggUnitData))
     }
     #
     # Compute marker sizes. 
@@ -84,7 +84,7 @@ markerMap.executeMap <- function(map) {
     #
     showMarkerNames <- param.getParam ("map.markerNames", params)
     if (showMarkerNames) {
-        lp <- map.computeLabelParams (selAggUnitData, baseMapInfo)
+        lp <- map.computeLabelParams (selAggUnitData, baseMapInfo)	#; print(lp)
         mapPlot <- mapPlot + 
             ggrepel::geom_label_repel(data=lp, ggplot2::aes(x=lon, y=lat, label=label), 
                                       size=4.5, fontface="bold", color="darkgray",
@@ -98,8 +98,8 @@ markerMap.executeMap <- function(map) {
         valueLabels <- rep("", nrow(selAggUnitData))
     } else {
         mValues <- selAggUnitData[,measure]
-        valueLabels <- round(mValues, digits=2)
-    }
+        valueLabels <- as.character(round(mValues, digits=2))
+    }									#; print(valueLabels)
     #
     # Now add the markers, coloured according to the appropriate scale, depending on the type of map
     #
@@ -117,13 +117,14 @@ markerMap.executeMap <- function(map) {
         ggplot2::scale_fill_gradientn(limits=c(scaleMin,scaleMax), colours=markerColours, values=c(0,1))
     } else if (mapType=="sampleCount") {
         mapPlot <- mapPlot +
-            ggplot2::geom_point(data=selAggUnitData, ggplot2::aes(x=Longitude, y=Latitude, fill=!!colourAdmDivCol),
-	                        size=pointSizes, shape=21, stroke=2) +
+            ggplot2::geom_point(ggplot2::aes(x=Longitude, y=Latitude, fill=!!rlang::sym(colourAdmDivCol)),
+	                        data=selAggUnitData,
+                                size=pointSizes, shape=21, stroke=2) +
             ggplot2::scale_fill_manual(values=admDivPalette, labels=admDivPaletteLabels, name=colourAdmDivTitle,
                                        guide=ggplot2::guide_legend(override.aes=list(size=3,stroke=0.5)))
     }  else if (mapType=="location") {
         mapPlot <- mapPlot +
-            ggplot2::geom_point(data=selAggUnitData, ggplot2::aes(x=Longitude, y=Latitude, fill=!!colourAdmDivCol),
+            ggplot2::geom_point(data=selAggUnitData, ggplot2::aes(x=Longitude, y=Latitude, fill=!!rlang::sym(colourAdmDivCol)),
 	                        size=pointSizes, shape=21, stroke=2)
     } else if (mapType=="drug") {
         mapPlot <- mapPlot +
@@ -150,8 +151,9 @@ markerMap.executeMap <- function(map) {
     #
     if (mapType=="sampleCount") {
         mapPlot <- mapPlot +
-            ggplot2::geom_text(data=selAggUnitData, ggplot2::aes(x=Longitude, y=Latitude, colour=!!colourAdmDivCol),
-                                              label=valueLabels, hjust=0.5, vjust=0.5, size=4.5, fontface="bold", show.legend=FALSE) +
+            ggplot2::geom_text(ggplot2::aes(x=Longitude, y=Latitude, colour=!!rlang::sym(colourAdmDivCol)),
+                               data=selAggUnitData, 
+                               label=valueLabels, hjust=0.5, vjust=0.5, size=4.5, fontface="bold", show.legend=FALSE) +
             ggplot2::scale_colour_manual(values=admDivTextPalette)
     } else {
         mapPlot <- mapPlot +

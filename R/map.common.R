@@ -468,6 +468,17 @@ map.getAdmDivNames <- function(gids) {		#; print(gids)
     admDivNames
 }
 #
+map.getAdmDivNamesFromMeta <- function (admDivLevel, sampleMeta) {
+    nameCol <- ADM_DIV_COLUMNS[admDivLevel+1]				#; print(nameCol)
+    gidCol  <- GID_COLUMNS[admDivLevel+1]				#; print(gidCol)
+    df <- data.frame(name=as.character(sampleMeta[,nameCol]),
+                     id=as.character(sampleMeta[,gidCol]))
+    df <- df[!duplicated(df),]
+    admDivNames <- df$name
+    names(admDivNames) <- df$id
+    admDivNames
+}
+#
 map.getAggregationUnitData <- function(plotCtx, datasetName, aggLevel, analysisName, mapType, params, dataFolder) {
 
     # Trim all data to discard samples that have incomplete geographical data
@@ -495,11 +506,13 @@ map.getAggregationUnitData <- function(plotCtx, datasetName, aggLevel, analysisN
 
     geo <- map.getGeoTables()
     admDivs <- geo$admDivs
+    admDivNames <- map.getAdmDivNamesFromMeta (aggLevel, sampleMeta)
     for (aIdx in 1:length(aggUnitGids)) {
         #
         # Get the sample data to be aggregated for this unit
         #
         aggUnitGid <- aggUnitGids[aIdx]
+        aggUnitName <- admDivNames[aggUnitGid]
         aggSamplesMeta <- sampleMeta[which(aggIndex == aggUnitGid),]		#; print(nrow(aggSamplesMeta))
         aggSamples <- rownames(aggSamplesMeta)
         aggBarcodes <- barcodeData[aggSamples,]
@@ -518,7 +531,7 @@ map.getAggregationUnitData <- function(plotCtx, datasetName, aggLevel, analysisN
         } else {
             stop (paste("Unsupported aggregation level."))
         }									#; print(paste(admDiv1_GID, admDiv2_GID))
-        cValues <- c(aggUnitGid, admDiv$Country, admDiv$Name, admDiv1_GID, admDiv2_GID, 
+        cValues <- c(aggUnitGid, admDiv$Country, aggUnitName, admDiv1_GID, admDiv2_GID, 
                      admDiv$Latitude, admDiv$Longitude, nrow(aggSamplesMeta))	#; print(cValues)
         aggUnitData <- rbind(aggUnitData, cValues)
     }
