@@ -13,15 +13,102 @@ GID_COLUMNS     <- c("Country", "AdmDiv1_GID", "AdmDiv2_GID")
 # Common Routines for Map Generation.
 ################################################################################
 #
-map.execute <- function(userCtx, sampleSetName, mapType, params) {		#;print(mapType)
+map.execute <- function(userCtx, sampleSetName, mapType, params) {		#;print(mapType)	;print(params)
     #
-    # Initialize the set of maps to be produced
+    # Get the set of specs for the maps to be produced
+    #
+    mapSpecs <- map.createMapSpecs (userCtx, sampleSetName, mapType, params)
+    #
+    # Now create the map plots one by one
+    #
+    for (mIdx in 1:length(mapSpecs)) {
+        mapSpec <- mapSpecs[[mIdx]]
+        #
+        # Generate the ggplot2 plot object
+        #
+        mapPlot <- map.generateMapPlot (mapSpec, params)
+        #
+        # Add the "look and feel" elements to the map plot
+        #
+        mapPlot <- mapPlot + map.getTheme()
+        #
+        # Deal with the legend 
+        #
+        mapPlot <- map.processLegend (mapPlot, mapSpec)
+        #
+        # Save to file. The size in inches is given in the config.
+        #
+        geom <- mapSpec$master$geometry						#; print(geom)
+        ggplot2::ggsave(plot=mapPlot, filename=mapSpec$plotFile, device=geom$format, 
+                        width=geom$width, height=geom$height, units=geom$units, dpi=geom$dpi)
+    }
+}
+#
+map.getTheme <- function() {
+    ggplot2::theme(plot.title       = ggplot2::element_text(face = "bold",size = ggplot2::rel(1.2), hjust = 0.5),
+                   panel.background = ggplot2::element_rect(colour = NA),
+                   plot.background  = ggplot2::element_rect(fill="white", colour = NA),
+                   axis.title       = ggplot2::element_text(face = "bold",size = ggplot2::rel(1)),
+                   axis.title.y     = ggplot2::element_text(angle=90, vjust =2),
+                   axis.title.x     = ggplot2::element_text(vjust = -0.2)
+                   )
+}
+#
+map.processLegend <- function(mapPlot, mapSpec) {		#; print(mapSpec$master$type)
+    if (map.isMarkerMap(mapSpec$master$type)) {
+        geom <- mapSpec$master$geometry
+        legPos <- geom$legendPos
+        if (legPos == "separate") {
+            #
+            # Separate the legend from the map, and set the map without the legend to be the plot to be wirtten to file
+            #
+            legendPlot <- cowplot::get_legend(mapPlot)				#; gtable::gtable_show_layout(legendPlot)
+            mapOnlyPlot <- mapPlot + ggplot2::theme(legend.position="none")
+            mapPlot <- mapOnlyPlot
+            #
+            # Find out the size of the legend (note, we write it out so we have a device for the size estimation)
+            #
+            legendFile <- paste0(mapSpec$plotFile, ".legend.png")
+            grDevices::png(filename=legendFile, width=geom$width, height=geom$height, units=geom$units, res=geom$dpi)
+            legW <- grid::convertWidth(grid::widthDetails(legendPlot), geom$units, valueOnly=TRUE)	; print(paste(legW, geom$units))
+            legH <- grid::convertHeight(grid::heightDetails(legendPlot), geom$units, valueOnly=TRUE)	; print(paste(legH, geom$units))
+            grDevices::dev.off()
+            #
+            # Write out the legend to a file of the exact size
+            #
+            legendPlot <- ggpubr::as_ggplot(legendPlot)
+            ggplot2::ggsave(plot=legendPlot, filename=legendFile, device="png", bg="white",
+                            width=legW, height=legH, units=geom$units, dpi=geom$dpi)
+        } else if (legPos == "inset") {
+            #
+            # If no width is specified, leave plot as-is
+            #
+            if (!is.null(geom$legendWidth)) {
+                mapPlot <- mapPlot + ggplot2::theme(legend.position=c(0,0))
+                legendPlot <- cowplot::get_legend(mapPlot)
+                mapOnlyPlot <- mapPlot + ggplot2::theme(legend.position="none")
+                rplot <- legendPlot; lplot <- mapOnlyPlot
+                rwidth <- geom$legendWidth; lwidth <- 1-rwidth
+                mapPlot <- cowplot::plot_grid(lplot, rplot, rel_widths=c(lwidth,rwidth))
+            }
+        }
+        mapPlot <- mapPlot + map.getTheme()
+    }
+}
+#
+###############################################################################
+# Creation of a list of specifications for generating the maps needed
+################################################################################
+#
+map.createMapSpecs <- function(userCtx, sampleSetName, mapType, params) {		#;print(mapType)
+    #
+    # Initialize the master spec on which to base the rest
     #
     mapMaster <- map.createMapMaster (userCtx, sampleSetName, mapType, params)
     #
     # Create lists of maps to be produced, adding the master as the first element
     #
-    maps <- list()
+    mapSpecs <- list()
     #
     # Create one map object for each time interval/dataset/aggregation/measure combination, and add it to the maps object
     #
@@ -65,67 +152,23 @@ map.execute <- function(userCtx, sampleSetName, mapType, params) {		#;print(mapT
                 for (mIdx in 1:length(measures)) {
                     measure <- measures[mIdx]			#; print(measure)
                     #
-                    map <- list()
-                    map$master      <- mapMaster
-                    map$mapCtx      <- mapCtx
-                    map$datasetName <- datasetName
-                    map$aggregation <- aggLevel
-                    map$interval    <- interval
-                    map$measure     <- measure
-                    map$aggUnitData <- aggUnitData
-                    map$aggUnitPairData <- aggUnitPairData
-                    map$plotFile    <- map.getMapFilepath(map)
+                    mapSpec <- list()
+                    mapSpec$master      <- mapMaster
+                    mapSpec$mapCtx      <- mapCtx
+                    mapSpec$datasetName <- datasetName
+                    mapSpec$aggregation <- aggLevel
+                    mapSpec$interval    <- interval
+                    mapSpec$measure     <- measure
+                    mapSpec$aggUnitData <- aggUnitData
+                    mapSpec$aggUnitPairData <- aggUnitPairData
+                    mapSpec$plotFile    <- map.getMapFilepath(mapSpec, params)
                     #
-                    maps[[length(maps)+1]] <- map
+                    mapSpecs[[length(mapSpecs)+1]] <- mapSpec
                 }
             }
         }
-    }								; print(paste("Maps to be rendered:",length(maps))); 
-    #
-    # Now create the map plots one by one
-    #
-    mapSize  <- param.getParam ("plot.size", params)
-    for (mIdx in 1:length(maps)) {
-        map <- maps[[mIdx]]
-        #
-        # Create the map plot
-        #
-        mapPlot <- NULL
-        if (map.isMarkerMap(mapType)) {
-            mapPlot <- markerMap.executeMap (map)
-        } else if (mapType=="alleleProp") {
-            mapPlot <- pieMap.executeMap (map)
-        } else if (mapType=="connect") {
-            mapPlot <- connectMap.executeMap (map)
-        } else if (mapType=="clusterPrevalence") {
-            mapPlot <- clusterMap.executeMap (map)
-        } else if (mapType=="clusterSharing") {
-            mapPlot <- clusterShareMap.executeMap (map)
-        } else if (mapType=="barcodeFrequency") {
-            mapPlot <- barcodeFreqMap.executeMap (map)
-        } else {
-            stop(paste("Invalid map type:", mapType))
-        }
-        #
-        # Add the "look and feel" elements to the map plot
-        #
-        mapPlot <- mapPlot +
-            ggplot2::theme(plot.title       = ggplot2::element_text(face = "bold",size = ggplot2::rel(1.2), hjust = 0.5),
-                           panel.background = ggplot2::element_rect(colour = NA),
-                           plot.background  = ggplot2::element_rect(colour = NA),
-                           axis.title       = ggplot2::element_text(face = "bold",size = ggplot2::rel(1)),
-                           axis.title.y     = ggplot2::element_text(angle=90, vjust =2),
-                           axis.title.x     = ggplot2::element_text(vjust = -0.2))
-        #
-        # Save to file. The size in inches is given in the config.
-        #
-        ggplot2::ggsave(plot=mapPlot, filename=map$plotFile, device="png", 
-                        width=mapSize$width, height=mapSize$height, units="in", dpi=300)
     }
-}
-#
-map.isMarkerMap <- function(mapType) {						#;print(mapType)
-    mapType %in% c("drug", "mutation", "diversity", "sampleCount", "location")
+    mapSpecs
 }
 #
 ###############################################################################
@@ -158,7 +201,7 @@ map.createMapMaster <- function (userCtx, sampleSetName, mapType, params) {		#; 
     #
     #
     #
-    aggregations <- param.getParam ("aggegation.levels", params)	#;print(aggregation)
+    aggregations <- param.getParam ("aggregation.levels", params)	#;print(aggregation)
     mapMaster$aggregations <- aggregations
     #
     # Get the output folders and file name elements
@@ -168,10 +211,7 @@ map.createMapMaster <- function (userCtx, sampleSetName, mapType, params) {		#; 
     #
     # Get the output image formatting parameters
     #
-    mapSize <- param.getParam ("plot.size", params)
-    mapMaster$width  <- mapSize$width
-    mapMaster$height <- mapSize$height
-    mapMaster$dpi    <- 300
+    mapMaster$geometry <- map.getPlotGeometry (params)
     #
     # Handle the "ALL" values for markers
     # Check the measures specified are valid; and if they are, ensure we have colour palettes for these measures, creating them if necessary.
@@ -223,7 +263,22 @@ map.createMapMaster <- function (userCtx, sampleSetName, mapType, params) {		#; 
     mapMaster
 }
 #
-map.getMapFilepath <- function (map) {
+map.getPlotGeometry <- function (params) {				#; print(names(params))
+    #
+    # Right now we're jusr reading params, but later this may be more sophisticated (aspect ration, font size, etc.
+    #
+    pg <- list()
+    pg$width  <- param.getParam ("plot.width", params)
+    pg$height <- param.getParam ("plot.height", params)
+    pg$units  <- param.getParam ("plot.units", params)
+    pg$dpi    <- param.getParam ("plot.dpi", params)
+    pg$format <- param.getParam ("plot.file.format", params)
+    pg$legendPos   <- param.getParam ("plot.legend.pos", params)
+    pg$legendWidth <- param.getParam ("plot.legend.width", params)	#; print(pg)
+    pg
+}
+#
+map.getMapFilepath <- function (map, params) {
     mapMaster <- map$master
     mapType <- mapMaster$type
     #
@@ -258,7 +313,9 @@ map.getMapFilepath <- function (map) {
     if (!is.null(map$interval$name)) {
         plotFilename  <- paste(plotFilename, map$interval$name, sep="-")
     }
-    plotFilename <- paste0(plotFilename,".png")
+    
+    fileExt <- param.getParam ("plot.file.format", params)				#; print(fileExt)
+    plotFilename <- paste0(plotFilename,".", fileExt)
     plotFile <- paste(plotFolder, plotFilename, sep="/")				#;print(plotFile)
     plotFile
 }    
@@ -424,6 +481,38 @@ map.getBordersThickness <- function(bbox) {
     plotWidth <- bbox$xMax - bbox$xMin
     plotBorderThickness <- map.defaultBorderThickness / sqrt(plotWidth / 3.0)	#; print(plotBorderThickness)
     plotBorderThickness
+}
+#
+###############################################################################
+# Creation of a list of specifications for generating the maps needed
+################################################################################
+#
+map.generateMapPlot <- function(mapSpec, params) {	#; print(names(mapSpec))
+    mapType <- mapSpec$master$type 
+    #
+    # Create the map plot
+    #
+    mapPlot <- NULL
+    if (map.isMarkerMap(mapType)) {
+        mapPlot <- markerMap.executeMap (mapSpec)
+    } else if (mapType=="alleleProp") {
+        mapPlot <- pieMap.executeMap (mapSpec)
+    } else if (mapType=="connect") {
+        mapPlot <- connectMap.executeMap (mapSpec)
+    } else if (mapType=="clusterPrevalence") {
+        mapPlot <- clusterMap.executeMap (mapSpec)
+    } else if (mapType=="clusterSharing") {
+        mapPlot <- clusterShareMap.executeMap (mapSpec)
+    } else if (mapType=="barcodeFrequency") {
+        mapPlot <- barcodeFreqMap.executeMap (mapSpec)
+    } else {
+        stop(paste("Invalid map type:", mapType))
+    }
+    mapPlot
+}
+#
+map.isMarkerMap <- function(mapType) {
+    mapType %in% c("drug", "mutation", "diversity", "sampleCount", "location")
 }
 #
 ###############################################################################

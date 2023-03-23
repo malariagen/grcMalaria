@@ -4,7 +4,7 @@
 \alias{plotTree}
 \title{Plot Trees}
 \usage{
-plotTree(ctx, sampleSet, type = "njt", plots, width = 15, height = 15)
+plotTree(ctx, sampleSet, type = "njt", plots, ...)
 }
 \arguments{
 \item{ctx}{TBD}
@@ -15,9 +15,7 @@ plotTree(ctx, sampleSet, type = "njt", plots, width = 15, height = 15)
 
 \item{plots}{TBD}
 
-\item{width}{The width (in inches) of the map image.}
-
-\item{height}{The height (in inches) of the map image.}
+\item{...}{any of plot paramenters, including: width, height, units, dpi, legendPosition, legendWidth}
 }
 \value{
 TBD

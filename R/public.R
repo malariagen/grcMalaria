@@ -118,8 +118,7 @@ selectSampleSet <- function (ctx, sampleSetName, select) {
 #'                   and max sizeof the marker, whose size will reflect the number of samples.
 #' @param showNames If TRUE, labels are shown with the name of the aggregation unit (Province or District)
 #' @param colourBy Shows the aggregation level to be used to colour the markers (Country or Province)
-#' @param width The width (in inches) of the map image.
-#' @param height The height (in inches) of the map image.
+#' @param ... any of plot paramenters, including: width, height, units, dpi, legendPosition, legendWidth
 #'
 #' @export
 #'
@@ -129,7 +128,7 @@ selectSampleSet <- function (ctx, sampleSetName, select) {
 mapLocations <- function (ctx, sampleSet,
                    aggregate="Province",
                    markerSize=c(4,40), showNames=TRUE, colourBy="Province",
-                   width=15, height=15) {
+                   ...) {
 
     if (length(colourBy) > 1) {
         stop ("colourBy parameter can only accet a single value (\"Country\" or \"Province\")")
@@ -141,15 +140,15 @@ mapLocations <- function (ctx, sampleSet,
     aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
     params <- list(
         analysis.measures="Location",
-        aggegation.levels=aggLevels,
+        aggregation.levels=aggLevels,
         map.markerColourAggLevel=colourAggLevel,
         map.markerSize=markerSize,
-        map.markerNames=showNames,
-        plot.size=list(width=width,height=height)
+        map.markerNames=showNames
     )
+    params <- c(params, parsePlotParams(...))
     execute.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, tasks="map/location", params=params)
 }
-
+#
 #############################################################
 #
 #' Map of Sample Counts
@@ -168,8 +167,7 @@ mapLocations <- function (ctx, sampleSet,
 #' @param markerSize Allows adjustment of the size of markers on the map. If only one value is passed, 
 #'                   all markers will be that size; if two values are passed, they will be used as the min 
 #'                   and max sizeof the marker, whose size will reflect the number of samples.
-#' @param width The width (in inches) of the map image.
-#' @param height The height (in inches) of the map image.
+#' @param ... any of plot paramenters, including: width, height, units, dpi, legendPosition, legendWidth
 #'
 #' @export
 #'
@@ -179,7 +177,7 @@ mapLocations <- function (ctx, sampleSet,
 mapSampleCounts <- function (ctx, sampleSet, timePeriods=NULL,
                    aggregate="Province", minAggregateCount=1,
                    markerSize=c(4,40), showNames=TRUE, colourBy="Province",
-                   width=15, height=15) {
+                   ...) {
 
     if (length(colourBy) > 1) {
         stop ("colourBy parameter can only accet a single value (\"Country\" or \"Province\")")
@@ -193,13 +191,13 @@ mapSampleCounts <- function (ctx, sampleSet, timePeriods=NULL,
     params <- list(
         analysis.timeIntervals=timeIntervals,
         analysis.measures="NumberOfSamples",
-        aggegation.levels=aggLevels,
+        aggregation.levels=aggLevels,
         map.aggregateCountMin=minAggregateCount,
         map.markerColourAggLevel=colourAggLevel,
         map.markerSize=markerSize,
-        map.markerNames=showNames,
-        plot.size=list(width=width,height=height)
+        map.markerNames=showNames
     )
+    params <- c(params, parsePlotParams(...))
     execute.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, tasks="map/sampleCount", params=params)
 }
 #
@@ -221,8 +219,7 @@ mapSampleCounts <- function (ctx, sampleSet, timePeriods=NULL,
 #' @param minAggregateCount The minimum count of aggregated samples, below which a marker is not shown.
 #' @param showNames If TRUE, labels are shown with the name of the aggregation unit (Province or District)
 #' @param markerSize Allows adjustment of the size of markers on the map.
-#' @param width The width (in inches) of the map image.
-#' @param height The height (in inches) of the map image.
+#' @param ... any of plot paramenters, including: width, height, units, dpi, legendPosition, legendWidth
 #'
 #' @export
 #'
@@ -233,20 +230,20 @@ mapDrugResistancePrevalence <- function (ctx, sampleSet, timePeriods=NULL,
                    drugs="ALL",
                    aggregate="Province", minAggregateCount=10,
                    showNames=TRUE, markerSize=16,
-                   width=15, height=15) {
+                   ...) {
 
     aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
     timeIntervals <- parseTimeIntervals(timePeriods)
     params <- list(
         analysis.timeIntervals=timeIntervals,
         analysis.measures=drugs,
-        aggegation.levels=aggLevels,
+        aggregation.levels=aggLevels,
         map.aggregateCountMin=minAggregateCount,
         map.markerSize=markerSize,			# Use this for constant marker size
         #map.markerSize=c(4,40),			# Use this for count-proportional marker size
-        map.markerNames=showNames,
-        plot.size=list(width=width,height=height)
+        map.markerNames=showNames
     )
+    params <- c(params, parsePlotParams(...))
     execute.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, tasks="map/drug", params=params)
 }
 #
@@ -262,8 +259,7 @@ mapDrugResistancePrevalence <- function (ctx, sampleSet, timePeriods=NULL,
 #' @param minAggregateCount TBD
 #' @param showNames TBD
 #' @param markerSize TBD
-#' @param width The width (in inches) of the map image.
-#' @param height The height (in inches) of the map image.
+#' @param ... any of plot paramenters, including: width, height, units, dpi, legendPosition, legendWidth
 #'
 #' @return TBD
 #' @export
@@ -274,20 +270,20 @@ mapMutationPrevalence <- function (ctx, sampleSet, timePeriods=NULL,
                    mutations="ALL",
                    aggregate="Province", minAggregateCount=10,
                    showNames=TRUE, markerSize=16,
-                   width=15, height=15) {
+                   ...) {
 
     aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
     timeIntervals <- parseTimeIntervals(timePeriods)
     params <- list(
         analysis.timeIntervals=timeIntervals,
         analysis.measures=mutations,
-        aggegation.levels=aggLevels,
+        aggregation.levels=aggLevels,
         map.aggregateCountMin=minAggregateCount,
         map.markerSize=markerSize,			# Use this for constant marker size
         #map.markerSize=c(4,40),			# Use this for count-proportional marker size
-        map.markerNames=showNames,
-        plot.size=list(width=width,height=height)
+        map.markerNames=showNames
     )
+    params <- c(params, parsePlotParams(...))
     execute.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, tasks="map/mutation", params=params)
 }
                    
@@ -304,8 +300,7 @@ mapMutationPrevalence <- function (ctx, sampleSet, timePeriods=NULL,
 #' @param minAggregateCount TBD
 #' @param showNames TBD
 #' @param markerSize TBD
-#' @param width The width (in inches) of the map image.
-#' @param height The height (in inches) of the map image.
+#' @param ... any of plot paramenters, including: width, height, units, dpi, legendPosition, legendWidth
 #'
 #' @return TBD
 #' @export
@@ -316,20 +311,20 @@ mapAlleleProportions <- function (ctx, sampleSet, timePeriods=NULL,
                    mutations="ALL",
                    aggregate="Province", minAggregateCount=10,
                    showNames=TRUE, markerSize=16,
-                   width=15, height=15) {
+                   ...) {
 
     aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
     timeIntervals <- parseTimeIntervals(timePeriods)
     params <- list(
         analysis.timeIntervals=timeIntervals,
         analysis.measures=mutations,
-        aggegation.levels=aggLevels,
+        aggregation.levels=aggLevels,
         map.aggregateCountMin=minAggregateCount,
         map.markerSize=markerSize,			# Use this for constant marker size
         #map.markerSize=c(4,40),			# Use this for count-proportional marker size
-        map.markerNames=showNames,
-        plot.size=list(width=width,height=height)
+        map.markerNames=showNames
     )
+    params <- c(params, parsePlotParams(...))
     execute.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, tasks="map/alleleProp", params=params)
 }
                    
@@ -346,8 +341,7 @@ mapAlleleProportions <- function (ctx, sampleSet, timePeriods=NULL,
 #' @param showNames TBD
 #' @param markerColours TBD
 #' @param markerSize TBD
-#' @param width The width (in inches) of the map image.
-#' @param height The height (in inches) of the map image.
+#' @param ... any of plot paramenters, including: width, height, units, dpi, legendPosition, legendWidth
 #'
 #' @return TBD
 #' @export
@@ -358,21 +352,21 @@ mapDiversity <- function (ctx, sampleSet, timePeriods=NULL,
                    measures="ALL",
                    aggregate="Province", minAggregateCount=10,
                    showNames=TRUE, markerSize=16, markerColours="red3",
-                   width=15, height=15) {
+                   ...) {
 
     aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
     timeIntervals <- parseTimeIntervals(timePeriods)
     params <- list(
         analysis.timeIntervals=timeIntervals,
         analysis.measures=measures,
-        aggegation.levels=aggLevels,
+        aggregation.levels=aggLevels,
         map.aggregateCountMin=minAggregateCount,
         map.markerSize=markerSize,			# Use this for constant marker size
         #map.markerSize=c(4,40),			# Use this for count-proportional marker size
         map.markerNames=showNames,
-        map.diversity.markerColours=markerColours,
-        plot.size=list(width=width,height=height)
+        map.diversity.markerColours=markerColours
     )
+    params <- c(params, parsePlotParams(...))
     execute.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, tasks="map/diversity", params=params)
 }
 
@@ -389,8 +383,7 @@ mapDiversity <- function (ctx, sampleSet, timePeriods=NULL,
 #' @param minAggregateCount TBD
 #' @param showNames TBD
 #' @param markerSize TBD
-#' @param width The width (in inches) of the map image.
-#' @param height The height (in inches) of the map image.
+#' @param ... any of plot paramenters, including: width, height, units, dpi, legendPosition, legendWidth
 #'
 #' @return TBD
 #' @export
@@ -403,21 +396,20 @@ mapConnections <- function (ctx, sampleSet,
                    meanDistanceLevels=0.5,
                    aggregate="Province", minAggregateCount=10,
                    showNames=TRUE, markerSize=16,
-                   width=15, height=15) {
+                   ...) {
                    
     aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
     params <- list(
         analysis.measures=measures,
-        aggegation.levels=aggLevels,
+        aggregation.levels=aggLevels,
         map.aggregateCountMin=minAggregateCount,
         map.markerSize=markerSize,			# Use this for constant marker size
         #map.markerSize=c(4,40),			# Use this for count-proportional marker size
         map.markerNames=showNames,
 	map.connect.identity.min=minIdentity,
-	map.connect.meanDistance.min=meanDistanceLevels,
-        plot.size=list(width=width,height=height)
+	map.connect.meanDistance.min=meanDistanceLevels
     )
-    aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
+    params <- c(params, parsePlotParams(...))
     execute.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, tasks="map/connect", params=params)
 }
 
@@ -432,8 +424,7 @@ mapConnections <- function (ctx, sampleSet,
 #' @param minAggregateCount TBD
 #' @param showNames TBD
 #' @param markerScale TBD
-#' @param width The width (in inches) of the map image.
-#' @param height The height (in inches) of the map image.
+#' @param ... any of plot paramenters, including: width, height, units, dpi, legendPosition, legendWidth
 #'
 #' @return TBD
 #' @export
@@ -444,18 +435,18 @@ mapBarcodeFrequencies <- function (ctx, sampleSet,
                    type=c("bar","pie"),
                    aggregate="Province", minAggregateCount=10, 
                    showNames=TRUE, markerScale=0.8,
-                   width=15, height=15) {
+                   ...) {
 
     aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
-    mapParams <- list(
-        aggegation.levels=aggLevels,
+    params <- list(
+        aggregation.levels=aggLevels,
         map.aggregateCountMin=minAggregateCount,
         map.markerNames=showNames,
         map.cluster.visualizations=type,        
-        map.cluster.markerScale=markerScale,
-        plot.size=list(width=width,height=height)
+        map.cluster.markerScale=markerScale
     )
-    execute.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, tasks="map/barcodeFrequency", params=mapParams)
+    params <- c(params, parsePlotParams(...))
+    execute.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, tasks="map/barcodeFrequency", params=params)
 }
 
 #############################################################
@@ -480,14 +471,14 @@ findClusters <- function (ctx, sampleSet, clusterSet,
                    clusteringMethod="allNeighbours", 
                    minClusterSize=10) {
 
-    mapParams <- list(
+    params <- list(
         cluster.clusterSet.name=clusterSet,
         cluster.identity.min=minIdentity,
         cluster.impute=impute,
         cluster.method=clusteringMethod,
         cluster.minSize=minClusterSize
     )
-    cluster.findClusters (ctx, sampleSetName=sampleSet, params=mapParams)
+    cluster.findClusters (ctx, sampleSetName=sampleSet, params=params)
 }
 
 #############################################################
@@ -499,8 +490,7 @@ findClusters <- function (ctx, sampleSet, clusterSet,
 #' @param clusterSet TBD
 #' @param graphLayout TBD
 #' @param weightPower TBD
-#' @param width The width (in inches) of the map image.
-#' @param height The height (in inches) of the map image.
+#' @param ... any of plot paramenters, including: width, height, units, dpi, legendPosition, legendWidth
 #'
 #' @return TBD
 #' @export
@@ -509,14 +499,14 @@ findClusters <- function (ctx, sampleSet, clusterSet,
 #'  #TBD
 plotClusterGraph <- function (ctx, sampleSet, clusterSet,
                    graphLayout="fr", weightPower=2,
-                   width=15, height=15) {
-    mapParams <- list(
+                   ...) {
+    params <- list(
         cluster.clusterSet.name=clusterSet,
         graph.layoutAlgorithm=graphLayout,
-        graph.weightPower=weightPower,
-        plot.size=list(width=width,height=height)
+        graph.weightPower=weightPower
     )
-    execute.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, tasks="graph", params=mapParams)
+    params <- c(params, parsePlotParams(...))
+    execute.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, tasks="graph", params=params)
 }
 
 #############################################################
@@ -531,8 +521,7 @@ plotClusterGraph <- function (ctx, sampleSet, clusterSet,
 #' @param minAggregateCount TBD
 #' @param showNames TBD
 #' @param markerScale TBD
-#' @param width The width (in inches) of the map image.
-#' @param height The height (in inches) of the map image.
+#' @param ... any of plot paramenters, including: width, height, units, dpi, legendPosition, legendWidth
 #'
 #' @return TBD
 #' @export
@@ -543,19 +532,19 @@ mapClusterSharing <- function (ctx, sampleSet, clusterSet,
                    type=c("bar","pie"),
                    aggregate="Province", minAggregateCount=5, 
                    showNames=TRUE, markerScale=0.8,
-                   width=15, height=15) {
+                   ...) {
                    
     aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
-    mapParams <- list(
+    params <- list(
         cluster.clusterSet.name=clusterSet,
-        aggegation.levels=aggLevels,
+        aggregation.levels=aggLevels,
         map.aggregateCountMin=minAggregateCount,
         map.markerNames=showNames,
         map.cluster.visualizations=type,        
-        map.cluster.markerScale=markerScale,
-        plot.size=list(width=width,height=height)
+        map.cluster.markerScale=markerScale
     )
-    execute.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, tasks="map/clusterSharing", params=mapParams)
+    params <- c(params, parsePlotParams(...))
+    execute.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, tasks="map/clusterSharing", params=params)
 }
 
 #############################################################
@@ -569,8 +558,7 @@ mapClusterSharing <- function (ctx, sampleSet, clusterSet,
 #' @param minAggregateCount TBD
 #' @param showNames TBD
 #' @param markerScale TBD
-#' @param width The width (in inches) of the map image.
-#' @param height The height (in inches) of the map image.
+#' @param ... any of plot paramenters, including: width, height, units, dpi, legendPosition, legendWidth
 #'
 #' @return TBD
 #' @export
@@ -580,19 +568,19 @@ mapClusterSharing <- function (ctx, sampleSet, clusterSet,
 mapClusterPrevalence <- function (ctx, sampleSet, clusterSet,
                    aggregate="Province", minAggregateCount=5, 
                    showNames=TRUE, markerScale=0.8,
-                   width=15, height=15) {
+                   ...) {
 
     aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
-    mapParams <- list(
+    params <- list(
         cluster.clusterSet.name=clusterSet,
-        aggegation.levels=aggLevels,
+        aggregation.levels=aggLevels,
         map.aggregateCountMin=minAggregateCount,
         map.markerNames=showNames,
         map.cluster.visualizations="cluster",        
-        map.cluster.markerScale=markerScale,
-        plot.size=list(width=width,height=height)
+        map.cluster.markerScale=markerScale
     )
-    execute.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, tasks="map/clusterPrevalence", params=mapParams)
+    params <- c(params, parsePlotParams(...))
+    execute.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, tasks="map/clusterPrevalence", params=params)
 }
 
 #############################################################
@@ -653,8 +641,7 @@ loadGraphicAttributes <- function (ctx, name, field, file, sheet) {
 #' @param sampleSet TBD TBD
 #' @param type TBD
 #' @param plots TBD
-#' @param width The width (in inches) of the map image.
-#' @param height The height (in inches) of the map image.
+#' @param ... any of plot paramenters, including: width, height, units, dpi, legendPosition, legendWidth
 #'
 #' @return TBD
 #' @export
@@ -662,14 +649,14 @@ loadGraphicAttributes <- function (ctx, name, field, file, sheet) {
 #' @examples
 #'  #TBD
 plotPrincipalComponents <- function (ctx, sampleSet, 
-                                     type="PCoA", plots, 
-                                     width=15, height=15) {
-    plotParams <- list(
-        plot.plotList=plots,
-        plot.size=list(width=width,height=height)
+                                     type="PCoA", plots,
+                                     ...) {
+    params <- list(
+        plot.plotList=plots
     )
     task <- paste("pca", type, sep="/")
-    execute.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, tasks=task, params=plotParams)
+    params <- c(params, parsePlotParams(...))
+    execute.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, tasks=task, params=params)
 }
 
 #############################################################
@@ -680,8 +667,7 @@ plotPrincipalComponents <- function (ctx, sampleSet,
 #' @param sampleSet TBD TBD
 #' @param type TBD
 #' @param plots TBD
-#' @param width The width (in inches) of the map image.
-#' @param height The height (in inches) of the map image.
+#' @param ... any of plot paramenters, including: width, height, units, dpi, legendPosition, legendWidth
 #'
 #' @return TBD
 #' @export
@@ -689,12 +675,71 @@ plotPrincipalComponents <- function (ctx, sampleSet,
 #' @examples
 #'  #TBD
 plotTree <- function (ctx, sampleSet, 
-                      type="njt", plots, 
-                      width=15, height=15) {
-    plotParams <- list(
-        plot.plotList=plots,
-        plot.size=list(width=width,height=height)
+                      type="njt", plots,
+                      ...) {
+    params <- list(
+        plot.plotList=plots
     )
+    params <- c(params, parsePlotParams(...))
     task <- paste("tree", type, sep="/")
-    execute.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, tasks=task, params=plotParams)
+    execute.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, tasks=task, params=params)
+}
+#
+#############################################################
+#############################################################
+#
+#
+#
+parsePlotParams <- function (...) {
+    args <- list(...)
+    argNames <- names(args)
+    params <- list(
+        plot.width = 15,
+        plot.height = 15,
+        plot.units = "in",
+        plot.dpi = 300,
+        plot.file.format = "png",
+        plot.legend.pos = "inset",
+        plot.legend.width = NULL
+    )
+    for (i in 1:length(args)) {
+        argName <- argNames[i]		#; print(argName)
+        arg <- args[[i]]		#; print(arg)
+        if (argName == "width") {			#; print(argName)
+	    params$plot.width <- as.numeric(arg)
+        } else if (argName == "height") {		#; print(argName)
+            params$plot.height <- as.numeric(arg)
+        } else if (argName == "units") {		#; print(argName)
+            if (arg %in% c("in", "cm", "mm", "px")) {
+                params$plot.units <- arg
+            } else {
+                stop(paste("Invalid unit specified:", arg))
+            }
+        } else if (argName == "dpi") {		; print(argName)
+            params$plot.dpi <- as.numeric(arg)
+        } else if (argName == "format") {		#; print(argName)
+            if (arg %in% c("png", "pdf", "jpg")) {
+                params$plot.file.format <- arg
+            } else {
+                stop(paste("Invalid file format specified:", arg))
+            }
+        } else if (argName == "legendPosition") {	#; print(argName)
+            if (arg %in% c("inset", "separate")) {
+                params$plot.legend.pos <- arg
+            } else {
+                stop(paste("Invalid legend position:", arg))
+            }
+        } else if (argName == "legendWidth") {		#; print(argName)
+            legWidth <- as.numeric(arg)
+            if ((legWidth <= 0) || (legWidth > 0.5)) {
+                stop(paste("Invalid legend width (must be greater than 0 and less than 0.5):", legWidth))
+            }
+            params$plot.legend.width <- legWidth
+        } else if (argName == "") {
+            warning(paste("Unnamed parameter ignored:", arg))
+        } else {
+            warning(paste("Unknown parameter ignored:", argName))
+        }
+    }							#; print(params)
+    params
 }

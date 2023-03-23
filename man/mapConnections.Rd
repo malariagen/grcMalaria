@@ -14,8 +14,7 @@ mapConnections(
   minAggregateCount = 10,
   showNames = TRUE,
   markerSize = 16,
-  width = 15,
-  height = 15
+  ...
 )
 }
 \arguments{
@@ -37,9 +36,7 @@ mapConnections(
 
 \item{markerSize}{TBD}
 
-\item{width}{The width (in inches) of the map image.}
-
-\item{height}{The height (in inches) of the map image.}
+\item{...}{any of plot paramenters, including: width, height, units, dpi, legendPosition, legendWidth}
 }
 \value{
 TBD

@@ -4,14 +4,7 @@
 \alias{plotPrincipalComponents}
 \title{Plot Population structure (PCA)}
 \usage{
-plotPrincipalComponents(
-  ctx,
-  sampleSet,
-  type = "PCoA",
-  plots,
-  width = 15,
-  height = 15
-)
+plotPrincipalComponents(ctx, sampleSet, type = "PCoA", plots, ...)
 }
 \arguments{
 \item{ctx}{TBD}
@@ -22,9 +15,7 @@ plotPrincipalComponents(
 
 \item{plots}{TBD}
 
-\item{width}{The width (in inches) of the map image.}
-
-\item{height}{The height (in inches) of the map image.}
+\item{...}{any of plot paramenters, including: width, height, units, dpi, legendPosition, legendWidth}
 }
 \value{
 TBD

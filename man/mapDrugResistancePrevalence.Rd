@@ -13,8 +13,7 @@ mapDrugResistancePrevalence(
   minAggregateCount = 10,
   showNames = TRUE,
   markerSize = 16,
-  width = 15,
-  height = 15
+  ...
 )
 }
 \arguments{
@@ -34,9 +33,7 @@ mapDrugResistancePrevalence(
 
 \item{markerSize}{Allows adjustment of the size of markers on the map.}
 
-\item{width}{The width (in inches) of the map image.}
-
-\item{height}{The height (in inches) of the map image.}
+\item{...}{any of plot paramenters, including: width, height, units, dpi, legendPosition, legendWidth}
 }
 \description{
 Creates a map showing the levels of resistance to a particular drug for different administrative divisions.

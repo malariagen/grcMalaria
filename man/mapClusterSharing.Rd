@@ -13,8 +13,7 @@ mapClusterSharing(
   minAggregateCount = 5,
   showNames = TRUE,
   markerScale = 0.8,
-  width = 15,
-  height = 15
+  ...
 )
 }
 \arguments{
@@ -34,9 +33,7 @@ mapClusterSharing(
 
 \item{markerScale}{TBD}
 
-\item{width}{The width (in inches) of the map image.}
-
-\item{height}{The height (in inches) of the map image.}
+\item{...}{any of plot paramenters, including: width, height, units, dpi, legendPosition, legendWidth}
 }
 \value{
 TBD

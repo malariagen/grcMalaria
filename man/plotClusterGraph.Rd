@@ -10,8 +10,7 @@ plotClusterGraph(
   clusterSet,
   graphLayout = "fr",
   weightPower = 2,
-  width = 15,
-  height = 15
+  ...
 )
 }
 \arguments{
@@ -25,9 +24,7 @@ plotClusterGraph(
 
 \item{weightPower}{TBD}
 
-\item{width}{The width (in inches) of the map image.}
-
-\item{height}{The height (in inches) of the map image.}
+\item{...}{any of plot paramenters, including: width, height, units, dpi, legendPosition, legendWidth}
 }
 \value{
 TBD

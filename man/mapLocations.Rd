@@ -11,8 +11,7 @@ mapLocations(
   markerSize = c(4, 40),
   showNames = TRUE,
   colourBy = "Province",
-  width = 15,
-  height = 15
+  ...
 )
 }
 \arguments{
@@ -30,9 +29,7 @@ and max sizeof the marker, whose size will reflect the number of samples.}
 
 \item{colourBy}{Shows the aggregation level to be used to colour the markers (Country or Province)}
 
-\item{width}{The width (in inches) of the map image.}
-
-\item{height}{The height (in inches) of the map image.}
+\item{...}{any of plot paramenters, including: width, height, units, dpi, legendPosition, legendWidth}
 }
 \description{
 Creates a map showing markers for all sites/districts/provinces where samples are collected.
