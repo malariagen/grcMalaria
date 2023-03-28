@@ -5,7 +5,7 @@ ui.makeSingleMap <- function (ctx, sampleSet, type,
                    #timePeriods=NULL,	TBD
                    measure=NULL,
                    aggregate="Province", minAggregateCount=1,
-                   markerSize=c(4,40), markerColours="red3", showNames=TRUE, colourBy="Province",
+                   markerSize=5, markerColours="red3", showNames=TRUE, colourBy="Province",
                    ...) {
                    
     if (!(type %in% UI.SUPPORTED_MAP_TYPES)) {
