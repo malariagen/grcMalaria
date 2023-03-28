@@ -702,7 +702,7 @@ parsePlotParams <- function (...) {
         plot.legend.pos = "inset",
         plot.legend.width = NULL
     )
-    for (i in 1:length(args)) {
+    for (i in seq_along(args)) {
         argName <- argNames[i]		#; print(argName)
         arg <- args[[i]]		#; print(arg)
         if (argName == "width") {			#; print(argName)
