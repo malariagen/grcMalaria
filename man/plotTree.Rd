@@ -7,22 +7,52 @@
 plotTree(ctx, sampleSet, type = "njt", plots, ...)
 }
 \arguments{
-\item{ctx}{TBD}
+\item{ctx}{The analysis context, created by intializeContext().}
 
-\item{sampleSet}{TBD TBD}
+\item{sampleSet}{The name of the sample set being used, which must have been previously created by selectSampleSet().}
 
-\item{type}{TBD}
+\item{type}{The method used to create the tree.
+Currently the only option "njt" which creates a neighbour-joining tree.}
 
-\item{plots}{TBD}
+\item{plots}{The list of attributes for which plots will be created. See example below.}
 
-\item{...}{any of plot paramenters, including: width, height, units, dpi, legendPosition, legendWidth}
+\item{...}{any of plot parameters, including: width, height, units, dpi, legendPosition, legendWidth
+width: the width of the plot (numeric), default=15
+height: the height of the plot (numeric), default=15
+units: the units in which the width and height are expressed. Supported values: "in" (default), "cm", "mm", "px"
+dpi: the resolution of the plot output, expressed as dots per inch, default=300
+format: the file format in which the plot will be saved. Supported values: "png" (default), "pdf"
+legendPosition: specifies where the legend should be plotted. Supported values: "inset" (default), "separate"
+legendWidth: specifies how wide a fixed width legend space should be, default:"NULL"}
 }
 \value{
-TBD
+Phylogenetic tree plots, .tab data files, and a .newick tree file.
 }
 \description{
-Plot Trees
+This function creates phylogenetic tree plots,
+in which the evolution of the population (i.e. samples in the sampleSet) is reconstructed based on the 'genetic barcode'.
+The 'genetic barcode' consists of 101 SNPs determined for each sample. These SNPs are distributed across all nuclear chromosomes.
+SNP positions were chosen based on their ability to differentiate populations and their power to recapitulate genetic distance.
+For each specified attribute, a plot is created for the phylogenetic tree, in which the nodes (i.e. samples) are coloured according to that attribute.
+Graphical display of attributes needs to be specified before using this function.
+Give command ?loadGraphicAttributes for more information.
+Additionally, separate .npg legend files are created.
+Furthermore, data files are created. Created .tab files can be opened with for example Excel.
+Lastly, a newick file is created that can be used for phylogenetic tree visualization tools.
+Plots and data are located in .../output/out/(sampleSetName)/njt/.
 }
 \examples{
- #TBD
+\dontrun{
+# Produce a neighbour-joining tree for sampleSet "Laos"
+# with plots in which the samples (i.e. nodes) are coloured according to i) province, ii) kelch13, 
+# iii) plasmepsin2/3 amplification status, iv) kelch13 and plasmepsin2/3 amplification status
+plotTree (ctx, sampleSet="Laos", type="njt",
+          plots=list(
+                    list(name="ByProvince",       attributes="province"),
+                    list(name="ByKelch13",        attributes="k13"),
+                    list(name="ByPm23",           attributes="pm23"),
+                    list(name="ByKelch13AndPm23", attributes=c("k13","pm23-noColour"))
+          ), 
+          width=15, height=10)
+}
 }

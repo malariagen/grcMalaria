@@ -2,27 +2,53 @@
 % Please edit documentation in R/public.R
 \name{loadGraphicAttributes}
 \alias{loadGraphicAttributes}
-\title{Graphical Attributes}
+\title{Graphical Attributes for Principal Component Analysis (PCA) and Neighbor-Joining (NJ)-tree}
 \usage{
 loadGraphicAttributes(ctx, name, field, file, sheet)
 }
 \arguments{
-\item{ctx}{TBD}
+\item{ctx}{The analysis context, created by intializeContext()}
 
-\item{name}{TBD}
+\item{name}{The name of the graphical attribute, this can be any metadata category of interest
+Once defined, graphical attributes can be applied by referencing their name
+Examples of names are: 'Countries', 'Provinces', 'Kelch13', etc}
 
-\item{field}{TBD}
+\item{field}{The corresponding column-name in the original data file of the specified graphical attributes}
 
-\item{file}{TBD}
+\item{file}{The file name of the Excel spreadsheet where all graphical attributes are specified}
 
-\item{sheet}{TBD}
+\item{sheet}{The sheet name of the Excel spreadsheet where the to parameter 'name' corresponding graphical attribute is specified}
 }
 \value{
 The analysis context, augmented with the new sample set
 }
 \description{
-Graphical Attributes
+This function allows for specification of the graphical display of samples based on their metadata,
+that can subsequently be used to plot the population structure with a principal component analysis (plotPrincipalComponents()),
+or creation of a neighbour-joining tree (plotTree()).
+Give command ?plotPrincipalComponents, or ?plotTree for more information.
+Specification based on metadata (i.e. attributes) is done by loading an Excel spreadsheet into R.
+The spreadsheet and instructions can be found in the grcMalaria user-guide, see link in 'See also' section.
 }
 \examples{
- #TBD
+\dontrun{
+#Load Excel spreadsheet into R with specified graphical attributes
+gaFile <- "/path/to/my/file/GenRe-GraphicAttributes.xlsx"
+
+#Load graphical attributes for province, kelch13, and plasmepsin2/3 amplification status
+ctx <- loadGraphicAttributes (ctx, name="province", field="AdmDiv1",       
+                              file=gaFile, sheet="Provinces")
+ctx <- loadGraphicAttributes (ctx, name="k13", field="Kelch",
+                              file=gaFile, sheet="Kelch13")
+ctx <- loadGraphicAttributes (ctx, name="pm23", field="Plasmepsin2/3",
+                              file=gaFile, sheet="Plasmepsin23")
+ctx <- loadGraphicAttributes (ctx, name="pm23-noColour", field="Plasmepsin2/3",
+                              file=gaFile, sheet="Plasmepsin23-noColour")
+}
+}
+\seealso{
+grcMalaria user-guide:
+\itemize{
+ \item {\url{https://cutt.ly/grcMalaria-R-UserGuide}}
+}
 }

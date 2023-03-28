@@ -15,26 +15,43 @@ findClusters(
 )
 }
 \arguments{
-\item{ctx}{TBD}
+\item{ctx}{The analysis context, created by intializeContext().}
 
-\item{sampleSet}{TBD}
+\item{sampleSet}{The name of the sample set being used, which must have been previously created by selectSampleSet().}
 
-\item{clusterSet}{TBD}
+\item{clusterSet}{The name of the clustering set.}
 
-\item{minIdentity}{TBD}
+\item{minIdentity}{The minimal similarity level set for a pair of samples to be in a cluster. For example, "0.95" corresponds to at least 95 percent genetic barcode similarity.
+The default is 1.}
 
-\item{impute}{TBD}
+\item{impute}{To use imputed or filtered data. The default is TRUE.}
 
-\item{clusteringMethod}{TBD}
+\item{clusteringMethod}{The clustering method. Two methods are available: "allNeighbours" and "louvain". The default is "allNeighbours".
+The "allNeighbours" method clusters samples together that are above the set "minIdentity" threshold.
+This method is less informative at low similarity levels, because each sample will be assigned to a single cluster.
+The "louvain" method is the preferred method. Also known as Louvain Community-based clustering,
+this method uses an algorithm to identify clusters within a network that are strongly connected to each other, and more weakly connected to other clusters.
+This method is superior to "allNeighbours", particularly in sample sets that have low genetic similarity.}
 
-\item{minClusterSize}{TBD}
-}
-\value{
-TBD
+\item{minClusterSize}{To avoid creating very small clusters, one can set a minimum cluster size. The default is 10 samples.}
 }
 \description{
-Clustering
+This function partitions the Plasmodium samples into clusters with a similar genetic background, based on the genetic barcode similarity.
+The genetic barcode consists of 101 SNPs determined for each sample. These SNPs are distributed across all nuclear chromosomes.
+SNP positions were chosen based on their ability to differentiate populations and their power to recapitulate genetic distance.
+Functions providing cluster analyses include: mapClusterSharing(), and mapClusterPrevalence(). Use commands ?mapClusterSharing, and ?mapClusterPrevalence for more information.
+findClusters() also produces three .tab files that can be opened with for example Excel.
+Output files are located in .../output/out/(sampleSetName)/cluster/data/(clusterSetname)/ge(minIdentity).
+The output files include: i) clusterMembers.tab: A list of samples and the cluster they belong to. Samples that are missing from the list are the one that do not belong to a cluster.
+ii) clusters.tab: A summary of cluster size and members. iii) clusterStats.tab: Frequencies of antimalarial drug resistance predictions and genetic mutation types for each cluster.
 }
 \examples{
- #TBD
+\dontrun{
+# Partition sampleset "Laos" into clusters of at least 5 samples, using the Louvain method, 
+# with a genetic similarity threshold of 100 and 95 percent
+# The clusterset will be called "Laos_clusters"
+findClusters(ctx, sampleSet="Laos", clusterSet="Laos_clusters",
+             minIdentity=c(1, 0.95),
+             clusteringMethod="louvain", minClusterSize=5)
+}
 }

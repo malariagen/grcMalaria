@@ -2,7 +2,7 @@
 % Please edit documentation in R/public.R
 \name{plotClusterGraph}
 \alias{plotClusterGraph}
-\title{Plot graphs of bracode identity, using cluster}
+\title{Plot graphs of barcode identity, using cluster}
 \usage{
 plotClusterGraph(
   ctx,
@@ -14,24 +14,42 @@ plotClusterGraph(
 )
 }
 \arguments{
-\item{ctx}{TBD}
+\item{ctx}{The analysis context, created by intializeContext()}
 
-\item{sampleSet}{TBD}
+\item{sampleSet}{The name of the sample set being used, which must have been previously created by selectSampleSet()}
 
-\item{clusterSet}{TBD}
+\item{clusterSet}{The name of the clustering set, defined in findClusters()}
 
-\item{graphLayout}{TBD}
+\item{graphLayout}{TBD, the default="fr"}
 
-\item{weightPower}{TBD}
+\item{weightPower}{TBD, the default is 2}
 
-\item{...}{any of plot paramenters, including: width, height, units, dpi, legendPosition, legendWidth}
+\item{...}{any of plot parameters, including: width, height, units, dpi, legendPosition, legendWidth
+width: the width of the plot (numeric), default=15
+height: the height of the plot (numeric), default=15
+units: the units in which the width and height are expressed. Supported values: "in" (default), "cm", "mm", "px"
+dpi: the resolution of the plot output, expressed as dots per inch, default=300
+format: the file format in which the plot will be saved. Supported values: "png" (default), "pdf"
+legendPosition: specifies where the legend should be plotted. Supported values: "inset" (default), "separate"
+legendWidth: specifies how wide a fixed width legend space should be, default:"NULL"}
 }
 \value{
-TBD
+Produces network graphs of clusters assigned in findClusters function.
 }
 \description{
-Plot graphs of bracode identity, using cluster
+Creates graphs of cluster networks within a sampleset of Plasmodium samples.
+The graphs are based on a cluster analysis, which needs to be produced with the findClusters function in advance.
+The findClusters function partitions the Plasmodium samples into clusters with a similar genetic background, based on the 'genetic barcode' similarity.
+Use command ?findClusters for more information.
+The genetic barcode consists of 101 SNPs determined for each sample. These SNPs are distributed across all nuclear chromosomes.
+SNP positions were chosen based on their ability to differentiate populations and their power to recapitulate genetic distance.
+Additionally, data files are created. Created .tab files can be opened with for example Excel.
+Maps and data are located in .../output/out/(sampleSetName)/graph/.
 }
 \examples{
- #TBD
+\dontrun{
+#Plot cluster network graph for sampleset "Laos", and clusterset "LAclust"
+plotClusterGraph (ctx, sampleSet="Laos", clusterSet="LAclust",
+                  graphLayout="fr", weightPower=2)
+}
 }

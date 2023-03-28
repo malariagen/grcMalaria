@@ -2,18 +2,18 @@
 % Please edit documentation in R/public.R
 \name{loadGrc}
 \alias{loadGrc}
-\title{Load a Genetic Report Cards data file}
+\title{Load a Genetic Report Card (GRC) data file}
 \usage{
-loadGrc(file, sheet = "GenRe-Mekong", species = "Pf", version = "1.0")
+loadGrc(file, sheet = "GRC", species = "Pf", version = "1.2")
 }
 \arguments{
 \item{file}{The path to the GRC data Microsoft Excel file (use forward slashes in the path)}
 
-\item{sheet}{The name of the datasheet within the Excel file containing the GRC data}
+\item{sheet}{The name of the datasheet or tab name within the Excel file containing the GRC data}
 
-\item{species}{The species being analyzed ("Pf" or "Pv")}
+\item{species}{The species being analyzed ("Pf" (i.e. Plasmodium falciparum) or "Pv" (i.e. Plasmodium vivax))}
 
-\item{version}{The version number of the GRC data file format. This is in the documentation when you receive or download the file.}
+\item{version}{The version number of the GRC data file format. This found is in the documentation when you receive or download the file.}
 }
 \value{
 A list containing a data frame with the data ready to be analyzed, plus some configuration metadata
@@ -24,5 +24,14 @@ The data frame returned contains a data table whose values and structure may hav
 and may have been updated to the latest version fo the format.
 }
 \examples{
-#TBD
+\dontrun{
+# Load data file
+# Change the path to where your file is located before running the code
+Data <- loadGrc("D:/myFiles/name_file.xlsx",
+               sheet = "GRC",
+               species = "Pf", version = "1.2")
+}
+}
+\seealso{
+Information on the GRC input file {\url{https://cutt.ly/grcMalaria-R-UserGuide}}
 }

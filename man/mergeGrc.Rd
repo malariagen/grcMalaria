@@ -2,7 +2,7 @@
 % Please edit documentation in R/public.R
 \name{mergeGrc}
 \alias{mergeGrc}
-\title{Combine two Genetic Report Cards datasets}
+\title{Combine two Genetic Report Cards (GRC) datasets}
 \usage{
 mergeGrc(srcGrc, newGrc, overwrite = FALSE, extendColumns = FALSE)
 }
@@ -25,5 +25,14 @@ with null values. If the new dataset contains sample data that is already in the
 or the source data rows can be overwritten.
 }
 \examples{
-#TBD
+\dontrun{
+# Load spreadsheet 1
+Sheet1 <- loadGrc("D:/myFiles/sheet1.xlsx",
+                 sheet="GRC", species="Pf", version="1.2")
+# Load spreadsheet 2
+Sheet2 <- loadGrc("D:/myFiles/sheet2.xlsx",
+                 sheet="GRC", species="Pf", version="1.2")
+# Merge datasets
+mergeData <- mergeGrc(Sheet1, Sheet2)
+}
 }

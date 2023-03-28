@@ -7,14 +7,20 @@
 resetColourPalette(ctx)
 }
 \arguments{
-\item{ctx}{TBD}
+\item{ctx}{The analysis context, created by intializeContext().}
 }
 \value{
-TBD
+Return to the default colour palette of grcMalaria.
 }
 \description{
-Reset to the default colour palette, removing user-defined palettes
+Return to the default 25-colour palette of grcMalaria.
 }
 \examples{
- #TBD
+\dontrun{
+# return to the default 25-colour palette:
+resetColourPalette(ctx)
+
+# To view default 25-colour palette
+ctx$config$defaultPalette
+}
 }

@@ -7,22 +7,52 @@
 plotPrincipalComponents(ctx, sampleSet, type = "PCoA", plots, ...)
 }
 \arguments{
-\item{ctx}{TBD}
+\item{ctx}{The analysis context, created by intializeContext()}
 
-\item{sampleSet}{TBD TBD}
+\item{sampleSet}{The name of the sample set being used, which must have been previously created by selectSampleSet()}
 
-\item{type}{TBD}
+\item{type}{The type of method used for the principal component analysis
+"PCoA", performs multidimensional scaling on a distance matrix, in which each sample is a variable
+"nipals", "bpca" are methods applied to the set of genetic barcode genotypes (each barcode position is a variable).
+The default is "PCoA"}
 
-\item{plots}{TBD}
+\item{plots}{The list of attributes for which plots will be created. See example below}
 
-\item{...}{any of plot paramenters, including: width, height, units, dpi, legendPosition, legendWidth}
+\item{...}{any of plot parameters, including: width, height, units, dpi, legendPosition, legendWidth
+width: the width of the plot (numeric), default=15
+height: the height of the plot (numeric), default=15
+units: the units in which the width and height are expressed. Supported values: "in" (default), "cm", "mm", "px"
+dpi: the resolution of the plot output, expressed as dots per inch, default=300
+format: the file format in which the plot will be saved. Supported values: "png" (default), "pdf"
+legendPosition: specifies where the legend should be plotted. Supported values: "inset" (default), "separate"
+legendWidth: specifies how wide a fixed width legend space should be, default:"NULL"}
 }
 \value{
-TBD
+Principal component plots and .tab data files.
 }
 \description{
-Plot Population structure (PCA)
+This function produces principal component analysis (PCA) plots, in which the population (i.e. samples in the sampleSet),
+is structured in principal components based on their genetic barcode.
+The genetic barcode consists of 101 SNPs determined for each sample. These SNPs are distributed across all nuclear chromosomes.
+SNP positions were chosen based on their ability to differentiate populations and their power to recapitulate genetic distance.
+One plot is created for each specified attribute in the parameter 'plots', in which the samples are coloured according to user input.
+Graphical display of attributes needs to be specified before using this function.
+Give command ?loadGraphicAttributes for more information.
+Additionally, data files are created. Created .tab files can be opened with for example Excel.
+Plots and data are located in .../output/out/(sampleSetName)/(PCA-method, see parameter 'type')/.
 }
 \examples{
- #TBD
+\dontrun{
+# Perform a principal component analysis for province, kelch13, plasmepsin2/3 amplification status, 
+# and kelch13 in combination with plasmepsin2/3 amplification status,
+# using the "PCoA" method on sampleSet "Laos"
+plotPrincipalComponents (ctx, sampleSet="Laos", type="PCoA",
+    plots=list(
+              list(name="ByProvince",       attributes="province"),
+              list(name="ByKelch13",        attributes="k13"),
+              list(name="ByPm23",           attributes="pm23"),
+              list(name="ByKelch13AndPm23", attributes=c("k13","pm23-noColour"))
+           ), 
+    width=15, height=10)
+}
 }

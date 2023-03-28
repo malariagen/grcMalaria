@@ -16,28 +16,46 @@ mapBarcodeFrequencies(
 )
 }
 \arguments{
-\item{ctx}{TBD}
+\item{ctx}{The analysis context, created by intializeContext().}
 
-\item{sampleSet}{TBD}
+\item{sampleSet}{The name of the sample set being used, which must have been previously created by selectSampleSet().}
 
-\item{type}{TBD}
+\item{type}{Frequency of barcode groups can be visualized either as a "bar" and/or a "pie".}
 
-\item{aggregate}{TBD}
+\item{aggregate}{The administrative level at which we perform pairwise comparisons}
 
-\item{minAggregateCount}{TBD}
+\item{minAggregateCount}{The minimum count of aggregated samples. To avoid estimating on very small samples, one can set a minimum count of samples, below which the marker is not shown.}
 
-\item{showNames}{TBD}
+\item{showNames}{If TRUE, labels are shown with the name of the aggregation unit (Province or District).}
 
-\item{markerScale}{TBD}
+\item{markerScale}{Allows adjustment of the size of markers on the map, default: 0.8.}
 
-\item{...}{any of plot paramenters, including: width, height, units, dpi, legendPosition, legendWidth}
-}
-\value{
-TBD
+\item{...}{any of plot parameters, including: width, height, units, dpi, legendPosition, legendWidth. 
+width: the width of the plot (numeric), default=15
+height: the height of the plot (numeric), default=15
+units: the units in which the width and height are expressed. Supported values: "in" (default), "cm", "mm", "px"
+dpi: the resolution of the plot output, expressed as dots per inch, default=300
+format: the file format in which the plot will be saved. Supported values: "png" (default), "pdf"
+legendPosition: specifies where the legend should be plotted. Supported values: "inset" (default), "separate"
+legendWidth: specifies how wide a fixed width legend space should be, default:"NULL"}
 }
 \description{
-Map barcode group frequencies
+Creates a map showing the frequency of groups of Plasmodium samples with identical a 'genetic barcode' within administrative divisions.
+The 'genetic barcode' consists of 101 SNPs determined for each sample. These SNPs are distributed across all nuclear chromosomes.
+SNP positions were chosen based on their ability to differentiate populations and their power to recapitulate genetic distance.
+The samples are grouped according to identical barcode within each administrative division, at the desired administrative level: Province, or District.
+Barcode groups are not compared between administrative divisions. To compare barcode groups between administrative divisions please use mapClusterSharing(). Use command ?mapClusterSharing for more information.
+To avoid estimating on very small samples, one can set a minimum count of samples, below which the marker is not shown.
+Additionally, data files are created. Created .tab files can be opened with for example Excel.
+Maps and data are located in .../output/out/sampleSetName/map-barcodeFrequency/.
 }
 \examples{
- #TBD
+\dontrun{
+# Map barcode group frequencies in both bar and pie form, for sampleSet "Laos", 
+# at both Province and District level
+mapBarcodeFrequencies (ctx, sampleSet="Laos",
+                       type=c("bar","pie"),
+                       aggregate=c("Province","District"),
+                       minAggregateCount=10, showNames=TRUE, markerScale=0.8)
+}
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/public.R
 \name{mapClusterPrevalence}
 \alias{mapClusterPrevalence}
-\title{Map Cluster prevalence at different sites, connecting these sites}
+\title{Map cluster prevalence at different sites, connecting these sites}
 \usage{
 mapClusterPrevalence(
   ctx,
@@ -16,28 +16,53 @@ mapClusterPrevalence(
 )
 }
 \arguments{
-\item{ctx}{TBD}
+\item{ctx}{The analysis context, created by intializeContext().}
 
-\item{sampleSet}{TBD}
+\item{sampleSet}{The name of the sample set being used, which must have been previously created by selectSampleSet().}
 
-\item{clusterSet}{TBD}
+\item{clusterSet}{The name of the clustering set, defined in findClusters().}
 
-\item{aggregate}{TBD}
+\item{aggregate}{The administrative level at which we perform pairwise comparisons, either "Province" and/or "District".}
 
-\item{minAggregateCount}{TBD}
+\item{minAggregateCount}{The minimum count of aggregated samples. To avoid estimating on very small samples, one can set a minimum count of samples,
+below which the marker is not shown, default=5}
 
-\item{showNames}{TBD}
+\item{showNames}{If TRUE, labels are shown with the name of the aggregation unit (Province or District)}
 
-\item{markerScale}{TBD}
+\item{markerScale}{Allows adjustment of the size of markers on the map, default=0.8}
 
-\item{...}{any of plot paramenters, including: width, height, units, dpi, legendPosition, legendWidth}
+\item{...}{any of plot parameters, including: width, height, units, dpi, legendPosition, legendWidth
+width: the width of the plot (numeric), default=15
+height: the height of the plot (numeric), default=15
+units: the units in which the width and height are expressed. Supported values: "in" (default), "cm", "mm", "px"
+dpi: the resolution of the plot output, expressed as dots per inch, default=300
+format: the file format in which the plot will be saved. Supported values: "png" (default), "pdf"
+legendPosition: specifies where the legend should be plotted. Supported values: "inset" (default), "separate"
+legendWidth: specifies how wide a fixed width legend space should be, default:"NULL"}
 }
 \value{
-TBD
+For each assigned cluster a map with cluster prevalence and overlap in cluster prevalence across administrative divisions
 }
 \description{
-Map Cluster prevalence at different sites, connecting these sites
+For each assigned cluster a map is created, showing the prevalence and overlap in prevalence of that cluster across administrative divisions.
+Each map also contains information on sample count, drug-resistance, and mutation frequencies.
+The maps are based on the cluster analysis, which needs to be produced with the findClusters function in advance.
+The findClusters function partitions the Plasmodium samples into clusters with a similar genetic background, based on the genetic barcode similarity.
+Use command ?findClusters for more information.
+The genetic barcode consists of 101 SNPs determined for each sample. These SNPs are distributed across all nuclear chromosomes.
+SNP positions were chosen based on their ability to differentiate populations and their power to recapitulate genetic distance.
+The prevalence of the assessed cluster is displayed in the nodes.
+The overlap in prevalence is displayed in the edges (i.e. lines).
+The definition of prevalence overlap is the proportion of sample pairs that have at least the assigned "minIdentity" of genetic barcode similarity in the findCluster function.
+Additionally, data files are created. Created .tab files can be opened with for example Excel.
+Maps and data are located in .../output/out/(sampleSetName)/map-clusterPrevalence/.
 }
 \examples{
- #TBD
+\dontrun{
+# Produce a network and prevalence map for each assigned cluster,
+# for sampleSet "Laos", and clusterSet "LAclust" at both a Province and District level,
+mapClusterPrevalence (ctx, sampleSet="Laos", clusterSet = "LAclust",
+                      aggregate=c("Province","District"),
+                      minAggregateCount=5, showNames=TRUE, markerScale=0.8)
+}
 }

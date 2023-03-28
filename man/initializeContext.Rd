@@ -2,7 +2,7 @@
 % Please edit documentation in R/public.R
 \name{initializeContext}
 \alias{initializeContext}
-\title{Initialize a Genetics Report Cards dataset}
+\title{Initialize a Genetics Report Card (GRC) dataset}
 \usage{
 initializeContext(
   grcData,
@@ -26,7 +26,14 @@ An analysis context object, which is a list that contains all the data for analy
 \description{
 Initialize a GRC dataset (obtained from function loadGrc()) so that it is ready for analysis.
 It performs barcode imputation, computes genetic distances, and initializes data that will subsequently be used in analyses.
+It creates a folder where output of future analyses will be saved. It will take a while to create a context object which will be used for the subsequent analysis tasks (can take as long as 5 mins to run).
 }
 \examples{
-#TBD
+\dontrun{
+Data <- loadGrc("D:/myFiles/name_file.xlsx", sheet = "GRC",
+               species = "Pf", version = "1.2")
+
+# Change the path to where you want output file to be
+ctx <- initializeContext(Data, dir="/path/to/my/folder")
+}
 }
