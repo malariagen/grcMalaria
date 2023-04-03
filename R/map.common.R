@@ -17,7 +17,7 @@ map.execute <- function(userCtx, sampleSetName, mapType, params) {		#;print(mapT
     #
     # Get the set of specs for the maps to be produced
     #
-    mapSpecs <- map.createMapSpecs (userCtx, sampleSetName, mapType, params)
+    mapSpecs <- map.createMapSpecs (userCtx, sampleSetName, mapType, params)	#;print(mapSpecs)
     #
     # Now create the map plots one by one
     #
@@ -30,11 +30,11 @@ map.execute <- function(userCtx, sampleSetName, mapType, params) {		#;print(mapT
         #
         # Add the "look and feel" elements to the map plot
         #
-        mapPlot <- mapPlot + map.getTheme()
+        mapPlot <- mapPlot + map.getTheme()				#; plot(mapPlot)
         #
         # Deal with the legend 
         #
-        mapPlot <- map.processLegend (mapPlot, mapSpec)
+        mapPlot <- map.processLegend (mapPlot, mapSpec)			#; plot(mapPlot)
         #
         # Save to file. The size in inches is given in the config.
         #
@@ -94,6 +94,7 @@ map.processLegend <- function(mapPlot, mapSpec) {		#; print(mapSpec$master$type)
         }
         mapPlot <- mapPlot + map.getTheme()
     }
+    mapPlot
 }
 #
 ###############################################################################
@@ -259,7 +260,6 @@ map.createMapMaster <- function (userCtx, sampleSetName, mapType, params) {		#; 
     #
     baseMapInfo <- map.buildBaseMap (mapMaster)
     mapMaster$baseMapInfo <- baseMapInfo
-    
     mapMaster
 }
 #
@@ -424,9 +424,11 @@ map.buildBaseMap <- function(mapMaster) {
     #
     # Get and Crop the country boundaries
     #
+    if (OVERRIDE_EXTERNAL_WARNINGS) options(warn=-1)
     adm0 <- geo$country.lines
     adm0 <- adm0[anBBExt,]
     adm0_df <- suppressMessages(ggplot2::fortify(adm0))    		#; print(colnames(adm0$spdf))
+    options(warn=1)
     #
     rivers <- geo$river.lines
     rivers <- rivers[anBBExt,]
@@ -507,7 +509,7 @@ map.generateMapPlot <- function(mapSpec, params) {	#; print(names(mapSpec))
         mapPlot <- barcodeFreqMap.executeMap (mapSpec)
     } else {
         stop(paste("Invalid map type:", mapType))
-    }
+    }							#; plot (mapPlot)
     mapPlot
 }
 #

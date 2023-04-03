@@ -1,3 +1,10 @@
+#
+# Override warning message hiding (i.e. those cause by packages that are invoked)
+# This is set to TRUE in the version we distribute, but we can set it to FALSE to make sure we see the warnings.
+#
+OVERRIDE_EXTERNAL_WARNINGS <- TRUE
+options(warn=1)
+#
 # #####################################################################################
 # Build configuration
 # #####################################################################################

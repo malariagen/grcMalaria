@@ -220,7 +220,7 @@ meta.getSampleDates <- function (sampleMeta, format=meta.defaultDateFormat) {
     if ("CollectionDate" %in% colnames(sampleMeta)) {
         metaDatesIn <- sampleMeta$CollectionDate
     } else {
-        message("Your GRC data does not contain the CollectionDate Field. Using the Year field instead- see the documentation.")
+        #message("Your GRC data does not contain the CollectionDate Field. Using the Year field instead- see the documentation.")
         years <- as.integer(sampleMeta$Year)
         metaDatesIn <- paste0("31/12/", years)		#; print(head(metaDatesIn))
     }

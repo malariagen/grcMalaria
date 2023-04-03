@@ -74,7 +74,7 @@ pieMap.executeMap <- function(map) {
     #
     # Now add the markers, coloured according to the palette
     #
-    valuePalette <- pieMap.getMeasurePalette (ctx, sampleSet$name, measure)
+    valuePalette <- pieMap.getMeasurePalette (ctx, sampleSet$name, measure)	#; print(valuePalette)
     #
     # Now add the pie chart markers
     #
