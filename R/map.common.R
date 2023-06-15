@@ -265,17 +265,25 @@ map.createMapMaster <- function (userCtx, sampleSetName, mapType, params) {		#; 
 #
 map.getPlotGeometry <- function (params) {				#; print(names(params))
     #
-    # Right now we're jusr reading params, but later this may be more sophisticated (aspect ration, font size, etc.
+    # Right now we're just reading params, but later this may be more sophisticated (aspect ration, font size, etc.
     #
-    pg <- list()
-    pg$width  <- param.getParam ("plot.width", params)
-    pg$height <- param.getParam ("plot.height", params)
-    pg$units  <- param.getParam ("plot.units", params)
-    pg$dpi    <- param.getParam ("plot.dpi", params)
-    pg$format <- param.getParam ("plot.file.format", params)
-    pg$legendPos   <- param.getParam ("plot.legend.pos", params)
-    pg$legendWidth <- param.getParam ("plot.legend.width", params)	#; print(pg)
-    pg
+    width  <- param.getParam ("plot.width", params)
+    height <- param.getParam ("plot.height", params)
+    units  <- param.getParam ("plot.units", params)
+    dpi    <- param.getParam ("plot.dpi", params)
+    format <- param.getParam ("plot.file.format", params)
+    #
+    aspectRatio <- width / height 
+    #
+    legendPos   <- param.getParam ("plot.legend.pos", params)
+    legendWidth <- param.getParam ("plot.legend.width", params)
+    #
+    #
+    #
+    geom <- list(width=width, height=height, aspectRatio=aspectRatio, 
+                 units=units, dpi=dpi, format=format,
+                 legendPos=legendPos, legendWidth=legendWidth)		#; print(geom)
+    geom
 }
 #
 map.getMapFilepath <- function (map, params) {
@@ -397,17 +405,40 @@ map.buildBaseMap <- function(mapMaster) {
     adm1_df <- suppressMessages(ggplot2::fortify(adm1Spdf))	#; print(colnames(adm1Spdf@data)); print(colnames(adm1_df))
     #
     # Construct the bounding box for this analysis
-    # Adjust the bounding box to give some margin
     #
-    xMar <- (xMax-xMin)/20;    yMar <- (yMax-yMin)/20
+    adjustMapBoundingBox <- function (xMin, xMax, yMin, yMax, aspectRatio) {
+        #
+        # Adjust the bounding box to give some margin
+        #
+        xMar <- (xMax-xMin)/20;    yMar <- (yMax-yMin)/20
+        xMin <- xMin-xMar; xMax <- xMax+xMar; yMin <- yMin-yMar; yMax <- yMax+yMar
+        #
+        # Now extend the bounding box so that it has the correct aspect ratio
+        #
+        mapW <- xMax - xMin; mapH <- yMax - yMin
+        mapAR <- mapW / mapH
+        if (mapAR < aspectRatio) {
+            newW <- mapH * aspectRatio
+            extraW <- newW - mapW
+            xMin <- xMin - (extraW / 2); xMax <- xMax + (extraW / 2)
+        } else if (mapAR > aspectRatio) {
+            newH <- mapW / aspectRatio
+            extraH <- newH - mapH
+            yMin <- yMin - (extraH / 2); yMax <- yMax + (extraH / 2)
+        }
+        
+        #
+        # Create the bounding box
+        #
+        bb <- list(xMin=xMin, xMax=xMax, yMin=yMin, yMax=yMax, 
+                   tl=c(yMax, xMin), br=c(yMin, xMax), bl=c(yMin, xMin), tr=c(yMax, xMax))
+        bb
+    }
     #
     # Create a bounding box, specifying WGS84 (EPSG:4326) to be the coordinates system 
     #
-    CRS.WGS84 <- geo$crs
-    #
-    anBB <- list(xMin=(xMin-xMar), xMax=(xMax+xMar), yMin=(yMin-yMar), yMax=(yMax+yMar))
-    anBB$tl <- c(anBB$yMax, anBB$xMin);    anBB$br <- c(anBB$yMin, anBB$xMax)
-    anBB$bl <- c(anBB$yMin, anBB$xMin);    anBB$tr <- c(anBB$yMax, anBB$xMax)
+    geom <- mapMaster$geometry						#; print(geom)
+    anBB <- adjustMapBoundingBox(xMin, xMax, yMin, yMax, geom$aspectRatio)
     #
     anBBCoords <- matrix(c(
                       anBB$xMin, anBB$yMin,
@@ -420,6 +451,10 @@ map.buildBaseMap <- function(mapMaster) {
                        sp::Polygons(list(sp::Polygon(anBBCoords)), ID="bb")
                    )
                )
+    #
+    # Specify WGS84 (EPSG:4326) to be the coordinates system 
+    #
+    CRS.WGS84 <- geo$crs
     sp::proj4string(anBBExt) <- CRS.WGS84
     #
     # Get and Crop the country boundaries
