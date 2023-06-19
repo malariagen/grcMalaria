@@ -1242,7 +1242,7 @@ parsePlotParams <- function (...) {
             } else {
                 stop(paste("Invalid unit specified:", arg))
             }
-        } else if (argName == "dpi") {		; print(argName)
+        } else if (argName == "dpi") {			#; print(argName)
             params$plot.dpi <- as.numeric(arg)
         } else if (argName == "format") {		#; print(argName)
             if (arg %in% c("png", "pdf", "jpg")) {

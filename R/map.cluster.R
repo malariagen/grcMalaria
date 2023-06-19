@@ -13,6 +13,8 @@ clusterMap.executeMap <- function (map) {
     measure     <- map$measure
     interval    <- map$interval
     #
+    pp          <- mapMaster$plotParams
+    #
     datasetName <- map$datasetName
     sampleSet   <- mapMaster$sampleSet
     userCtx     <- mapMaster$userCtx
@@ -73,22 +75,9 @@ clusterMap.executeMap <- function (map) {
     #
     mapPlot <- baseMapInfo$baseMap
     #
-    # If we need to show aggregation unit names, we need to compute the label positioning 
-    # and plot before the markers
-    #
-    showMarkerNames <- param.getParam ("map.markerNames", params)
-    if (showMarkerNames) {
-        lp <- map.computeLabelParams (selAggUnitData, baseMapInfo)		#; print(lp)
-        mapPlot <- mapPlot + 
-            ggplot2::geom_point(ggplot2::aes(x=lon, y=lat), data=lp, colour="red") +
-            ggrepel::geom_label_repel(ggplot2::aes(x=lon, y=lat, label=label), data=lp,
-                                      fill="black", size=4.5, fontface="bold", color="darkgray", show.legend=FALSE,
-                                      hjust=lp$just, vjust=0.5, nudge_x=lp$x, nudge_y=lp$y, label.padding=grid::unit(0.2, "lines"))
-    }
     #
     #
-    #
-    mapPlot <- clusterMap.addConnections (mapPlot, clusterId, clusterShareData, clusterPalette)
+    mapPlot <- clusterMap.addConnections (mapPlot, baseMapInfo, clusterId, clusterShareData, clusterPalette, params, pp)
     #        
     # Dirty trick so we can show an annotation with cluster info above the legends.
     # We "plot" a couple of points, and create a ficticious alpha legend containing the cluster info text.
@@ -96,10 +85,11 @@ clusterMap.executeMap <- function (map) {
     bb <- baseMapInfo$anBB
     dummydf <- data.frame(x=c(bb$xMin,bb$xMin), y=c(bb$yMax,bb$yMax), alpha=c(0.1, 0.11))
     mapPlot <- mapPlot +
-        ggplot2::geom_point(ggplot2::aes(x=x, y=y, alpha=as.numeric(alpha), size=0.01), data=dummydf) +
+        ggplot2::geom_point(ggplot2::aes(x=x, y=y, alpha=as.numeric(alpha)), size=0.01, 
+                            data=dummydf) +
         ggplot2::scale_alpha_continuous(clusterId, breaks=c(0.1, 0.11), labels=c(clusterInfoText,""), 
                                         guide=ggplot2::guide_legend(order=1,keywidth=0, keyheight=0.01, nrow=1,
-                                         override.aes=list(shape=NA,fill=NA,size=0.01)))
+                                        override.aes=list(shape=NA,fill=NA,size=0.01)))
     #
     plotTitle <- paste(sampleSet$name, "-", clusterId);
     mapPlot <- mapPlot + ggplot2::labs(title=plotTitle, subtitle="")
@@ -257,7 +247,7 @@ clusterMap.buildCountData <- function(aggLevel, aggUnitData, dataset, params) {
 # Maps of connections between Haplotype Sharing sites plotting 
 ################################################################################
 #
-clusterMap.addConnections <- function (mapPlot, clusterId, clusterShareData, clusterPalette) {
+clusterMap.addConnections <- function (mapPlot, baseMapInfo, clusterId, clusterShareData, clusterPalette, params, pp) {
     #
     # Work out the values to display for every marker (the fractional prevalence)
     #
@@ -265,7 +255,7 @@ clusterMap.addConnections <- function (mapPlot, clusterId, clusterShareData, clu
     valueLabels <- round(mValues, digits=2)
     
     # Work out size, colour and colour gradient for the markers
-    pointSizes <- 16							#; print(clusterPalette)
+    pointSizes <- pp$clusterPrevalenceMarkerSize			#; print(clusterPalette)
     clusterColour <- clusterPalette[clusterId]				#; print(clusterColour)
     mMax <- max(mValues); scaleMax <- round(mMax,digits=1); scaleMax <- ifelse(scaleMax<mMax, scaleMax+0.1, scaleMax)
     mMin <- min(mValues); scaleMin <- round(mMin,digits=1); scaleMin <- ifelse(scaleMin>mMin, scaleMin-0.1, scaleMin)  #; print(paste(scaleMin, scaleMax))
@@ -310,21 +300,31 @@ clusterMap.addConnections <- function (mapPlot, clusterId, clusterShareData, clu
         #print(aggUnitPairData); #print(nrow(aggUnitPairData)); print(colnames(aggUnitPairData))
         mapPlot <- mapPlot +
                    ggplot2::geom_curve(ggplot2::aes(x=Lon1, y=Lat1, xend=Lon2, yend=Lat2, linewidth=Weight, colour=Weight),	# draw edges as arcs
-                               data=aggUnitPairData, curvature=0.2, alpha=0.75) +
-                   ggplot2::scale_size_continuous(guide="none", range=c(0.25, 4)) +          			# scale for edge widths
+                               data=aggUnitPairData, 
+                               curvature=0.2, alpha=0.75) +
+                   ggplot2::scale_linewidth_continuous(guide="none", range=c(pp$connectCurveWidthMin, pp$connectCurveWidthMax)) + 
                    ggplot2::scale_colour_gradientn(name="Sharing", colours=c(weakHaploColour,clusterColour))
     }
-    
+    #
     # Silly trick to make the package checker happy... :-(
     Longitude <- Latitude <- ClusterProp <- NULL
-
+    #
+    # If we need to show aggregation unit names, we need to compute the label positioning and plot
+    #
+    showMarkerNames <- param.getParam ("map.markerNames", params)
+    if (showMarkerNames) {
+        mapPlot <- map.addAggregationUnitNameLayer (mapPlot, clusterShareData, baseMapInfo, pp, markerSize=pointSizes)
+    }
+    #
     # Plot the Aggregation Unit markers
     mapPlot <- mapPlot +
 	       ggplot2::geom_point(ggplot2::aes(x=Longitude, y=Latitude, fill=ClusterProp), 
-	                           data=clusterShareData, size=pointSizes, shape=21, stroke=2) +
+	                           data=clusterShareData, 
+	                           size=pointSizes, shape=21, stroke=pp$markerBorderWidth) +
 	       ggplot2::scale_fill_gradientn(name="Prevalence", limits=c(scaleMin,scaleMax), colours=c("white",clusterColour), values=c(0,1)) +
                ggplot2::geom_text(ggplot2::aes(x=Longitude, y=Latitude), 
-                                  data=clusterShareData, label=valueLabels, hjust=0.5, vjust=0.5, size=4.5, fontface="bold")
+                                  data=clusterShareData, 
+                                  label=valueLabels, size=pp$clusterPrevalenceFontSize, fontface="bold", hjust=0.5, vjust=0.5)
     mapPlot
 }
 

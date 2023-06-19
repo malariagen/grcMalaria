@@ -18,6 +18,8 @@ connectMap.executeMap <- function(map) {
     measure     <- map$measure
     interval    <- map$interval
     #
+    pp          <- mapMaster$plotParams
+    #
     datasetName <- map$datasetName
     sampleSet   <- mapMaster$sampleSet
     userCtx     <- mapMaster$userCtx
@@ -78,24 +80,25 @@ connectMap.executeMap <- function(map) {
     # Now plot the connections
     #
     mapPlot <- mapPlot +
-        ggplot2::geom_curve(ggplot2::aes(x=Lon1, y=Lat1, xend=Lon2, yend=Lat2, linewidth=!!rlang::sym(measure), colour=!!rlang::sym(measure)),
-                            data=selAggUnitPairData, curvature=0.2, alpha=0.75) +
-        ggplot2::scale_size_continuous(guide="none", range=c(0.25, 4)) +          					# scale for edge widths
+        ggplot2::geom_curve(ggplot2::aes(x=Lon1, y=Lat1, xend=Lon2, yend=Lat2, 
+                                         linewidth=!!rlang::sym(measure), colour=!!rlang::sym(measure)),
+                            data=selAggUnitPairData, 
+                            curvature=0.2, alpha=0.75) +
+        ggplot2::scale_linewidth_continuous(guide="none", range=c(pp$connectCurveWidthMin, pp$connectCurveWidthMax)) +          # scale for edge widths
         ggplot2::scale_colour_gradientn(colours=c("skyblue1","midnightblue"))
     #
     # Now add the markers
     #
     mapPlot <- mapPlot +
-        ggplot2::geom_point(ggplot2::aes(x=Longitude, y=Latitude), data=aggUnitData, size=4, shape=19, col="red")
+        ggplot2::geom_point(ggplot2::aes(x=Longitude, y=Latitude), 
+                            data=aggUnitData,
+                            size=pp$connectMarkerSize, shape=19, col="red")
     #
     # If we need to show aggregation unit names, we need to compute the label positioning and plot
     #
     showMarkerNames <- param.getParam ("map.markerNames", params)
     if (showMarkerNames) {
-        lp <- map.computeLabelParams (aggUnitData, baseMapInfo)
-        mapPlot <- mapPlot +
-            ggrepel::geom_label_repel(ggplot2::aes(x=lon, y=lat, label=label), data=lp, size=4.5, fontface="bold", color="darkgray",
-                                      hjust=lp$just, vjust=0.5, nudge_x=lp$x, nudge_y=lp$y, label.padding=grid::unit(0.2, "lines"))
+        mapPlot <- map.addAggregationUnitNameLayer (mapPlot, aggUnitData, baseMapInfo, pp)
     }
     #
     # Return map plot for completion and saving to file

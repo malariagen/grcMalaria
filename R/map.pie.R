@@ -8,6 +8,9 @@ pieMap.executeMap <- function(map) {
     measure     <- map$measure
     interval    <- map$interval
     #
+    geom        <- mapMaster$geometry
+    pp          <- mapMaster$plotParams
+    #
     datasetName <- map$datasetName
     sampleSet   <- mapMaster$sampleSet
     userCtx     <- mapMaster$userCtx
@@ -45,7 +48,7 @@ pieMap.executeMap <- function(map) {
     #
     pieMapData <- pieMap.buildCountData (ctx, datasetName, sampleSet$name, aggLevel, aggUnitData, measure)	#; print(pieMapData)
     selAggUnitIds <- unique(pieMapData$UnitId)
-    selAggUnitData <- aggUnitData[which(aggUnitData$UnitId %in% selAggUnitIds),]				#; print(nrow(selAggUnitData))
+    selAggUnitData <- aggUnitData[which(aggUnitData$UnitId %in% selAggUnitIds),]				#; print(selAggUnitData)
     #
     # Compute pie chart sizes.
     #
@@ -60,16 +63,11 @@ pieMap.executeMap <- function(map) {
     #
     mapPlot <- baseMapInfo$baseMap
     #
-    # If we need to show aggregation unit names, we need to compute the label positioning 
-    # and plot before the markers
+    # If we need to show aggregation unit names, we need to compute the label positioning and plot
     #
     showMarkerNames <- param.getParam ("map.markerNames", params)
     if (showMarkerNames) {
-        lp <- map.computeLabelParams (selAggUnitData, baseMapInfo)
-        mapPlot <- mapPlot + 
-            ggrepel::geom_label_repel(data=lp, ggplot2::aes(x=lon, y=lat, label=label), 
-                                      size=4.5, fontface="bold", color="darkgray",
-                                      hjust=lp$just, vjust=0.5, nudge_x=lp$x, nudge_y=lp$y, label.padding=grid::unit(0.2, "lines"))
+        mapPlot <- map.addAggregationUnitNameLayer (mapPlot, selAggUnitData, baseMapInfo, pp, markerSize=sqrt(selAggUnitData$SampleCount))
     }
     #
     # Now add the markers, coloured according to the palette
@@ -78,9 +76,11 @@ pieMap.executeMap <- function(map) {
     #
     # Now add the pie chart markers
     #
+    # Nasty trick we have to do because there is no linewidth aesthetic at present
+    ggplot2::update_geom_defaults(ggforce::GeomArcBar, ggplot2::aes(linewidth=!!pp$pieLineWidth))
     mapPlot <- mapPlot +
-        ggforce::geom_arc_bar(data=pieMapData, stat="pie", inherit.aes=FALSE, 
-                              ggplot2::aes(x0=Longitude, y0=Latitude, r0=0, r=PieSize, fill=Allele, amount=AlleleCount),
+        ggforce::geom_arc_bar(ggplot2::aes(x0=Longitude, y0=Latitude, r0=0, r=PieSize, fill=Allele, amount=AlleleCount),
+                              data=pieMapData, stat="pie", inherit.aes=FALSE, 
                               colour="gray25", show.legend=TRUE) +
         ggplot2::scale_fill_manual(values=valuePalette)
     #

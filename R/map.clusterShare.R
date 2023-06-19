@@ -13,6 +13,8 @@ clusterShareMap.executeMap <- function (map) {
     measure     <- map$measure
     interval    <- map$interval
     #
+    pp          <- mapMaster$plotParams
+    #
     datasetName <- map$datasetName
     sampleSet   <- mapMaster$sampleSet
     userCtx     <- mapMaster$userCtx
@@ -73,22 +75,17 @@ clusterShareMap.executeMap <- function (map) {
     #
     mapPlot <- baseMapInfo$baseMap
     #
-    # If we need to show aggregation unit names, we need to compute the label positioning 
-    # and plot before the markers
+    # If we need to show aggregation unit names, we need to compute the label positioning and plot
     #
     showMarkerNames <- param.getParam ("map.markerNames", params)
     if (showMarkerNames) {
-        lp <- map.computeLabelParams (aggUnitData, baseMapInfo)		#; print(lp)
-        mapPlot <- mapPlot + 
-            ggplot2::geom_point(ggplot2::aes(x=lon, y=lat), data=lp, colour="red") +
-            ggrepel::geom_label_repel(ggplot2::aes(x=lon, y=lat, label=label), data=lp,
-                                      fill="black", size=4.5, fontface="bold", color="darkgray", show.legend=FALSE,
-                                      hjust=lp$just, vjust=0.5, nudge_x=lp$x, nudge_y=lp$y, label.padding=grid::unit(0.2, "lines"))
+        relSizes <- sqrt(aggUnitData$SampleCount)
+        mapPlot <- map.addAggregationUnitNameLayer (mapPlot, aggUnitData, baseMapInfo, pp, markerSize=relSizes)
     }
     #
     # Now add the markers and title
     #
-    mapPlot <- clusterShareMap.addShareMarkers (mapPlot, visType, clusterShareData, clusterPalette, aggUnitData, stdMarkerCount, stdMarkerSize)
+    mapPlot <- clusterShareMap.addShareMarkers (mapPlot, visType, clusterShareData, clusterPalette, aggUnitData, stdMarkerCount, stdMarkerSize, pp)
     mapPlot <- mapPlot + ggplot2::labs(title=plotTitle, subtitle="")
     #
     # Return map plot for completion and saving to file
@@ -169,21 +166,23 @@ clusterShareMap.parseMeasure <- function(measure) {
 # Haplotype Sharing Markers plotting 
 ################################################################################
 #
-clusterShareMap.addShareMarkers <- function (mapPlot, visType, clusterShareData, clusterPalette, aggUnitData, stdMarkerCount, stdMarkerSize) {
+clusterShareMap.addShareMarkers <- function (mapPlot, visType, clusterShareData, clusterPalette, aggUnitData, stdMarkerCount, stdMarkerSize, pp) {
     # Do th actual marker plotting for the twp types of markers
     if (visType=="bar") {
-        mapPlot <- clusterShareMap.addShareBars (mapPlot, clusterShareData, clusterPalette, aggUnitData, stdMarkerCount, stdMarkerSize)
+        mapPlot <- clusterShareMap.addShareBars (mapPlot, clusterShareData, clusterPalette, aggUnitData, stdMarkerCount, stdMarkerSize, pp)
     } else if (visType=="pie") {
-        mapPlot <- clusterShareMap.addSharePies (mapPlot, clusterShareData, clusterPalette, aggUnitData, stdMarkerCount, stdMarkerSize)
+        mapPlot <- clusterShareMap.addSharePies (mapPlot, clusterShareData, clusterPalette, aggUnitData, stdMarkerCount, stdMarkerSize, pp)
     }
     mapPlot
 }
 #
 #
 #
-clusterShareMap.addSharePies <- function (mapPlot, clusterShareData, clusterPalette, aggUnitData, stdMarkerCount, stdMarkerSize) {
+clusterShareMap.addSharePies <- function (mapPlot, clusterShareData, clusterPalette, aggUnitData, stdMarkerCount, stdMarkerSize, pp) {
     # Silly trick to make the package checker happy... :-(
     Longitude <- Latitude <- Cluster <- ClusterCount <- SampleCount <-NULL
+    # Nasty trick we have to do because there is no linewidth aesthetic at present
+    ggplot2::update_geom_defaults(ggforce::GeomArcBar, ggplot2::aes(linewidth=!!pp$pieLineWidth))
 
     # Now add the pie chart markers
     if (stdMarkerCount==0) {
@@ -191,7 +190,6 @@ clusterShareMap.addSharePies <- function (mapPlot, clusterShareData, clusterPale
                    ggforce::geom_arc_bar(ggplot2::aes(x0=Longitude, y0=Latitude, r0=0, r=stdMarkerSize, 
                                          fill=Cluster, amount=ClusterCount),
                                 data=clusterShareData, stat="pie", inherit.aes=FALSE,
-                                #colour="gray25", stroke=0.5, show.legend=FALSE) +
                                 colour="gray25", show.legend=FALSE) +
                    ggplot2::scale_fill_manual(values=clusterPalette)
     } else {
@@ -199,7 +197,6 @@ clusterShareMap.addSharePies <- function (mapPlot, clusterShareData, clusterPale
                    ggforce::geom_arc_bar(ggplot2::aes(x0=Longitude, y0=Latitude, r0=0, r=stdMarkerSize*sqrt(SampleCount/stdMarkerCount), 
                                          fill=Cluster, amount=ClusterCount),
                                 data=clusterShareData, stat="pie", inherit.aes=FALSE,
-                                #colour="gray25", stroke=0.5, show.legend=FALSE) +
                                 colour="gray25", show.legend=FALSE) +
                    ggplot2::scale_fill_manual(values=clusterPalette)
     }
@@ -208,7 +205,7 @@ clusterShareMap.addSharePies <- function (mapPlot, clusterShareData, clusterPale
 #
 #
 #
-clusterShareMap.addShareBars <- function (mapPlot, clusterShareData, clusterPalette, aggUnitData, stdMarkerCount, stdMarkerSize) {
+clusterShareMap.addShareBars <- function (mapPlot, clusterShareData, clusterPalette, aggUnitData, stdMarkerCount, stdMarkerSize, pp) {
 
     # Get all aggregation unit ids, in descending order of sample count
     aggUnitData <- aggUnitData[order(-aggUnitData$SampleCount),]
@@ -267,7 +264,7 @@ clusterShareMap.addShareBars <- function (mapPlot, clusterShareData, clusterPale
     mapPlot <- mapPlot +
                ggplot2::geom_rect(ggplot2::aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2, fill=Cluster), 
                                   data=freqBarData, inherit.aes=FALSE,
-                                  colour="gray25", size=0.5, show.legend=FALSE) +
+                                  colour="gray25", linewidth=pp$pieLineWidth, show.legend=FALSE) +
                ggplot2::scale_fill_manual(values=clusterPalette)
     mapPlot
 }

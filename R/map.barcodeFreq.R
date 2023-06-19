@@ -9,6 +9,8 @@ barcodeFreqMap.executeMap <- function (map) {
     measure     <- map$measure
     interval    <- map$interval
     #
+    pp          <- mapMaster$plotParams
+    #
     datasetName <- map$datasetName
     sampleSet   <- mapMaster$sampleSet
     userCtx     <- mapMaster$userCtx
@@ -60,22 +62,17 @@ barcodeFreqMap.executeMap <- function (map) {
     #
     mapPlot <- baseMapInfo$baseMap
     #
-    # If we need to show aggregation unit names, we need to compute the label positioning 
-    # and plot before the markers
+    # If we need to show aggregation unit names, we need to compute the label positioning and plot
     #
     showMarkerNames <- param.getParam ("map.markerNames", params)
     if (showMarkerNames) {
-        lp <- map.computeLabelParams (aggUnitData, baseMapInfo)		#; print(lp)
-        mapPlot <- mapPlot + 
-            ggplot2::geom_point(ggplot2::aes(x=lon, y=lat), data=lp, colour="red") +
-            ggrepel::geom_label_repel(ggplot2::aes(x=lon, y=lat, label=label), data=lp,
-                                      fill="black", size=4.5, fontface="bold", color="darkgray", show.legend=FALSE,
-                                      hjust=lp$just, vjust=0.5, nudge_x=lp$x, nudge_y=lp$y, label.padding=grid::unit(0.2, "lines"))
+        relSizes <- sqrt(aggUnitData$SampleCount)
+        mapPlot <- map.addAggregationUnitNameLayer (mapPlot, aggUnitData, baseMapInfo, pp, markerSize=relSizes)
     }
     #
     # Now add the markers and title
     #
-    mapPlot <- barcodeFreqMap.addFreqMarkers (mapPlot, visType, clusterCountData, aggUnitData, stdMarkerCount, stdMarkerSize)
+    mapPlot <- barcodeFreqMap.addFreqMarkers (mapPlot, visType, clusterCountData, aggUnitData, stdMarkerCount, stdMarkerSize, pp)
     mapPlot <- mapPlot + ggplot2::labs(title=plotTitle, subtitle="")
     #
     # Return map plot for completion and saving to file
@@ -105,18 +102,20 @@ barcodeFreqMap.getVisualizationTypeFromMeasure <- function(measure) {		#; print(
 # Haplotype Frequency Markers plotting 
 ################################################################################
 #
-barcodeFreqMap.addFreqMarkers <- function (mapPlot, visType, countData, aggUnitData, stdMarkerCount, stdMarkerSize) {
+barcodeFreqMap.addFreqMarkers <- function (mapPlot, visType, countData, aggUnitData, stdMarkerCount, stdMarkerSize, pp) {
     if (visType=="bar") {
-        mapPlot <- barcodeFreqMap.addFreqBars (mapPlot, countData, aggUnitData, stdMarkerCount, stdMarkerSize)
+        mapPlot <- barcodeFreqMap.addFreqBars (mapPlot, countData, aggUnitData, stdMarkerCount, stdMarkerSize, pp)
     } else if (visType=="pie") {
-        mapPlot <- barcodeFreqMap.addFreqPies (mapPlot, countData, aggUnitData, stdMarkerCount, stdMarkerSize)
+        mapPlot <- barcodeFreqMap.addFreqPies (mapPlot, countData, aggUnitData, stdMarkerCount, stdMarkerSize, pp)
     }
     mapPlot
 }
 
-barcodeFreqMap.addFreqPies <- function (mapPlot, countData, aggUnitData, stdMarkerCount, stdMarkerSize) {
+barcodeFreqMap.addFreqPies <- function (mapPlot, countData, aggUnitData, stdMarkerCount, stdMarkerSize, pp) {
     # Silly trick to make the package checker happy... :-(
     Longitude <- Latitude <- Haplo <- ClusterCount <- SampleCount <-NULL
+    # Nasty trick we have to do because there is no linewidth aesthetic at present
+    ggplot2::update_geom_defaults(ggforce::GeomArcBar, ggplot2::aes(linewidth=!!pp$pieLineWidth))
 
     # Now add the pie chart markers
     if (stdMarkerCount==0) {
@@ -137,7 +136,7 @@ barcodeFreqMap.addFreqPies <- function (mapPlot, countData, aggUnitData, stdMark
     mapPlot
 }
 
-barcodeFreqMap.addFreqBars <- function (mapPlot, countData, aggUnitData, stdMarkerCount, stdMarkerSize) {
+barcodeFreqMap.addFreqBars <- function (mapPlot, countData, aggUnitData, stdMarkerCount, stdMarkerSize, pp) {
 
     # Get all aggregation unit ids, in descending order of sample count
     aggUnitData <- aggUnitData[order(-aggUnitData$SampleCount),]
@@ -183,8 +182,9 @@ barcodeFreqMap.addFreqBars <- function (mapPlot, countData, aggUnitData, stdMark
     }				
     #print(freqBarData)
     mapPlot <- mapPlot +
-               ggplot2::geom_rect(ggplot2::aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2), data=freqBarData, inherit.aes=FALSE,
-                                  colour="gray25", size=0.5, fill="white", show.legend=FALSE)
+               ggplot2::geom_rect(ggplot2::aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2), 
+                                  data=freqBarData, inherit.aes=FALSE,
+                                  colour="gray25", linewidth=pp$pieLineWidth, fill="white", show.legend=FALSE)
     mapPlot
 }
 

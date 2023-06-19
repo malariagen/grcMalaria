@@ -5,7 +5,7 @@ ui.makeSingleMap <- function (ctx, sampleSet, type,
                    #timePeriods=NULL,	TBD
                    measure=NULL,
                    aggregate="Province", minAggregateCount=1,
-                   markerSize=5, markerColours="red3", showNames=TRUE, colourBy="Province",
+                   markerSize=c(4,40), markerColours="red3", showNames=TRUE, colourBy="Province",
                    ...) {
                    
     if (!(type %in% UI.SUPPORTED_MAP_TYPES)) {
@@ -81,14 +81,16 @@ map.makeSingleMap <- function(userCtx, sampleSetName, mapType, params) {		#;prin
     # Get the set of specs for the maps to be produced
     #
     mapSpecs <- map.createMapSpecs (userCtx, sampleSetName, mapType, params)
+    mapSpec <- mapSpecs[[1]]
     #
     # Generate the ggplot2 plot object
     #
-    mapPlot <- map.generateMapPlot (mapSpecs[[1]], params)
+    mapPlot <- map.generateMapPlot (mapSpec, params)
     #
     # Add the "look and feel" elements to the map plot
     #
-    mapPlot <- mapPlot + map.getTheme()
+    pp <- mapSpec$master$plotParams					#; print(pp)
+    mapPlot <- mapPlot + pp$theme
     #
     # Deal with the legend - TBD
     #
