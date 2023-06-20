@@ -89,8 +89,7 @@ map.makeSingleMap <- function(userCtx, sampleSetName, mapType, params) {		#;prin
     #
     # Add the "look and feel" elements to the map plot
     #
-    pp <- mapSpec$master$plotParams					#; print(pp)
-    mapPlot <- mapPlot + pp$theme
+    mapPlot <- mapPlot + mapSpec$master$theme
     #
     # Deal with the legend - TBD
     #
