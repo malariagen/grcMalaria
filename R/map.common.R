@@ -260,7 +260,9 @@ map.createMapMaster <- function (userCtx, sampleSetName, mapType, params) {		#; 
 map.getTheme <- function(pp) {
     th <- ggplot2::theme_grey(base_size=pp$themeBaseSize)
     th <- th +
-          ggplot2::theme(panel.background = ggplot2::element_rect(colour=NA),
+          ggplot2::theme(panel.background = ggplot2::element_rect(fill=map.colour.sea, colour=NA),
+                         panel.grid.major = ggplot2::element_blank(),
+                         panel.grid.minor = ggplot2::element_blank(),
                          plot.background  = ggplot2::element_rect(fill="white", colour=NA),
                          plot.title       = ggplot2::element_text(face="bold",size=ggplot2::rel(pp$plotTitleSize), hjust=0.5),
                          axis.title       = ggplot2::element_text(face="bold",size=ggplot2::rel(pp$axisTitleSize)),
