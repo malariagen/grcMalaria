@@ -12,8 +12,8 @@ markerMap.getDiversityMeasures <- function() {
 markerMap.executeMap <- function(map) {
     mapMaster   <- map$master
     mapType     <- mapMaster$type
-    measure     <- map$measure
-    interval    <- map$interval
+    measure     <- map$measure				#; print(measure)
+    interval    <- map$interval				#; print(interval)
     #
     geom        <- mapMaster$geometry
     pp          <- mapMaster$plotParams
@@ -68,10 +68,14 @@ markerMap.executeMap <- function(map) {
     # Select the aggregation units to be plotted (all, in the case of location markers)
     # In this case, those that have an NA for the measure being plotted (should be only for drug resistance)
     #
-    selAggUnitData <- aggUnitData
+    selAggUnitData <- aggUnitData				#; print(nrow(selAggUnitData))
     if (mapType != "location") {
         vals <- aggUnitData[,measure]				#; print(vals)
         selAggUnitData <- aggUnitData[which(!is.na(vals)),]	#; print(nrow(selAggUnitData))
+        if (nrow(selAggUnitData)==0) {
+	    print(paste("Insufficient data for a map of", measure, "for interval", interval$name))
+	    return()
+	}
     }
     #
     # Compute marker sizes. 
