@@ -12,6 +12,7 @@ param.getParam <- function (paramName, params) {
     }
     value
 }
+
 #
 ###################################################################
 # Argument parsing and translating to parameters
@@ -232,11 +233,7 @@ param.addMapParameters <- function (ctx, p, args, taskMethod, ...) {
         p$cluster.clusterSet.name <- param.getArgParameter (args, "clusterSet", type="character")
 
     } else {
-<<<<<<< HEAD
         stop(paste("Invalid plot task:", paste0("map/",taskMethod)))
-=======
-        stop(paste("Invalid plot task:", taskName))
->>>>>>> 3cd3d8f6a4632e0ab7a53c814bf1a6503b2747fe
     }
 }
 

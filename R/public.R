@@ -24,6 +24,7 @@
 #' @name grcMalaria
 NULL
 
+
 #############################################################
 #
 #' Load a Genetic Report Card (GRC) data file
@@ -472,11 +473,7 @@ mapMutationPrevalence <- function (ctx, sampleSet, timePeriods=NULL,
 #' @param minAggregateCount The minimum count of aggregated samples. To avoid estimating on very small samples, one can set a minimum count of samples, below which the marker is not shown
 #' @param markerSize Allows adjustment of the size of markers on the map
 #' @param showNames If TRUE, labels are shown with the name of the aggregation unit (Province or District)
-<<<<<<< HEAD
 #' @param nameFontSize Set the font size of the geographical name labels outside the markers on the map, if showNames=TRUE, default=5
-=======
-#' @param markerFontSize Set the font size of the value labels inside the markers on the map, default=6
->>>>>>> 3cd3d8f6a4632e0ab7a53c814bf1a6503b2747fe
 #' @param ... any of plot parameters, including: width, height, units, dpi, legendPosition, legendWidth. 
 #'            width: the width of the plot (numeric), default=15
 #'            height: the height of the plot (numeric), default=15

@@ -1,4 +1,5 @@
 
+
 UI.SUPPORTED_MAP_TYPES <- c("location", "sampleCount", "drug", "mutation", "alleleProp", "diversity")
 
 ui.makeSingleMap <- function (ctx, sampleSet, type,
@@ -14,10 +15,7 @@ ui.makeSingleMap <- function (ctx, sampleSet, type,
         stop (paste("Unsupported map type for UI:", type))
     }
     task <- paste0("map/", type)
-<<<<<<< HEAD
     config <- ctx$config
-=======
->>>>>>> 3cd3d8f6a4632e0ab7a53c814bf1a6503b2747fe
 
     params <- param.makeParameterList (ctx, task, 
                   timePeriods=NULL, aggregate=aggregate, minAggregateCount=minAggregateCount, 
