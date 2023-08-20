@@ -11,8 +11,10 @@ mapSampleCounts(
   aggregate = "Province",
   minAggregateCount = 1,
   markerSize = c(4, 40),
-  showNames = TRUE,
+  markerFontSize = 6,
   colourBy = "Province",
+  showNames = TRUE,
+  nameFontSize = 5,
   ...
 )
 }
@@ -29,13 +31,17 @@ Currently, the public GRC data only contains years, so only the year in the prov
 
 \item{minAggregateCount}{The minimum count of aggregated samples, below which a marker is not shown.}
 
-\item{markerSize}{Allows adjustment of the size of markers on the map. If only one value is passed, 
+\item{markerSize}{Set the size of markers on the map. If only one value is passed, 
 all markers will be that size; if two values are passed, they will be used as the min 
 and max size of the marker, whose size will reflect the number of samples.}
 
-\item{showNames}{If TRUE, labels are shown with the name of the aggregation unit (Province or District)}
+\item{markerFontSize}{Set the font size of the value labels inside the markers on the map, default=6}
 
 \item{colourBy}{Shows the aggregation level to be used to colour the markers (Country or Province)}
+
+\item{showNames}{If TRUE, labels are shown with the name of the aggregation unit (Province or District)}
+
+\item{nameFontSize}{Set the font size of the geographical name labels outside the markers on the map, if showNames=TRUE, default=5}
 
 \item{...}{any of plot parameters, including: width, height, units, dpi, legendPosition, legendWidth. 
 width: the width of the plot (numeric), default=15

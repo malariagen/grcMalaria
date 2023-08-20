@@ -15,9 +15,6 @@ markerMap.executeMap <- function(map) {
     measure     <- map$measure				#; print(measure)
     interval    <- map$interval				#; print(interval)
     #
-    geom        <- mapMaster$geometry
-    pp          <- mapMaster$plotParams
-    #
     datasetName <- map$datasetName
     sampleSet   <- mapMaster$sampleSet
     userCtx     <- mapMaster$userCtx
@@ -53,14 +50,14 @@ markerMap.executeMap <- function(map) {
     # For sample count markers, the colour may be based on a different admin division level from the aggregation
     #
     if (mapType %in% c("sampleCount","location")) {
-        colourAdmDivLevel <- param.getParam ("map.markerColourAggLevel", params)	#; print(colourAdmDivLevel) # should be 0 or 1
-        colourAdmDivTitle <- ADM_DIV_LABELS[colourAdmDivLevel+1]			#; print(colourAdmDivCol)
-        colourAdmDivCol   <- GID_COLUMNS[colourAdmDivLevel+1]				#; print(colourAdmDivCol)
-        colourAdmDivs <- aggUnitData[,colourAdmDivCol]					#; print(colourAdmDivs)
-        colourGids    <- unique(colourAdmDivs)						#; print(colourGids)
-        colPalette    <- graphics.getColourPalette (userCtx)
-        admDivPalette <- rep_len(colPalette, length.out=length(colourGids))
-        admDivTextPalette <- graphics.makeTextPalette (admDivPalette)		
+        colourAdmDivLevel    <- param.getParam ("map.markerColourAggLevel", params)	#; print(colourAdmDivLevel) # should be 0 or 1
+        colourAdmDivTitle    <- ADM_DIV_LABELS[colourAdmDivLevel+1]			#; print(colourAdmDivCol)
+        colourAdmDivCol      <- GID_COLUMNS[colourAdmDivLevel+1]			#; print(colourAdmDivCol)
+        colourAdmDivs        <- aggUnitData[,colourAdmDivCol]				#; print(colourAdmDivs)
+        colourGids           <- unique(colourAdmDivs)					#; print(colourGids)
+        colPalette           <- graphics.getColourPalette (userCtx)
+        admDivPalette        <- rep_len(colPalette, length.out=length(colourGids))
+        admDivTextPalette    <- graphics.makeTextPalette (admDivPalette)		
         names(admDivPalette) <- names(admDivTextPalette) <- colourGids			#; print(admDivPalette); print(admDivTextPalette)
         admDivPaletteLabels  <- map.getAdmDivNamesFromMeta (colourAdmDivLevel, sampleMeta)	#; print(admDivPaletteLabels)
     }
@@ -80,7 +77,7 @@ markerMap.executeMap <- function(map) {
     #
     # Compute marker sizes. 
     #
-    pointSizes <- markerMap.getAggUnitMarkerSizes (selAggUnitData, params, geom)
+    pointSizes <- markerMap.getAggUnitMarkerSizes (selAggUnitData, params)	#; print(pointSizes)
     #
     # Do the actual plot, starting with the background map
     #
@@ -90,14 +87,12 @@ markerMap.executeMap <- function(map) {
     #
     showMarkerNames <- param.getParam ("map.markerNames", params)
     if (showMarkerNames) {
-        mapPlot <- map.addAggregationUnitNameLayer (mapPlot, selAggUnitData, baseMapInfo, pp, markerSize=pointSizes)
+        mapPlot <- map.addAggregationUnitNameLayer (mapPlot, selAggUnitData, baseMapInfo, params, markerSize=pointSizes)
     }
     #
     # Get the values to be displyed in the markers (except for the location markers)
     #
-    if (mapType == "location") {
-        valueLabels <- rep("", nrow(selAggUnitData))
-    } else {
+    if (mapType != "location") {
         mValues <- selAggUnitData[,measure]
         valueLabels <- as.character(round(mValues, digits=2))
     }									#; print(valueLabels)
@@ -105,7 +100,7 @@ markerMap.executeMap <- function(map) {
     # Now add the markers, coloured according to the appropriate scale, depending on the type of map
     #
     if (mapType=="diversity") {
-        markerColours <- param.getParam ("map.diversity.markerColours", params)
+        markerColours <- param.getParam ("map.markerColours", params)
         # Two marker colours can be specified to create a gradient. If a single marker colour is 
         # specified, then create a gradient from white to that colour.
         if (length(markerColours) == 1) {
@@ -116,29 +111,34 @@ markerMap.executeMap <- function(map) {
         mapPlot <- mapPlot +
             ggplot2::geom_point(ggplot2::aes(x=Longitude, y=Latitude, fill=!!rlang::sym(measure)),
                                 data=selAggUnitData,
-                                size=pointSizes, shape=21, stroke=pp$markerBorderWidth) +
+                                size=pointSizes, shape=21, stroke=params$markerBorderWidth) +
             ggplot2::scale_fill_gradientn(limits=c(scaleMin,scaleMax), colours=markerColours, values=c(0,1))
-    } else if (mapType=="sampleCount") {
+    } else if (mapType=="sampleCount") {			#; print(length(pointSizes)); print(params$markerBorderWidth)
         mapPlot <- mapPlot +
             ggplot2::geom_point(ggplot2::aes(x=Longitude, y=Latitude, fill=!!rlang::sym(colourAdmDivCol)),
 	                        data=selAggUnitData,
-                                size=pointSizes, shape=21, stroke=pp$markerBorderWidth) +
+                                size=pointSizes, shape=21, stroke=params$markerBorderWidth) +
             ggplot2::scale_fill_manual(values=admDivPalette, labels=admDivPaletteLabels, name=colourAdmDivTitle,
                                        guide=ggplot2::guide_legend(override.aes=list(
-                                           size=pp$legendFontSize, stroke=pp$legendBorderWidth
+                                       size=params$legendFontSize, stroke=params$legendBorderWidth
                                        )))
     }  else if (mapType=="location") {
         mapPlot <- mapPlot +
-            ggplot2::geom_point(data=selAggUnitData, ggplot2::aes(x=Longitude, y=Latitude, fill=!!rlang::sym(colourAdmDivCol)),
-	                        size=pointSizes, shape=21, stroke=pp$markerBorderWidth)
+            ggplot2::geom_point(ggplot2::aes(x=Longitude, y=Latitude, fill=!!rlang::sym(colourAdmDivCol)),
+	                        data=selAggUnitData,
+                                size=pointSizes, shape=21, stroke=params$markerBorderWidth) +
+            ggplot2::scale_fill_manual(values=admDivPalette, labels=admDivPaletteLabels, name=colourAdmDivTitle,
+                                       guide=ggplot2::guide_legend(override.aes=list(
+                                           size=params$legendFontSize, stroke=params$legendBorderWidth
+                                       )))
     } else if (mapType=="drug") {
         mapPlot <- mapPlot +
             ggplot2::geom_point(ggplot2::aes(x=Longitude, y=Latitude, fill=!!rlang::sym(measure)), 
 	                        data=selAggUnitData, 
-	                        size=pointSizes, shape=21, stroke=pp$markerBorderWidth) +
+	                        size=pointSizes, shape=21, stroke=params$markerBorderWidth) +
             ggplot2::scale_fill_gradientn(limits=c(0,1), colours=c("green3","orange2","red3","red3"), values=c(0, 0.2, 0.75, 1))
     } else if (mapType=="mutation") {
-        markerColours <- param.getParam ("map.prevalence.markerColours", params)
+        markerColours <- param.getParam ("map.markerColours", params)
         #
         # Two marker colours can be specified to create a gradient. If a single marker colour is 
         # specified, then create a gradient from white to that colour.
@@ -149,7 +149,7 @@ markerMap.executeMap <- function(map) {
         scaleMin <- 0; scaleMax <- 1
         mapPlot <- mapPlot +
             ggplot2::geom_point(ggplot2::aes(x=Longitude, y=Latitude, fill=!!rlang::sym(measure)), 
-	                        data=selAggUnitData, size=pointSizes, shape=21, stroke=pp$markerBorderWidth) +
+	                        data=selAggUnitData, size=pointSizes, shape=21, stroke=params$markerBorderWidth) +
             ggplot2::scale_fill_gradientn(limits=c(scaleMin,scaleMax), colours=markerColours, values=c(0,1))
     }
     #	    
@@ -159,13 +159,14 @@ markerMap.executeMap <- function(map) {
         mapPlot <- mapPlot +
             ggplot2::geom_text(ggplot2::aes(x=Longitude, y=Latitude, colour=!!rlang::sym(colourAdmDivCol)),
                                data=selAggUnitData, 
-                               label=valueLabels, hjust=0.5, vjust=0.5, size=pp$markerValueFontSize, fontface="bold", show.legend=FALSE) +
+                               label=valueLabels, hjust=0.5, vjust=0.5, size=params$map.markerValueFontSize, fontface="bold", 
+                               show.legend=FALSE) +
             ggplot2::scale_colour_manual(values=admDivTextPalette)
-    } else {
+    } else if (mapType != "location") {
         mapPlot <- mapPlot +
             ggplot2::geom_text(ggplot2::aes(x=Longitude, y=Latitude),
                                data=selAggUnitData,
-                               label=valueLabels, hjust=0.5, vjust=0.5, size=pp$markerValueFontSize, fontface="bold")
+                               label=valueLabels, hjust=0.5, vjust=0.5, size=params$map.markerValueFontSize, fontface="bold")
     }
     #
     # Return map plot for completion and saving to file
@@ -177,25 +178,24 @@ markerMap.executeMap <- function(map) {
 # Graphical rendition of site markers
 ################################################################################
 #
-markerMap.getAggUnitMarkerSizes <- function(aggUnitData, params, geom) {
+markerMap.getAggUnitMarkerSizes <- function(aggUnitData, params) {
     # Compute marker sizes. 
     # If only one size was given in the config, then the markers will be constant size/
-    # If there are two sizes, then merkers will be sized proportional to the number of samples, with the smaller
+    # If there are two sizes, then markers will be sized proportional to the number of samples, with the smaller
     # size representing 1 sample, and the larger size representing the numer of samples in the largest aggregation
-    mSizeParam <- param.getParam ("map.markerSize", params)
+    mSizeParam <- param.getParam ("map.markerSize", params)	#; print(mSizeParam); print(length(mSizeParam))
     if (length(mSizeParam) > 1) {
         minSize  <- mSizeParam[1]
         maxSize  <- mSizeParam[2]
         sizeRange  <- maxSize - minSize
-        counts <- aggUnitData$SampleCount
+        counts <- aggUnitData$SampleCount			#; print(counts)
         minCount <- 1
         maxCount <- max(counts)
         countRange <- maxCount - minCount
         markerSizes <- minSize + (sizeRange * ((counts - minCount) / countRange))
     } else {
         markerSizes <- mSizeParam
-    }
-    markerSizes <- markerSizes / geom$scale
+    }								#; print(markerSizes)
     markerSizes
 }
 #
@@ -203,8 +203,12 @@ markerMap.getAggUnitMarkerSizes <- function(aggUnitData, params, geom) {
 # Estimation of marker measures (drug resistance and diversity)
 ################################################################################
 #
-markerMap.resolveMeasures <- function(mapType, measures, config) {
+markerMap.resolveMeasures <- function(ctx, mapType, params) {
+    measures <- param.getParam ("analysis.measures", params)
+    #
     # Get the admin division values from the first sample of this unit (assuming the values are the same for all)
+    #
+    config <- ctx$config
     if (mapType=="diversity") {
         if ("ALL" %in% measures) {
             measures <- markerMap.getDiversityMeasures()

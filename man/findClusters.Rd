@@ -10,7 +10,7 @@ findClusters(
   clusterSet,
   minIdentity = 1,
   impute = TRUE,
-  clusteringMethod = "allNeighbours",
+  clusteringMethod = "louvain",
   minClusterSize = 10
 )
 }
@@ -26,7 +26,7 @@ The default is 1.}
 
 \item{impute}{To use imputed or filtered data. The default is TRUE.}
 
-\item{clusteringMethod}{The clustering method. Two methods are available: "allNeighbours" and "louvain". The default is "allNeighbours".
+\item{clusteringMethod}{The clustering method. Two methods are available: "allNeighbours" and "louvain". The default is "louvain".
 The "allNeighbours" method clusters samples together that are above the set "minIdentity" threshold.
 This method is less informative at low similarity levels, because each sample will be assigned to a single cluster.
 The "louvain" method is the preferred method. Also known as Louvain Community-based clustering,

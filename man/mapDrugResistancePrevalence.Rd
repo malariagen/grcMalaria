@@ -11,8 +11,10 @@ mapDrugResistancePrevalence(
   drugs = "ALL",
   aggregate = "Province",
   minAggregateCount = 10,
-  showNames = TRUE,
   markerSize = 16,
+  markerFontSize = 6,
+  showNames = TRUE,
+  nameFontSize = 5,
   ...
 )
 }
@@ -34,9 +36,13 @@ To specify a drug put the drug name in between quotation marks e.g. "Artemisinin
 
 \item{minAggregateCount}{The minimum count of aggregated samples. To avoid estimating on very small samples, one can set a minimum count of samples, below which the marker is not shown}
 
+\item{markerSize}{Allows adjustment of the size of markers on the map}
+
+\item{markerFontSize}{Set the font size of the value labels inside the markers on the map, default=6}
+
 \item{showNames}{If TRUE, labels are shown with the name of the aggregation unit (Province or District)}
 
-\item{markerSize}{Allows adjustment of the size of markers on the map}
+\item{nameFontSize}{Set the font size of the geographical name labels outside the markers on the map, if showNames=TRUE, default=5}
 
 \item{...}{any of plot parameters, including: width, height, units, dpi, legendPosition, legendWidth. 
 width: the width of the plot (numeric), default=15
@@ -70,7 +76,8 @@ periods <- list(
 mapDrugResistancePrevalence (ctx, sampleSet="Laos", timePeriods=periods,
                              drugs=c("Artemisinin", "Chloroquine"), 
                              aggregate=c("Province","District"),
-                             minAggregateCount=10, showNames=TRUE, markerSize=16, legend)
+                             minAggregateCount=10, 
+                               markerSize=16, showNames=TRUE)
 }
 
 }

@@ -13,8 +13,6 @@ clusterShareMap.executeMap <- function (map) {
     measure     <- map$measure
     interval    <- map$interval
     #
-    pp          <- mapMaster$plotParams
-    #
     datasetName <- map$datasetName
     sampleSet   <- mapMaster$sampleSet
     userCtx     <- mapMaster$userCtx
@@ -80,12 +78,12 @@ clusterShareMap.executeMap <- function (map) {
     showMarkerNames <- param.getParam ("map.markerNames", params)
     if (showMarkerNames) {
         relSizes <- sqrt(aggUnitData$SampleCount)
-        mapPlot <- map.addAggregationUnitNameLayer (mapPlot, aggUnitData, baseMapInfo, pp, markerSize=relSizes)
+        mapPlot <- map.addAggregationUnitNameLayer (mapPlot, aggUnitData, baseMapInfo, params, markerSize=relSizes)
     }
     #
     # Now add the markers and title
     #
-    mapPlot <- clusterShareMap.addShareMarkers (mapPlot, visType, clusterShareData, clusterPalette, aggUnitData, stdMarkerCount, stdMarkerSize, pp)
+    mapPlot <- clusterShareMap.addShareMarkers (mapPlot, visType, clusterShareData, clusterPalette, aggUnitData, stdMarkerCount, stdMarkerSize, params)
     mapPlot <- mapPlot + ggplot2::labs(title=plotTitle, subtitle="")
     #
     # Return map plot for completion and saving to file
@@ -166,23 +164,23 @@ clusterShareMap.parseMeasure <- function(measure) {
 # Haplotype Sharing Markers plotting 
 ################################################################################
 #
-clusterShareMap.addShareMarkers <- function (mapPlot, visType, clusterShareData, clusterPalette, aggUnitData, stdMarkerCount, stdMarkerSize, pp) {
+clusterShareMap.addShareMarkers <- function (mapPlot, visType, clusterShareData, clusterPalette, aggUnitData, stdMarkerCount, stdMarkerSize, params) {
     # Do th actual marker plotting for the twp types of markers
     if (visType=="bar") {
-        mapPlot <- clusterShareMap.addShareBars (mapPlot, clusterShareData, clusterPalette, aggUnitData, stdMarkerCount, stdMarkerSize, pp)
+        mapPlot <- clusterShareMap.addShareBars (mapPlot, clusterShareData, clusterPalette, aggUnitData, stdMarkerCount, stdMarkerSize, params)
     } else if (visType=="pie") {
-        mapPlot <- clusterShareMap.addSharePies (mapPlot, clusterShareData, clusterPalette, aggUnitData, stdMarkerCount, stdMarkerSize, pp)
+        mapPlot <- clusterShareMap.addSharePies (mapPlot, clusterShareData, clusterPalette, aggUnitData, stdMarkerCount, stdMarkerSize, params)
     }
     mapPlot
 }
 #
 #
 #
-clusterShareMap.addSharePies <- function (mapPlot, clusterShareData, clusterPalette, aggUnitData, stdMarkerCount, stdMarkerSize, pp) {
+clusterShareMap.addSharePies <- function (mapPlot, clusterShareData, clusterPalette, aggUnitData, stdMarkerCount, stdMarkerSize, params) {
     # Silly trick to make the package checker happy... :-(
     Longitude <- Latitude <- Cluster <- ClusterCount <- SampleCount <-NULL
     # Nasty trick we have to do because there is no linewidth aesthetic at present
-    ggplot2::update_geom_defaults(ggforce::GeomArcBar, ggplot2::aes(linewidth=!!pp$pieLineWidth))
+    ggplot2::update_geom_defaults(ggforce::GeomArcBar, ggplot2::aes(linewidth=!!params$pieLineWidth))
 
     # Now add the pie chart markers
     if (stdMarkerCount==0) {
@@ -205,7 +203,7 @@ clusterShareMap.addSharePies <- function (mapPlot, clusterShareData, clusterPale
 #
 #
 #
-clusterShareMap.addShareBars <- function (mapPlot, clusterShareData, clusterPalette, aggUnitData, stdMarkerCount, stdMarkerSize, pp) {
+clusterShareMap.addShareBars <- function (mapPlot, clusterShareData, clusterPalette, aggUnitData, stdMarkerCount, stdMarkerSize, params) {
 
     # Get all aggregation unit ids, in descending order of sample count
     aggUnitData <- aggUnitData[order(-aggUnitData$SampleCount),]
@@ -264,7 +262,7 @@ clusterShareMap.addShareBars <- function (mapPlot, clusterShareData, clusterPale
     mapPlot <- mapPlot +
                ggplot2::geom_rect(ggplot2::aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2, fill=Cluster), 
                                   data=freqBarData, inherit.aes=FALSE,
-                                  colour="gray25", linewidth=pp$pieLineWidth, show.legend=FALSE) +
+                                  colour="gray25", linewidth=params$pieLineWidth, show.legend=FALSE) +
                ggplot2::scale_fill_manual(values=clusterPalette)
     mapPlot
 }

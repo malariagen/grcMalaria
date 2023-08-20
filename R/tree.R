@@ -109,10 +109,8 @@ tree.execute <- function(userCtx, sampleSetName, method, params) {
         # Plot tree
         #
         treeName  <- paste("tree", plotName, sep="-")
-        plotSize <- param.getParam ("plot.size", params)		#; print(plotSize)
         graphicFilenameRoot  <- paste(plotsFolder, treeName, sep="/")
-        initializeGraphics (getGraphicsFilename (graphicFilenameRoot), 
-                            widthInch=plotSize$width, heightInch=plotSize$height, resolution=300)
+        initializeGraphics (getGraphicsFilename (graphicFilenameRoot), params)
         graphics::par(mar=c(3.1, 3.1, 3.1, 3.1))
         treePlot <- NULL
         treePlot <- ape::plot.phylo(tree, type="unrooted", root.edge=FALSE, edge.color=edgeColours, edge.width=tree.branchThickness, 
@@ -129,7 +127,7 @@ tree.execute <- function(userCtx, sampleSetName, method, params) {
         # Create a separate legend
         #
         graphicFilenameRoot  <- paste0(plotsFolder, "/", treeName, "-legend")
-        initializeGraphics (getGraphicsFilename (graphicFilenameRoot), widthInch=plotSize$width, heightInch=plotSize$height, resolution=300)
+        initializeGraphics (getGraphicsFilename (graphicFilenameRoot), params)
         graphics::plot.new()
         graphics::par(mar=c(0,0,0,0))
         graphics::legend("topleft", ncol=1, inset=0.05, cex=1.0, 

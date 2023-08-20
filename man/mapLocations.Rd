@@ -9,8 +9,9 @@ mapLocations(
   sampleSet,
   aggregate = "Province",
   markerSize = c(4, 40),
-  showNames = TRUE,
   colourBy = "Province",
+  showNames = TRUE,
+  nameFontSize = 5,
   ...
 )
 }
@@ -25,9 +26,11 @@ mapLocations(
 all markers will be that size; if two values are passed, they will be used as the min 
 and max size of the marker, whose size will reflect the number of samples.}
 
+\item{colourBy}{Shows the aggregation level to be used to colour the markers (Country or Province)}
+
 \item{showNames}{If TRUE, labels are shown with the name of the aggregation unit (Province or District)}
 
-\item{colourBy}{Shows the aggregation level to be used to colour the markers (Country or Province)}
+\item{nameFontSize}{Set the font size of the geographical name labels outside the markers on the map, if showNames=TRUE, default=5}
 
 \item{...}{any of plot parameters, including: width, height, units, dpi, legendPosition, legendWidth. 
 width: the width of the plot (numeric), default=15

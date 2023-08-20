@@ -11,9 +11,11 @@ mapDiversity(
   measures = "ALL",
   aggregate = "Province",
   minAggregateCount = 10,
-  showNames = TRUE,
   markerSize = 16,
+  markerFontSize = 6,
   markerColours = "red3",
+  showNames = TRUE,
+  nameFontSize = 5,
   ...
 )
 }
@@ -46,11 +48,15 @@ The is calculated using pairwise genetic distance as the proportion of SNPs diff
 
 \item{minAggregateCount}{The minimum count of aggregated samples. To avoid estimating on very small samples, one can set a minimum count of samples, below which the marker is not shown}
 
-\item{showNames}{If TRUE, labels are shown with the name of the aggregation unit (Province or District)}
-
 \item{markerSize}{Allows adjustment of the size of markers on the map}
 
+\item{markerFontSize}{Set the font size of the value labels inside the markers on the map, default=6}
+
 \item{markerColours}{The colour to indicate the level of genetic diversity. Default: "red3", other examples: "forestgreen", "cornflowerblue","darkgoldenrod3"}
+
+\item{showNames}{If TRUE, labels are shown with the name of the aggregation unit (Province or District)}
+
+\item{nameFontSize}{Set the font size of the geographical name labels outside the markers on the map, if showNames=TRUE, default=5}
 
 \item{...}{any of plot parameters, including: width, height, units, dpi, legendPosition, legendWidth. 
 width: the width of the plot (numeric), default=15

@@ -12,8 +12,9 @@ mapConnections(
   meanDistanceLevels = 0.5,
   aggregate = "Province",
   minAggregateCount = 10,
+  markerSize = 6,
   showNames = TRUE,
-  markerSize = 16,
+  nameFontSize = 5,
   ...
 )
 }
@@ -36,9 +37,11 @@ the proportion of sample pairs with at least the percentage of similarity given 
 
 \item{minAggregateCount}{The minimum count of aggregated samples. To avoid estimating on very small samples, one can set a minimum count of samples, below which the marker is not shown.}
 
+\item{markerSize}{Allows adjustment of the size of markers on the map.}
+
 \item{showNames}{If TRUE, labels are shown with the name of the aggregation unit (Province or District).}
 
-\item{markerSize}{Allows adjustment of the size of markers on the map.}
+\item{nameFontSize}{Set the font size of the geographical name labels outside the markers on the map, if showNames=TRUE, default=5}
 
 \item{...}{any of plot parameters, including: width, height, units, dpi, legendPosition, legendWidth. 
 width: the width of the plot (numeric), default=15

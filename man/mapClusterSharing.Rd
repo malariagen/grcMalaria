@@ -11,8 +11,9 @@ mapClusterSharing(
   type = c("bar", "pie"),
   aggregate = "Province",
   minAggregateCount = 5,
-  showNames = TRUE,
   markerScale = 0.8,
+  showNames = TRUE,
+  nameFontSize = 5,
   ...
 )
 }
@@ -30,9 +31,11 @@ mapClusterSharing(
 \item{minAggregateCount}{The minimum count of aggregated samples. To avoid estimating on very small samples, one can set a minimum count of samples,
 below which the marker is not shown.The default is 5.}
 
+\item{markerScale}{Allows adjustment of the size of markers on the map, default: 0.8.}
+
 \item{showNames}{If TRUE, labels are shown with the name of the aggregation unit (Province or District).}
 
-\item{markerScale}{Allows adjustment of the size of markers on the map, default: 0.8.}
+\item{nameFontSize}{Set the font size of the geographical name labels outside the markers on the map, if showNames=TRUE, default=5}
 
 \item{...}{any of plot parameters, including: width, height, units, dpi, legendPosition, legendWidth
 width: the width of the plot (numeric), default=15

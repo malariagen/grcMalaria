@@ -110,17 +110,12 @@ clusterGraph.makeClusterPlot <- function (ctx, graphInfo, params) {
     clGraphFilename <- paste("graph", filenameSuffix, "clusters", sep="-")
     plotFolder <- getOutFolder(ctx$config, sampleSetName, c("graph", "plots"))
     clGraphFile <- paste(plotFolder, clGraphFilename, sep="/")
-    initializeGraphics (getGraphicsFilename (clGraphFile), widthInch=24, heightInch=24)
+    initializeGraphics (getGraphicsFilename (clGraphFile), params)
     plot(gr, layout=grLayout,
          edge.color=grEdgeColours, edge.width=grEdgeWidths, 
          vertex.shape="circle", vertex.label=nodeData$label, vertex.size=nodeData$size, vertex.color=nodeData$color)
     grDevices::dev.off()
 }
-#
-#
-#
-
-
 #
 #
 #

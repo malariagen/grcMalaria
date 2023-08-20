@@ -8,9 +8,6 @@ pieMap.executeMap <- function(map) {
     measure     <- map$measure
     interval    <- map$interval
     #
-    geom        <- mapMaster$geometry
-    pp          <- mapMaster$plotParams
-    #
     datasetName <- map$datasetName
     sampleSet   <- mapMaster$sampleSet
     userCtx     <- mapMaster$userCtx
@@ -23,8 +20,7 @@ pieMap.executeMap <- function(map) {
     dataset    <- ctx[[datasetName]]
     sampleMeta <- dataset$meta
     if (nrow(sampleMeta)==0) {
-        print(paste("No samples found - skipping interval", interval$name))
-        return()
+        return(NULL)
     }
     #
     baseMapInfo <- mapMaster$baseMapInfo
@@ -49,6 +45,9 @@ pieMap.executeMap <- function(map) {
     pieMapData <- pieMap.buildCountData (ctx, datasetName, sampleSet$name, aggLevel, aggUnitData, measure)	#; print(pieMapData)
     selAggUnitIds <- unique(pieMapData$UnitId)
     selAggUnitData <- aggUnitData[which(aggUnitData$UnitId %in% selAggUnitIds),]				#; print(selAggUnitData)
+    if (nrow(selAggUnitData) == 0) {
+        return(NULL)
+    }
     #
     # Compute pie chart sizes.
     #
@@ -67,7 +66,7 @@ pieMap.executeMap <- function(map) {
     #
     showMarkerNames <- param.getParam ("map.markerNames", params)
     if (showMarkerNames) {
-        mapPlot <- map.addAggregationUnitNameLayer (mapPlot, selAggUnitData, baseMapInfo, pp, markerSize=sqrt(selAggUnitData$SampleCount))
+        mapPlot <- map.addAggregationUnitNameLayer (mapPlot, selAggUnitData, baseMapInfo, params, markerSize=sqrt(selAggUnitData$SampleCount))
     }
     #
     # Now add the markers, coloured according to the palette
@@ -77,7 +76,7 @@ pieMap.executeMap <- function(map) {
     # Now add the pie chart markers
     #
     # Nasty trick we have to do because there is no linewidth aesthetic at present
-    ggplot2::update_geom_defaults(ggforce::GeomArcBar, ggplot2::aes(linewidth=!!pp$pieLineWidth))
+    ggplot2::update_geom_defaults(ggforce::GeomArcBar, ggplot2::aes(linewidth=!!params$pieLineWidth))
     mapPlot <- mapPlot +
         ggforce::geom_arc_bar(ggplot2::aes(x0=Longitude, y0=Latitude, r0=0, r=PieSize, fill=Allele, amount=AlleleCount),
                               data=pieMapData, stat="pie", inherit.aes=FALSE, 
@@ -132,7 +131,10 @@ pieMap.computeLabelCoordinates <- function(pieMapData, labelRadius=0.5) {		#; pr
 }
             
 
-pieMap.getAggUnitPieSizes <- function(aggUnitData, params) {
+pieMap.getAggUnitPieSizes <- function(aggUnitData, params) {		#; print(nrow(aggUnitData))
+    if (nrow(aggUnitData) == 0) {
+        return (numeric(0))
+    }
     # Compute pie chart sizes. 
     # If only one size was given in the config, then the markers will be constant size/
     # If there are two sizes, then merkers will be sized proportional to the number of samples, with the smaller
@@ -150,7 +152,6 @@ pieMap.getAggUnitPieSizes <- function(aggUnitData, params) {
     } else {
         markerSizes <- rep(mSizeParam, nrow(aggUnitData))
     }
-    #markerSizes <- as.numeric(markerSizes)
     markerSizes <- as.numeric(markerSizes / 100)		# The /100 is an arbitrary scaling factor, will fix later 
     names(markerSizes) <- aggUnitData$UnitId
     markerSizes								#; print(markerSizes)
@@ -164,9 +165,13 @@ pieMap.getAggUnitPieSizes <- function(aggUnitData, params) {
 # If they are, ensure we have colour palettes for these measures, creating them if necessary.
 # For a given measure, all plots for this sample set use the same palette, otherwise the viewer will be confused when looking at multiple maps.
 #
-pieMap.resolveMeasures <- function(ctx, sampleSetName, measures) {
+pieMap.resolveMeasures <- function(ctx, sampleSetName, params) {
     userCtx <- ctx$rootCtx
     config <- userCtx$config 
+    measures <- param.getParam ("analysis.measures", params)
+    #
+    #
+    #
     allMeasures <- c(config$countColumns, config$amplificationColumns, config$drugResistancePositions)		#; print(allMeasures)
     if ("ALL" %in% measures) {
         measures <- allMeasures

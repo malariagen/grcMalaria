@@ -10,8 +10,10 @@ mapClusterPrevalence(
   clusterSet,
   aggregate = "Province",
   minAggregateCount = 5,
+  markerSize = 16,
+  markerFontSize = 6,
   showNames = TRUE,
-  markerScale = 0.8,
+  nameFontSize = 5,
   ...
 )
 }
@@ -27,9 +29,13 @@ mapClusterPrevalence(
 \item{minAggregateCount}{The minimum count of aggregated samples. To avoid estimating on very small samples, one can set a minimum count of samples,
 below which the marker is not shown, default=5}
 
+\item{markerSize}{Allows adjustment of the size of markers on the map.}
+
+\item{markerFontSize}{Set the font size of the value labels inside the markers on the map, default=6}
+
 \item{showNames}{If TRUE, labels are shown with the name of the aggregation unit (Province or District)}
 
-\item{markerScale}{Allows adjustment of the size of markers on the map, default=0.8}
+\item{nameFontSize}{Set the font size of the geographical name labels outside the markers on the map, if showNames=TRUE, default=5}
 
 \item{...}{any of plot parameters, including: width, height, units, dpi, legendPosition, legendWidth
 width: the width of the plot (numeric), default=15
@@ -63,6 +69,6 @@ Maps and data are located in .../output/out/(sampleSetName)/map-clusterPrevalenc
 # for sampleSet "Laos", and clusterSet "LAclust" at both a Province and District level,
 mapClusterPrevalence (ctx, sampleSet="Laos", clusterSet = "LAclust",
                       aggregate=c("Province","District"),
-                      minAggregateCount=5, showNames=TRUE, markerScale=0.8)
+                      minAggregateCount=5, showNames=TRUE)
 }
 }

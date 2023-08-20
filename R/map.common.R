@@ -27,6 +27,14 @@ map.execute <- function(userCtx, sampleSetName, mapType, params) {		#;print(mapT
         # Generate the ggplot2 plot object
         #
         mapPlot <- map.generateMapPlot (mapSpec, params)
+        if (is.null(mapPlot)) {
+            msg <- paste("Skipping map:", mapSpec$master$type, mapSpec$measure)
+            if (!is.null(mapSpec$interval)) {
+                 msg <- paste(msg, mapSpec$interval$name)
+            }
+            print(msg)
+            next
+        }
         #
         # Add the "look and feel" elements to the map plot
         #
@@ -34,20 +42,18 @@ map.execute <- function(userCtx, sampleSetName, mapType, params) {		#;print(mapT
         #
         # Deal with the legend 
         #
-        mapPlot <- map.processLegend (mapPlot, mapSpec)			#; plot(mapPlot)
+        mapPlot <- map.processLegend (mapPlot, mapSpec, params)			#; plot(mapPlot)
         #
         # Save to file. The size in inches is given in the config.
         #
-        geom <- mapSpec$master$geometry					#; print(geom)
-        ggplot2::ggsave(plot=mapPlot, filename=mapSpec$plotFile, device=geom$format, 
-                        width=geom$width, height=geom$height, units=geom$units, dpi=geom$dpi)
+        ggplot2::ggsave(plot=mapPlot, filename=mapSpec$plotFile, device=params$plot.file.format, 
+                        width=params$plot.width, height=params$plot.height, units=params$plot.units, dpi=params$plot.dpi)
     }
 }
 #
-map.processLegend <- function(mapPlot, mapSpec) {			#; print(mapSpec$master$type)
+map.processLegend <- function(mapPlot, mapSpec, params) {			#; print(mapSpec$master$type)
     if (map.isMarkerMap(mapSpec$master$type)) {
-        geom <- mapSpec$master$geometry
-        legPos <- geom$legendPos
+        legPos <- params$plot.legend.pos
         if (legPos == "separate") {
             #
             # Separate the legend from the map, and set the map without the legend to be the plot to be wirtten to file
@@ -59,26 +65,26 @@ map.processLegend <- function(mapPlot, mapSpec) {			#; print(mapSpec$master$type
             # Find out the size of the legend (note, we write it out so we have a device for the size estimation)
             #
             legendFile <- paste0(mapSpec$plotFile, ".legend.png")
-            grDevices::png(filename=legendFile, width=geom$width, height=geom$height, units=geom$units, res=geom$dpi)
-            legW <- grid::convertWidth(grid::widthDetails(legendPlot), geom$units, valueOnly=TRUE)	; print(paste(legW, geom$units))
-            legH <- grid::convertHeight(grid::heightDetails(legendPlot), geom$units, valueOnly=TRUE)	; print(paste(legH, geom$units))
+            grDevices::png(filename=legendFile, width=params$plot.width, height=params$plot.height, units=params$plot.units, res=params$plot.dpi)
+            legW <- grid::convertWidth(grid::widthDetails(legendPlot), params$plot.units, valueOnly=TRUE)	; print(paste(legW, params$plot.units))
+            legH <- grid::convertHeight(grid::heightDetails(legendPlot), params$plot.units, valueOnly=TRUE)	; print(paste(legH, params$plot.units))
             grDevices::dev.off()
             #
             # Write out the legend to a file of the exact size
             #
             legendPlot <- ggpubr::as_ggplot(legendPlot)
             ggplot2::ggsave(plot=legendPlot, filename=legendFile, device="png", bg="white",
-                            width=legW, height=legH, units=geom$units, dpi=geom$dpi)
+                            width=legW, height=legH, units=params$plot.units, dpi=params$plot.dpi)
         } else if (legPos == "inset") {
             #
             # If no width is specified, leave plot as-is
             #
-            if (!is.null(geom$legendWidth)) {
+            if (!is.null(params$plot.legend.width)) {
                 mapPlot <- mapPlot + ggplot2::theme(legend.position=c(0,0))
                 legendPlot <- cowplot::get_legend(mapPlot)
                 mapOnlyPlot <- mapPlot + ggplot2::theme(legend.position="none")
                 rplot <- legendPlot; lplot <- mapOnlyPlot
-                rwidth <- geom$legendWidth; lwidth <- 1-rwidth
+                rwidth <- params$plot.legend.width; lwidth <- 1-rwidth
                 mapPlot <- cowplot::plot_grid(lplot, rplot, rel_widths=c(lwidth,rwidth))
             }
         }
@@ -202,26 +208,24 @@ map.createMapMaster <- function (userCtx, sampleSetName, mapType, params) {		#; 
     #
     # Get the output image formatting parameters
     #
-    mapMaster$geometry <- map.getPlotGeometry (params)				#;print(mapMaster$geometry)
-    mapMaster$plotParams <- map.getPlotParameters (mapMaster$geometry)		#;print(mapMaster$plotParams)
-    mapMaster$theme <- map.getTheme(mapMaster$plotParams)			#; plot(mapMaster$theme)
+    mapMaster$theme <- map.getTheme(params)				#; plot(mapMaster$theme)
     #
     # Handle the "ALL" values for markers
     # Check the measures specified are valid; and if they are, ensure we have colour palettes for these measures, creating them if necessary.
     # For a given measure, all plots for this sample set use the same palette, otherwise the viewer will be confused when looking at multiple maps.
     #
-    measures <- param.getParam ("analysis.measures", params)		#; print(paste(length(measures),"measures:",measures))
-    if (mapType=="alleleProp") {  #TBD
-        measures <- pieMap.resolveMeasures (userCtx, sampleSetName, measures)
-    } else if (mapType %in% c("drug", "mutation", "diversity")) {
-        measures <- markerMap.resolveMeasures (mapType, measures, userCtx$config)
+    if (mapType %in% c("drug", "mutation", "diversity")) {
+        measures <- markerMap.resolveMeasures (userCtx, mapType, params)
+
+    } else if (mapType=="alleleProp") {
+        measures <- pieMap.resolveMeasures (userCtx, sampleSetName, params)
+        
     } else if (mapType=="connect") {
-        # Remove measures and add one measure for each similarity threshold (e.g. "similarity-ge0.80")
-        measures <- connectMap.resolveMeasures(measures, params)
-    } else if (mapType=="sampleCount") {
-        measures <- "SampleCount"
-    } else if (mapType=="location") {
-        measures <- "Location"
+        measures <- connectMap.resolveMeasures(params)
+
+    } else if (mapType %in% c("location", "sampleCount")) {
+        measures <- param.getParam ("analysis.measures", params)
+        
     } else if (mapType %in% c("clusterPrevalence","clusterSharing")) {
         # Add one measure for each similarity threshold (e.g. "clusterPrevalence-ge0.80" or "clusterSharing-ge0.80")
         clusterSetName  <- param.getParam ("cluster.clusterSet.name", params)			#; print(clusterSetName)
@@ -232,8 +236,10 @@ map.createMapMaster <- function (userCtx, sampleSetName, mapType, params) {		#; 
         } else if (mapType=="clusterSharing") {
             measures <- clusterShareMap.resolveMeasures (mapMaster$clusterSets, params)
         }
+
     } else if (mapType=="barcodeFrequency") {
         measures <- barcodeFreqMap.resolveMeasures (mapMaster$clusterSets, params)		#; print(names(params))
+
     }
     mapMaster$measures <- measures					#; print(paste(length(measures),"measures:",measures))
     #
@@ -257,105 +263,21 @@ map.createMapMaster <- function (userCtx, sampleSetName, mapType, params) {		#; 
 #
 #
 #
-map.getTheme <- function(pp) {
-    th <- ggplot2::theme_grey(base_size=pp$themeBaseSize)
+map.getTheme <- function(params) {
+    th <- ggplot2::theme_grey(base_size=params$themeBaseSize)
     th <- th +
           ggplot2::theme(panel.background = ggplot2::element_rect(fill=map.colour.sea, colour=NA),
                          panel.grid.major = ggplot2::element_blank(),
                          panel.grid.minor = ggplot2::element_blank(),
                          plot.background  = ggplot2::element_rect(fill="white", colour=NA),
-                         plot.title       = ggplot2::element_text(face="bold",size=ggplot2::rel(pp$plotTitleSize), hjust=0.5),
-                         axis.title       = ggplot2::element_text(face="bold",size=ggplot2::rel(pp$axisTitleSize)),
+                         plot.title       = ggplot2::element_text(face="bold",size=ggplot2::rel(params$plotTitleSize), hjust=0.5),
+                         axis.title       = ggplot2::element_text(face="bold",size=ggplot2::rel(params$axisTitleSize)),
                          axis.title.y     = ggplot2::element_text(angle=90, vjust=2),
                          axis.title.x     = ggplot2::element_text(vjust=-0.2),
-                         #legend.spacing   = ggplot2::unit(pp$legendSpacing, "pt"),
-                         legend.key.size  = ggplot2::unit(pp$legendKeySize, "lines")
+                         #legend.spacing   = ggplot2::unit(params$legendSpacing, "pt"),
+                         legend.key.size  = ggplot2::unit(params$legendKeySize, "lines")
                          )
     th
-}
-#
-#
-#
-map.getPlotGeometry <- function (params) {				#; print(names(params))
-    #
-    # Right now we're just reading params, but later this may be more sophisticated (aspect ration, font size, etc.
-    #
-    width  <- param.getParam ("plot.width", params)
-    height <- param.getParam ("plot.height", params)
-    units  <- param.getParam ("plot.units", params)
-    dpi    <- param.getParam ("plot.dpi", params)
-    format <- param.getParam ("plot.file.format", params)
-    #
-    aspectRatio <- width / height 
-    #
-    # Get the size requested in inches and get the scaling ratio that will make the smallest side equal to 16 inches
-    #
-    if (units == "in") {
-        inW <- width; inH <- height
-    } else if (units == "cm") {
-        inW <- width/2.54; inH <- height/2.54
-    } else if (units == "mm") {
-        inW <- width/25.4; inH <- height/25.4
-    } else if (units == "px") {
-        inW <- width/dpi; inH <- height/dpi
-    }
-    inMax <- min(inW, inH)
-    scaleFactor <- 16 / inMax
-    #
-    legendPos   <- param.getParam ("plot.legend.pos", params)
-    legendWidth <- param.getParam ("plot.legend.width", params)
-    #
-    #
-    #
-    geom <- list(width=width, height=height, aspectRatio=aspectRatio, 
-                 units=units, dpi=dpi, format=format, scale=scaleFactor,
-                 legendPos=legendPos, legendWidth=legendWidth)		#; print(geom)
-    geom
-}
-#
-#
-#
-map.getPlotParameters <- function (geom) {
-    #
-    # Set up the numeric scalable parameters of the plot
-    #
-    pp <- list (
-        themeBaseSize=11,
-        plotTitleSize=1.2,
-        axisTitleSize=1.0,
-        admNameLabelFontSize=5.0,
-        admNameLabelPadding=0.3,
-        admNameLineWidth=1.0,
-        baseBorderWidth=1.0,
-	markerBorderWidth=1.5,
-	markerValueFontSize=6.0,
-	pieLineWidth=0.5,
-	legendBorderWidth=0.5,
-	legendFontSize=4.0,
-	legendKeySize=1.2,
-	connectMarkerSize=4,
-	connectCurveWidthMin=0.25,
-	connectCurveWidthMax=4,
-	clusterPrevalenceMarkerSize=16,
-	clusterPrevalenceFontSize=4.5
-    )
-    #
-    # Scale the list to match the size of the device
-    #
-    ppvec <- unlist(pp)
-    ppvec <- ppvec / geom$scale
-    pp <- as.list(ppvec)
-    #
-    # Add any non-scalable or non-numeric parameters, and return
-    #
-    pp$plotTitleSize   <- 1.2
-    pp$axisTitleSize   <- 1.0
-    pp$adm0BorderWidth <- 1.5
-    pp$adm1BorderWidth <- 1.0
-    pp$riverWidth      <- 1.0
-    pp$lakeshoreWidth  <- 1.0
-    #
-    pp
 }
 #
 #
@@ -418,8 +340,6 @@ map.buildBaseMap <- function(mapMaster) {
     dataset     <- ctx[[datasetName]]
     sampleMeta  <- dataset$meta
     params      <- mapMaster$params
-    geom        <- mapMaster$geometry
-    pp          <- mapMaster$plotParams
     #
     # Read the countries needed in this analysis, so we can get the boundary contours
     #
@@ -513,7 +433,7 @@ map.buildBaseMap <- function(mapMaster) {
     #
     # Create a bounding box, specifying WGS84 (EPSG:4326) to be the coordinates system 
     #
-    anBB <- adjustMapBoundingBox(xMin, xMax, yMin, yMax, geom$aspectRatio)
+    anBB <- adjustMapBoundingBox(xMin, xMax, yMin, yMax, params$plot.aspectRatio)
     #
     anBBCoords <- matrix(c(
                       anBB$xMin, anBB$yMin,
@@ -557,11 +477,11 @@ map.buildBaseMap <- function(mapMaster) {
     # Silly trick to make the package checker happy... :-(
     long <- lat <- group <- NULL
     #
-    mapLineWidth    <- map.getBordersThickness (anBB, pp)	#; print(mapLineWidth)
-    adm0BorderWidth <- mapLineWidth * pp$adm0BorderWidth	#; print(adm0BorderWidth)
-    adm1BorderWidth <- mapLineWidth * pp$adm1BorderWidth	#; print(adm1BorderWidth)
-    riverWidth      <- mapLineWidth * pp$riverWidth		#; print(riverWidth)
-    lakeshoreWidth  <- mapLineWidth * pp$lakeshoreWidth		#; print(lakeshoreWidth)
+    mapLineWidth    <- map.getBordersThickness (anBB, params)	#; print(mapLineWidth)
+    adm0BorderWidth <- mapLineWidth * params$adm0BorderWidth	#; print(adm0BorderWidth)
+    adm1BorderWidth <- mapLineWidth * params$adm1BorderWidth	#; print(adm1BorderWidth)
+    riverWidth      <- mapLineWidth * params$riverWidth		#; print(riverWidth)
+    lakeshoreWidth  <- mapLineWidth * params$lakeshoreWidth	#; print(lakeshoreWidth)
     #
     # Construct a base plot for completing subsequent maps
     #
@@ -592,9 +512,9 @@ map.buildBaseMap <- function(mapMaster) {
     baseMapInfo
 }
 #
-map.getBordersThickness <- function(bbox, plotParams) {				#; print(plotParams)
+map.getBordersThickness <- function(bbox, params) {
     plotWidth <- bbox$xMax - bbox$xMin						#; print(plotWidth)
-    borderThickness <- plotParams$baseBorderWidth / sqrt(plotWidth / 3.0)	#; print(borderThickness)
+    borderThickness <- params$baseBorderWidth / sqrt(plotWidth / 3.0)		#; print(borderThickness)
     borderThickness
 }
 #
@@ -796,7 +716,7 @@ map.getCountryData <- function (iso2Country) {
 # Labelling of aggregated sites
 ################################################################################
 #
-map.addAggregationUnitNameLayer <- function (mapPlot, aggUnitData, baseMapInfo, pp, markerSize=NULL) {
+map.addAggregationUnitNameLayer <- function (mapPlot, aggUnitData, baseMapInfo, params, markerSize=NULL) {
     #
     cnt <- nrow(aggUnitData)						#; print(aggUnitData) 
     lon <- as.numeric(aggUnitData$Longitude)				#; print(lon)
@@ -829,10 +749,10 @@ map.addAggregationUnitNameLayer <- function (mapPlot, aggUnitData, baseMapInfo, 
         #ggplot2::geom_point(ggplot2::aes(x=lon, y=lat), data=lp, colour="red") +
         ggrepel::geom_label_repel(ggplot2::aes(x=lon, y=lat, label=label, point.size=markerSize), 
                                   data=lp,
-                                  size=pp$admNameLabelFontSize, fontface="bold", color="grey50",
+                                  size=params$map.admNameLabelFontSize, fontface="bold", color="grey50",
                                   #hjust=lp$just, vjust=0.5, nudge_x=lp$nudge_x, nudge_y=lp$nudge_y, force=4,
                                   show.legend=FALSE,
-                                  segment.size=pp$admNameLineWidth, label.size=pp$admNameLineWidth,
-                                  label.padding=grid::unit(pp$admNameLabelPadding, "lines"))
+                                  segment.size=params$admNameLineWidth, label.size=params$admNameLineWidth,
+                                  label.padding=grid::unit(params$admNameLabelPadding, "lines"))
     mapPlot
 }

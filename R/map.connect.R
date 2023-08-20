@@ -18,8 +18,6 @@ connectMap.executeMap <- function(map) {
     measure     <- map$measure
     interval    <- map$interval
     #
-    pp          <- mapMaster$plotParams
-    #
     datasetName <- map$datasetName
     sampleSet   <- mapMaster$sampleSet
     userCtx     <- mapMaster$userCtx
@@ -84,7 +82,7 @@ connectMap.executeMap <- function(map) {
                                          linewidth=!!rlang::sym(measure), colour=!!rlang::sym(measure)),
                             data=selAggUnitPairData, 
                             curvature=0.2, alpha=0.75) +
-        ggplot2::scale_linewidth_continuous(guide="none", range=c(pp$connectCurveWidthMin, pp$connectCurveWidthMax)) +          # scale for edge widths
+        ggplot2::scale_linewidth_continuous(guide="none", range=c(params$connectCurveWidthMin, params$connectCurveWidthMax)) +          # scale for edge widths
         ggplot2::scale_colour_gradientn(colours=c("skyblue1","midnightblue"))
     #
     # Now add the markers
@@ -92,13 +90,13 @@ connectMap.executeMap <- function(map) {
     mapPlot <- mapPlot +
         ggplot2::geom_point(ggplot2::aes(x=Longitude, y=Latitude), 
                             data=aggUnitData,
-                            size=pp$connectMarkerSize, shape=19, col="red")
+                            size=params$map.markerSize, shape=19, col="red")
     #
     # If we need to show aggregation unit names, we need to compute the label positioning and plot
     #
     showMarkerNames <- param.getParam ("map.markerNames", params)
     if (showMarkerNames) {
-        mapPlot <- map.addAggregationUnitNameLayer (mapPlot, aggUnitData, baseMapInfo, pp)
+        mapPlot <- map.addAggregationUnitNameLayer (mapPlot, aggUnitData, baseMapInfo, params)
     }
     #
     # Return map plot for completion and saving to file
@@ -106,10 +104,14 @@ connectMap.executeMap <- function(map) {
     mapPlot
 }
 
-connectMap.resolveMeasures <- function(measures, params) {		#; print(measures)
+connectMap.resolveMeasures <- function(params) {
+    measures <- param.getParam ("analysis.measures", params)		#; print(measures)
     if ("ALL" %in% measures) {
         measures <- connectMap.getConnectednessMeasures()
-    }									#; print(measures)
+    }
+    #
+    # Create one "expanded" measure for each similarity threshold (e.g. "similarity-ge0.80")
+    #
     expanded <- c()
     for (mIdx in 1:length(measures)) {
         measure <- measures[mIdx]
