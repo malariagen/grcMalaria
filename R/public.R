@@ -208,26 +208,15 @@ selectSampleSet <- function (ctx, sampleSetName, select) {
 #
 mapLocations <- function (ctx, sampleSet,
                    aggregate="Province",
-                   markerSize=c(4,40), showNames=TRUE, colourBy="Province",
+                   markerSize=c(4,40), colourBy="Province",
+                   showNames=TRUE, nameFontSize=5, 
                    ...) {
 
-    if (length(colourBy) > 1) {
-        stop ("colourBy parameter can only accet a single value (\"Country\" or \"Province\")")
-    }
-    colourAggLevel <- map.getAggregationLevelsFromLabels (colourBy)
-    if (colourAggLevel > 1) {
-        stop ("colourBy parameter can only accet values \"Country\" or \"Province\"")
-    }
-    aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
-    params <- list(
-        analysis.measures="Location",
-        aggregation.levels=aggLevels,
-        map.markerColourAggLevel=colourAggLevel,
-        map.markerSize=markerSize,
-        map.markerNames=showNames
-    )
-    params <- c(params, parsePlotParams(...))
-    execute.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, task="map/location", params=params)
+    task <- "map/location"
+    params <- param.makeParameterList (ctx, task, 
+                  aggregate=aggregate, markerSize=markerSize, colourBy=colourBy, showNames=showNames, nameFontSize=nameFontSize, 
+                  ...)
+    execute.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, task=task, params=params)
 }
 
 #############################################################
@@ -247,11 +236,13 @@ mapLocations <- function (ctx, sampleSet,
 #' Currently, the public GRC data only contains years, so only the year in the provided ?start? date is used.
 #' @param aggregate The administrative level at which we aggregate (Province or District). Separate maps are created for each administrative level.
 #' @param minAggregateCount The minimum count of aggregated samples, below which a marker is not shown.
-#' @param showNames If TRUE, labels are shown with the name of the aggregation unit (Province or District)
-#' @param colourBy Shows the aggregation level to be used to colour the markers (Country or Province)
-#' @param markerSize Allows adjustment of the size of markers on the map. If only one value is passed, 
+#' @param markerSize Set the size of markers on the map. If only one value is passed, 
 #'                   all markers will be that size; if two values are passed, they will be used as the min 
 #'                   and max size of the marker, whose size will reflect the number of samples.
+#' @param markerFontSize Set the font size of the value labels inside the markers on the map, default=6
+#' @param colourBy Shows the aggregation level to be used to colour the markers (Country or Province)
+#' @param showNames If TRUE, labels are shown with the name of the aggregation unit (Province or District)
+#' @param nameFontSize Set the font size of the geographical name labels outside the markers on the map, if showNames=TRUE, default=5
 #' @param ... any of plot parameters, including: width, height, units, dpi, legendPosition, legendWidth. 
 #'            width: the width of the plot (numeric), default=15
 #'            height: the height of the plot (numeric), default=15
@@ -292,29 +283,16 @@ mapLocations <- function (ctx, sampleSet,
 #
 mapSampleCounts <- function (ctx, sampleSet, timePeriods=NULL,
                    aggregate="Province", minAggregateCount=1,
-                   markerSize=c(4,40), showNames=TRUE, colourBy="Province",
+                   markerSize=c(4,40), markerFontSize=6, colourBy="Province",
+                   showNames=TRUE, nameFontSize=5, 
                    ...) {
 
-    if (length(colourBy) > 1) {
-        stop ("colourBy parameter can only accet a single value (\"Country\" or \"Province\")")
-    }
-    colourAggLevel <- map.getAggregationLevelsFromLabels (colourBy)
-    if (colourAggLevel > 1) {
-        stop ("colourBy parameter can only accet values \"Country\" or \"Province\"")
-    }
-    aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
-    timeIntervals <- parseTimeIntervals(timePeriods)
-    params <- list(
-        analysis.timeIntervals=timeIntervals,
-        analysis.measures="NumberOfSamples",
-        aggregation.levels=aggLevels,
-        map.aggregateCountMin=minAggregateCount,
-        map.markerColourAggLevel=colourAggLevel,
-        map.markerSize=markerSize,
-        map.markerNames=showNames
-    )
-    params <- c(params, parsePlotParams(...))
-    execute.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, task="map/sampleCount", params=params)
+    task <- "map/sampleCount"
+    params <- param.makeParameterList (ctx, task, 
+                  timePeriods=timePeriods, aggregate=aggregate, minAggregateCount=minAggregateCount, markerSize=markerSize, 
+                  markerFontSize=markerFontSize, colourBy=colourBy, showNames=showNames, nameFontSize=nameFontSize, 
+                  ...)
+    execute.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, task=task, params=params)
 }
 
 #############################################################
@@ -340,8 +318,10 @@ mapSampleCounts <- function (ctx, sampleSet, timePeriods=NULL,
 #' To specify a drug put the drug name in between quotation marks e.g. "Artemisinin", or  c(?Artemisinin?, ?Chloroquine?, ?S-P?) to select several specific drugs
 #' @param aggregate The administrative level at which we aggregate. Separate maps are created for each administrative level
 #' @param minAggregateCount The minimum count of aggregated samples. To avoid estimating on very small samples, one can set a minimum count of samples, below which the marker is not shown
-#' @param showNames If TRUE, labels are shown with the name of the aggregation unit (Province or District)
 #' @param markerSize Allows adjustment of the size of markers on the map
+#' @param markerFontSize Set the font size of the value labels inside the markers on the map, default=6
+#' @param showNames If TRUE, labels are shown with the name of the aggregation unit (Province or District)
+#' @param nameFontSize Set the font size of the geographical name labels outside the markers on the map, if showNames=TRUE, default=5
 #' @param ... any of plot parameters, including: width, height, units, dpi, legendPosition, legendWidth. 
 #'            width: the width of the plot (numeric), default=15
 #'            height: the height of the plot (numeric), default=15
@@ -366,7 +346,8 @@ mapSampleCounts <- function (ctx, sampleSet, timePeriods=NULL,
 #' mapDrugResistancePrevalence (ctx, sampleSet="Laos", timePeriods=periods,
 #'                              drugs=c("Artemisinin", "Chloroquine"), 
 #'                              aggregate=c("Province","District"),
-#'                              minAggregateCount=10, showNames=TRUE, markerSize=16, legend)
+#'                              minAggregateCount=10, 
+#'                                markerSize=16, showNames=TRUE)
 #'}
 #'
 #' @seealso Useful links:
@@ -378,22 +359,16 @@ mapSampleCounts <- function (ctx, sampleSet, timePeriods=NULL,
 mapDrugResistancePrevalence <- function (ctx, sampleSet, timePeriods=NULL,
                    drugs="ALL",
                    aggregate="Province", minAggregateCount=10,
-                   showNames=TRUE, markerSize=16,
+                   markerSize=16, markerFontSize=6,
+                   showNames=TRUE, nameFontSize=5, 
                    ...) {
 
-    aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
-    timeIntervals <- parseTimeIntervals(timePeriods)
-    params <- list(
-        analysis.timeIntervals=timeIntervals,
-        analysis.measures=drugs,
-        aggregation.levels=aggLevels,
-        map.aggregateCountMin=minAggregateCount,
-        map.markerSize=markerSize,			# Use this for constant marker size
-        #map.markerSize=c(4,40),			# Use this for count-proportional marker size
-        map.markerNames=showNames
-    )
-    params <- c(params, parsePlotParams(...))
-    execute.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, task="map/drug", params=params)
+    task <- "map/drug"
+    params <- param.makeParameterList (ctx, task, 
+                  timePeriods=timePeriods, drugs=drugs, aggregate=aggregate, minAggregateCount=minAggregateCount, markerSize=markerSize, 
+                  markerFontSize=markerFontSize, showNames=showNames, nameFontSize=nameFontSize, 
+                  ...)
+    execute.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, task=task, params=params)
 }
 
 #############################################################
@@ -421,8 +396,10 @@ mapDrugResistancePrevalence <- function (ctx, sampleSet, timePeriods=NULL,
 #' To specify a mutation put the mutation type in between quotation marks e.g. "crt_N75E", or  c("arps10_D128Y","fd_D193Y","crt_I218F") to select several genetic mutation types.
 #' @param aggregate The administrative level at which we aggregate.
 #' @param minAggregateCount The minimum count of aggregated samples. To avoid estimating on very small samples, one can set a minimum count of samples, below which the marker is not shown.
-#' @param showNames If TRUE, labels are shown with the name of the aggregation unit (Province or District).
 #' @param markerSize Allows adjustment of the size of markers on the map.
+#' @param markerFontSize Set the font size of the value labels inside the markers on the map, default=6
+#' @param showNames If TRUE, labels are shown with the name of the aggregation unit (Province or District).
+#' @param nameFontSize Set the font size of the geographical name labels outside the markers on the map, if showNames=TRUE, default=5
 #' @param ... any of plot parameters, including: width, height, units, dpi, legendPosition, legendWidth. 
 #'            width: the width of the plot (numeric), default=15
 #'            height: the height of the plot (numeric), default=15
@@ -457,22 +434,16 @@ mapDrugResistancePrevalence <- function (ctx, sampleSet, timePeriods=NULL,
 mapMutationPrevalence <- function (ctx, sampleSet, timePeriods=NULL,
                    mutations="ALL",
                    aggregate="Province", minAggregateCount=10,
-                   showNames=TRUE, markerSize=16,
+                   markerSize=16, markerFontSize=6,
+                   showNames=TRUE, nameFontSize=5, 
                    ...) {
 
-    aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
-    timeIntervals <- parseTimeIntervals(timePeriods)
-    params <- list(
-        analysis.timeIntervals=timeIntervals,
-        analysis.measures=mutations,
-        aggregation.levels=aggLevels,
-        map.aggregateCountMin=minAggregateCount,
-        map.markerSize=markerSize,			# Use this for constant marker size
-        #map.markerSize=c(4,40),			# Use this for count-proportional marker size
-        map.markerNames=showNames
-    )
-    params <- c(params, parsePlotParams(...))
-    execute.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, task="map/mutation", params=params)
+    task <- "map/mutation"
+    params <- param.makeParameterList (ctx, task, 
+                  timePeriods=timePeriods, mutations=mutations, aggregate=aggregate, minAggregateCount=minAggregateCount, 
+                  markerSize=markerSize, markerFontSize=markerFontSize, showNames=showNames, nameFontSize=nameFontSize, 
+                  ...)
+    execute.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, task=task, params=params)
 }
                   
 #############################################################
@@ -498,8 +469,9 @@ mapMutationPrevalence <- function (ctx, sampleSet, timePeriods=NULL,
 #' To specify a mutation put it in between quotation marks e.g. "Pfkelch13", or  c("Pfkelch13","dhfr","fd") to select several genetic mutation types
 #' @param aggregate The administrative level at which we aggregate
 #' @param minAggregateCount The minimum count of aggregated samples. To avoid estimating on very small samples, one can set a minimum count of samples, below which the marker is not shown
-#' @param showNames If TRUE, labels are shown with the name of the aggregation unit (Province or District)
 #' @param markerSize Allows adjustment of the size of markers on the map
+#' @param showNames If TRUE, labels are shown with the name of the aggregation unit (Province or District)
+#' @param markerFontSize Set the font size of the value labels inside the markers on the map, default=6
 #' @param ... any of plot parameters, including: width, height, units, dpi, legendPosition, legendWidth. 
 #'            width: the width of the plot (numeric), default=15
 #'            height: the height of the plot (numeric), default=15
@@ -526,23 +498,18 @@ mapMutationPrevalence <- function (ctx, sampleSet, timePeriods=NULL,
 #
 mapAlleleProportions <- function (ctx, sampleSet, timePeriods=NULL,
                    mutations="ALL",
-                   aggregate="Province", minAggregateCount=10,
-                   showNames=TRUE, markerSize=16,
+                   aggregate="Province", minAggregateCount=10, 
+                   markerSize=16,
+                   showNames=TRUE, nameFontSize=5,
                    ...) {
 
-    aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
-    timeIntervals <- parseTimeIntervals(timePeriods)
-    params <- list(
-        analysis.timeIntervals=timeIntervals,
-        analysis.measures=mutations,
-        aggregation.levels=aggLevels,
-        map.aggregateCountMin=minAggregateCount,
-        map.markerSize=markerSize,			# Use this for constant marker size
-        #map.markerSize=c(4,40),			# Use this for count-proportional marker size
-        map.markerNames=showNames
-    )
-    params <- c(params, parsePlotParams(...))
-    execute.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, task="map/alleleProp", params=params)
+    task <- "map/alleleProp"
+    params <- param.makeParameterList (ctx, task, 
+                  timePeriods, mutations, aggregate, minAggregateCount, markerSize, showNames, nameFontSize, 
+                  timePeriods=timePeriods, mutations=mutations, aggregate=aggregate, minAggregateCount=minAggregateCount, 
+                  markerSize=markerSize, showNames=showNames, nameFontSize=nameFontSize, 
+                  ...)
+    execute.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, task=task, params=params)
 }
                    
 #############################################################
@@ -582,9 +549,11 @@ mapAlleleProportions <- function (ctx, sampleSet, timePeriods=NULL,
 #' The is calculated using pairwise genetic distance as the proportion of SNPs differing between two samples. Then taking the median of these in the group of samples of interest
 #' @param aggregate The administrative level at which we aggregate
 #' @param minAggregateCount The minimum count of aggregated samples. To avoid estimating on very small samples, one can set a minimum count of samples, below which the marker is not shown
-#' @param showNames If TRUE, labels are shown with the name of the aggregation unit (Province or District)
-#' @param markerColours The colour to indicate the level of genetic diversity. Default: "red3", other examples: "forestgreen", "cornflowerblue","darkgoldenrod3"
 #' @param markerSize Allows adjustment of the size of markers on the map
+#' @param markerFontSize Set the font size of the value labels inside the markers on the map, default=6
+#' @param markerColours The colour to indicate the level of genetic diversity. Default: "red3", other examples: "forestgreen", "cornflowerblue","darkgoldenrod3"
+#' @param showNames If TRUE, labels are shown with the name of the aggregation unit (Province or District)
+#' @param nameFontSize Set the font size of the geographical name labels outside the markers on the map, if showNames=TRUE, default=5
 #' @param ... any of plot parameters, including: width, height, units, dpi, legendPosition, legendWidth. 
 #'            width: the width of the plot (numeric), default=15
 #'            height: the height of the plot (numeric), default=15
@@ -615,23 +584,16 @@ mapAlleleProportions <- function (ctx, sampleSet, timePeriods=NULL,
 mapDiversity <- function (ctx, sampleSet, timePeriods=NULL,
                    measures="ALL",
                    aggregate="Province", minAggregateCount=10,
-                   showNames=TRUE, markerSize=16, markerColours="red3",
+                   markerSize=16, markerFontSize=6, markerColours="red3",
+                   showNames=TRUE, nameFontSize=5, 
                    ...) {
 
-    aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
-    timeIntervals <- parseTimeIntervals(timePeriods)
-    params <- list(
-        analysis.timeIntervals=timeIntervals,
-        analysis.measures=measures,
-        aggregation.levels=aggLevels,
-        map.aggregateCountMin=minAggregateCount,
-        map.markerSize=markerSize,			# Use this for constant marker size
-        #map.markerSize=c(4,40),			# Use this for count-proportional marker size
-        map.markerNames=showNames,
-        map.diversity.markerColours=markerColours
-    )
-    params <- c(params, parsePlotParams(...))
-    execute.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, task="map/diversity", params=params)
+    task <- "map/diversity"
+    params <- param.makeParameterList (ctx, task, 
+                  timePeriods=timePeriods, measures=measures, aggregate=aggregate, minAggregateCount=minAggregateCount, 
+                  markerSize=markerSize, markerFontSize=markerFontSize, markerColours=markerColours, showNames=showNames, nameFontSize=nameFontSize, 
+                  ...)
+    execute.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, task=task, params=params)
 }
 
 
@@ -665,8 +627,9 @@ mapDiversity <- function (ctx, sampleSet, timePeriods=NULL,
 #' @param meanDistanceLevels meanDistanceLevels value between 0 and 1, default is 0.5
 #' @param aggregate The administrative level at which we perform pairwise comparisons
 #' @param minAggregateCount The minimum count of aggregated samples. To avoid estimating on very small samples, one can set a minimum count of samples, below which the marker is not shown.
-#' @param showNames If TRUE, labels are shown with the name of the aggregation unit (Province or District).
 #' @param markerSize Allows adjustment of the size of markers on the map.
+#' @param showNames If TRUE, labels are shown with the name of the aggregation unit (Province or District).
+#' @param nameFontSize Set the font size of the geographical name labels outside the markers on the map, if showNames=TRUE, default=5
 #' @param ... any of plot parameters, including: width, height, units, dpi, legendPosition, legendWidth. 
 #'            width: the width of the plot (numeric), default=15
 #'            height: the height of the plot (numeric), default=15
@@ -692,22 +655,17 @@ mapConnections <- function (ctx, sampleSet,
                    minIdentity=1.0,
                    meanDistanceLevels=0.5,
                    aggregate="Province", minAggregateCount=10,
-                   showNames=TRUE, markerSize=16,
+                   markerSize=6,
+                   showNames=TRUE, nameFontSize=5,
                    ...) {
-                   
-    aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
-    params <- list(
-        analysis.measures=measures,
-        aggregation.levels=aggLevels,
-        map.aggregateCountMin=minAggregateCount,
-        map.markerSize=markerSize,			# Use this for constant marker size
-        #map.markerSize=c(4,40),			# Use this for count-proportional marker size
-        map.markerNames=showNames,
-	map.connect.identity.min=minIdentity,
-	map.connect.meanDistance.min=meanDistanceLevels
-    )
-    params <- c(params, parsePlotParams(...))
-    execute.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, task="map/connect", params=params)
+
+    task <- "map/connect"
+    params <- param.makeParameterList (ctx, task, 
+                  measures=measures, minIdentity=minIdentity, meanDistanceLevels=meanDistanceLevels, 
+                  aggregate=aggregate, minAggregateCount=minAggregateCount, markerSize=markerSize, 
+                  showNames=showNames, nameFontSize=nameFontSize, 
+                  ...)
+    execute.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, task=task, params=params)
 }
 
 #############################################################
@@ -728,8 +686,9 @@ mapConnections <- function (ctx, sampleSet,
 #' @param type Frequency of barcode groups can be visualized either as a "bar" and/or a "pie".
 #' @param aggregate The administrative level at which we perform pairwise comparisons
 #' @param minAggregateCount The minimum count of aggregated samples. To avoid estimating on very small samples, one can set a minimum count of samples, below which the marker is not shown.
-#' @param showNames If TRUE, labels are shown with the name of the aggregation unit (Province or District).
 #' @param markerScale Allows adjustment of the size of markers on the map, default: 0.8.
+#' @param showNames If TRUE, labels are shown with the name of the aggregation unit (Province or District).
+#' @param nameFontSize Set the font size of the geographical name labels outside the markers on the map, if showNames=TRUE, default=5
 #' @param ... any of plot parameters, including: width, height, units, dpi, legendPosition, legendWidth. 
 #'            width: the width of the plot (numeric), default=15
 #'            height: the height of the plot (numeric), default=15
@@ -753,19 +712,16 @@ mapConnections <- function (ctx, sampleSet,
 mapBarcodeFrequencies <- function (ctx, sampleSet,
                    type=c("bar","pie"),
                    aggregate="Province", minAggregateCount=10, 
-                   showNames=TRUE, markerScale=0.8,
+                   markerScale=0.8,
+                   showNames=TRUE, nameFontSize=5, 
                    ...) {
 
-    aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
-    params <- list(
-        aggregation.levels=aggLevels,
-        map.aggregateCountMin=minAggregateCount,
-        map.markerNames=showNames,
-        map.cluster.visualizations=type,        
-        map.cluster.markerScale=markerScale
-    )
-    params <- c(params, parsePlotParams(...))
-    execute.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, task="map/barcodeFrequency", params=params)
+    task <- "map/barcodeFrequency"
+    params <- param.makeParameterList (ctx, task, 
+                  type=type, aggregate=aggregate, minAggregateCount=minAggregateCount, markerScale=markerScale, 
+                  showNames=showNames, nameFontSize=nameFontSize, 
+                  ...)
+    execute.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, task=task, params=params)
 }
 
 #############################################################
@@ -787,7 +743,7 @@ mapBarcodeFrequencies <- function (ctx, sampleSet,
 #' @param minIdentity The minimal similarity level set for a pair of samples to be in a cluster. For example, "0.95" corresponds to at least 95 percent genetic barcode similarity.
 #' The default is 1.
 #' @param impute To use imputed or filtered data. The default is TRUE.
-#' @param clusteringMethod The clustering method. Two methods are available: "allNeighbours" and "louvain". The default is "allNeighbours".
+#' @param clusteringMethod The clustering method. Two methods are available: "allNeighbours" and "louvain". The default is "louvain".
 #' The "allNeighbours" method clusters samples together that are above the set "minIdentity" threshold.
 #' This method is less informative at low similarity levels, because each sample will be assigned to a single cluster.
 #' The "louvain" method is the preferred method. Also known as Louvain Community-based clustering,
@@ -808,17 +764,17 @@ mapBarcodeFrequencies <- function (ctx, sampleSet,
 #
 findClusters <- function (ctx, sampleSet, clusterSet,
                    minIdentity=1.0, impute=TRUE,
-                   clusteringMethod="allNeighbours", 
+                   clusteringMethod="louvain", 
                    minClusterSize=10) {
-
-    params <- list(
-        cluster.clusterSet.name=clusterSet,
-        cluster.identity.min=minIdentity,
-        cluster.impute=impute,
-        cluster.method=clusteringMethod,
-        cluster.minSize=minClusterSize
-    )
-    cluster.findClusters (ctx, sampleSetName=sampleSet, params=params)
+    # Construct a list of arguments so we can use the params.getArgParameter utility function
+    args <- list(clusterSet=clusterSet, minIdentity=minIdentity, impute=impute, clusteringMethod=clusteringMethod, minClusterSize=minClusterSize)
+    p <- new.env ()
+    p$cluster.clusterSet.name <- param.getArgParameter (args, "clusterSet")
+    p$cluster.identity.min    <- param.getArgParameter (args, "minIdentity",      type="numeric", multiValue=TRUE, defaultValue=1.0)
+    p$cluster.impute          <- param.getArgParameter (args, "impute",           type="logical", defaultValue=TRUE)
+    p$cluster.method          <- param.getArgParameter (args, "clusteringMethod", defaultValue="louvain", validValues=c("louvain","allNeighbours"))
+    p$cluster.minSize         <- param.getArgParameter (args, "minClusterSize",   type="integer", defaultValue=10)
+    cluster.findClusters (ctx, sampleSetName=sampleSet, params=p)
 }
 
 #############################################################
@@ -858,15 +814,14 @@ findClusters <- function (ctx, sampleSet, clusterSet,
 #'}
 #
 plotClusterGraph <- function (ctx, sampleSet, clusterSet,
-                   graphLayout="fr", weightPower=2,
-                   ...) {
-    params <- list(
-        cluster.clusterSet.name=clusterSet,
-        graph.layoutAlgorithm=graphLayout,
-        graph.weightPower=weightPower
-    )
-    params <- c(params, parsePlotParams(...))
-    execute.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, task="graph", params=params)
+                              graphLayout="fr", weightPower=2,
+                              ...) {
+                   
+    task <- "graph"
+    params <- param.makeParameterList (ctx, task,
+                  clusterSet=clusterSet, graphLayout=graphLayout, weightPower=weightPower,
+                  ...)
+    execute.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, task=task, params=params)
 }
 
 #############################################################
@@ -891,8 +846,9 @@ plotClusterGraph <- function (ctx, sampleSet, clusterSet,
 #' @param aggregate The administrative level at which we perform pairwise comparisons, either "Province" and/or "District".
 #' @param minAggregateCount The minimum count of aggregated samples. To avoid estimating on very small samples, one can set a minimum count of samples,
 #' below which the marker is not shown.The default is 5.
-#' @param showNames If TRUE, labels are shown with the name of the aggregation unit (Province or District).
 #' @param markerScale Allows adjustment of the size of markers on the map, default: 0.8.
+#' @param showNames If TRUE, labels are shown with the name of the aggregation unit (Province or District).
+#' @param nameFontSize Set the font size of the geographical name labels outside the markers on the map, if showNames=TRUE, default=5
 #' @param ... any of plot parameters, including: width, height, units, dpi, legendPosition, legendWidth
 #'            width: the width of the plot (numeric), default=15
 #'            height: the height of the plot (numeric), default=15
@@ -917,20 +873,16 @@ plotClusterGraph <- function (ctx, sampleSet, clusterSet,
 mapClusterSharing <- function (ctx, sampleSet, clusterSet,
                    type=c("bar","pie"),
                    aggregate="Province", minAggregateCount=5, 
-                   showNames=TRUE, markerScale=0.8,
+                   markerScale=0.8, 
+                   showNames=TRUE, nameFontSize=5, 
                    ...) {
                    
-    aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
-    params <- list(
-        cluster.clusterSet.name=clusterSet,
-        aggregation.levels=aggLevels,
-        map.aggregateCountMin=minAggregateCount,
-        map.markerNames=showNames,
-        map.cluster.visualizations=type,        
-        map.cluster.markerScale=markerScale
-    )
-    params <- c(params, parsePlotParams(...))
-    execute.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, task="map/clusterSharing", params=params)
+    task <- "map/clusterSharing"
+    params <- param.makeParameterList (ctx, task, 
+                  clusterSet=clusterSet, type=type, aggregate=aggregate, minAggregateCount=minAggregateCount, markerScale=markerScale, 
+                  showNames=showNames, nameFontSize=nameFontSize, 
+                  ...)
+    execute.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, task=task, params=params)
 }
 
 #############################################################
@@ -956,8 +908,10 @@ mapClusterSharing <- function (ctx, sampleSet, clusterSet,
 #' @param aggregate The administrative level at which we perform pairwise comparisons, either "Province" and/or "District".
 #' @param minAggregateCount The minimum count of aggregated samples. To avoid estimating on very small samples, one can set a minimum count of samples,
 #' below which the marker is not shown, default=5
+#' @param markerSize Allows adjustment of the size of markers on the map.
+#' @param markerFontSize Set the font size of the value labels inside the markers on the map, default=6
 #' @param showNames If TRUE, labels are shown with the name of the aggregation unit (Province or District)
-#' @param markerScale Allows adjustment of the size of markers on the map, default=0.8
+#' @param nameFontSize Set the font size of the geographical name labels outside the markers on the map, if showNames=TRUE, default=5
 #' @param ... any of plot parameters, including: width, height, units, dpi, legendPosition, legendWidth
 #'            width: the width of the plot (numeric), default=15
 #'            height: the height of the plot (numeric), default=15
@@ -975,25 +929,21 @@ mapClusterSharing <- function (ctx, sampleSet, clusterSet,
 #' # for sampleSet "Laos", and clusterSet "LAclust" at both a Province and District level,
 #' mapClusterPrevalence (ctx, sampleSet="Laos", clusterSet = "LAclust",
 #'                       aggregate=c("Province","District"),
-#'                       minAggregateCount=5, showNames=TRUE, markerScale=0.8)
+#'                       minAggregateCount=5, showNames=TRUE)
 #'}
 #
 mapClusterPrevalence <- function (ctx, sampleSet, clusterSet,
                    aggregate="Province", minAggregateCount=5, 
-                   showNames=TRUE, markerScale=0.8,
+                   markerSize=16, markerFontSize=6,
+                   showNames=TRUE, nameFontSize=5, 
                    ...) {
-
-    aggLevels <- map.getAggregationLevelsFromLabels (aggregate)
-    params <- list(
-        cluster.clusterSet.name=clusterSet,
-        aggregation.levels=aggLevels,
-        map.aggregateCountMin=minAggregateCount,
-        map.markerNames=showNames,
-        map.cluster.visualizations="cluster",        
-        map.cluster.markerScale=markerScale
-    )
-    params <- c(params, parsePlotParams(...))
-    execute.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, task="map/clusterPrevalence", params=params)
+                   
+    task <- "map/clusterPrevalence"
+    params <- param.makeParameterList (ctx, task, 
+                  clusterSet=clusterSet, aggregate=aggregate, minAggregateCount=minAggregateCount, markerSize=markerSize, 
+                  markerFontSize=markerFontSize, showNames=showNames, nameFontSize=nameFontSize, 
+                  ...)
+    execute.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, task=task, params=params)
 }
 
 #############################################################
@@ -1147,11 +1097,14 @@ loadGraphicAttributes <- function (ctx, name, field, file, sheet) {
 plotPrincipalComponents <- function (ctx, sampleSet, 
                                      type="PCoA", plots,
                                      ...) {
-    params <- list(
-        plot.plotList=plots
-    )
-    task <- paste("pca", type, sep="/")
-    params <- c(params, parsePlotParams(...))
+                                     
+    # Construct a list of arguments so we can use the params.getArgParameter utility function
+    args <- list(type=type, plots=plots)
+    pcaType  <- param.getArgParameter (args, "type", defaultValue="PCoA", validValues=c("PCoA", "nipals", "bpca"))
+    task <- paste("pca", pcaType, sep="/")
+    params <- param.makeParameterList (ctx, task,
+                  plots=plots, 
+                  ...)
     execute.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, task=task, params=params)
 }
 
@@ -1205,68 +1158,17 @@ plotPrincipalComponents <- function (ctx, sampleSet,
 plotTree <- function (ctx, sampleSet, 
                       type="njt", plots,
                       ...) {
-    params <- list(
-        plot.plotList=plots
-    )
-    params <- c(params, parsePlotParams(...))
-    task <- paste("tree", type, sep="/")
+
+    # Construct a list of arguments so we can use the params.getArgParameter utility function
+    args <- list(type=type, plots=plots)
+    treeType  <- param.getArgParameter (args, "type", defaultValue="njt", validValues=c("njt"))
+    task <- paste("tree", treeType, sep="/")
+    params <- param.makeParameterList (ctx, task,
+                  plots=plots, 
+                  ...)
     execute.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, task=task, params=params)
 }
+#
+#
+#
 #############################################################
-#############################################################
-#
-#
-#
-parsePlotParams <- function (...) {
-    args <- list(...)
-    argNames <- names(args)
-    params <- list(
-        plot.width = 15,
-        plot.height = 15,
-        plot.units = "in",
-        plot.dpi = 300,
-        plot.file.format = "png",
-        plot.legend.pos = "inset",
-        plot.legend.width = NULL
-    )
-    for (i in seq_along(args)) {
-        argName <- argNames[i]		#; print(argName)
-        arg <- args[[i]]		#; print(arg)
-        if (argName == "width") {			#; print(argName)
-	    params$plot.width <- as.numeric(arg)
-        } else if (argName == "height") {		#; print(argName)
-            params$plot.height <- as.numeric(arg)
-        } else if (argName == "units") {		#; print(argName)
-            if (arg %in% c("in", "cm", "mm", "px")) {
-                params$plot.units <- arg
-            } else {
-                stop(paste("Invalid unit specified:", arg))
-            }
-        } else if (argName == "dpi") {			#; print(argName)
-            params$plot.dpi <- as.numeric(arg)
-        } else if (argName == "format") {		#; print(argName)
-            if (arg %in% c("png", "pdf", "jpg")) {
-                params$plot.file.format <- arg
-            } else {
-                stop(paste("Invalid file format specified:", arg))
-            }
-        } else if (argName == "legendPosition") {	#; print(argName)
-            if (arg %in% c("inset", "separate")) {
-                params$plot.legend.pos <- arg
-            } else {
-                stop(paste("Invalid legend position:", arg))
-            }
-        } else if (argName == "legendWidth") {		#; print(argName)
-            legWidth <- as.numeric(arg)
-            if ((legWidth <= 0) || (legWidth > 0.5)) {
-                stop(paste("Invalid legend width (must be greater than 0 and less than 0.5):", legWidth))
-            }
-            params$plot.legend.width <- legWidth
-        } else if (argName == "") {
-            warning(paste("Unnamed parameter ignored:", arg))
-        } else {
-            warning(paste("Unknown parameter ignored:", argName))
-        }
-    }							#; print(params)
-    params
-}

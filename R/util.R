@@ -181,7 +181,7 @@ writeRdaMatrix <- function(matrixData, outFilename) {
 #
 # 
 #
-parseTimeIntervals <- function (timePeriods) {
+parseTimeIntervals <- function (timePeriods) {		#; print(timePeriods)
     intervals <- list()
     if (is.null(timePeriods)) {
          intervals[[1]] <- getDefaultTimeInterval()

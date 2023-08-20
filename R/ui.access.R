@@ -2,50 +2,51 @@
 UI.SUPPORTED_MAP_TYPES <- c("location", "sampleCount", "drug", "mutation", "alleleProp", "diversity")
 
 ui.makeSingleMap <- function (ctx, sampleSet, type,
-                   #timePeriods=NULL,	TBD
-                   measure=NULL,
-                   aggregate="Province", minAggregateCount=1,
-                   markerSize=c(4,40), markerColours="red3", showNames=TRUE, colourBy="Province",
-                   ...) {
-                   
+                              #timePeriods=NULL,	TBD
+                              measure=NULL,
+                              aggregate="Province", minAggregateCount=1,
+                              markerSize=c(4,40), markerColours="red3", markerFontSize=6,
+                              colourBy="Province",
+                              showNames=TRUE, nameFontSize=5,
+                              ...) {
+
     if (!(type %in% UI.SUPPORTED_MAP_TYPES)) {
         stop (paste("Unsupported map type for UI:", type))
     }
-                   
-    # aggregate param 
-    ui.checkSingleValue (aggregate, "aggregate")
-    aggLevel <- map.getAggregationLevelsFromLabels (aggregate)
+    task <- paste0("map/", type)
 
-    # colourBy param (locations, sampleCount only)
-    if (length(colourBy) > 1) {
-        stop ("colourBy can only accet a single value (\"Country\" or \"Province\")")
-    }
-    colourAggLevel <- map.getAggregationLevelsFromLabels (colourBy)
-    if (colourAggLevel > 1) {
-        stop ("colourBy parameter can only accet values \"Country\" or \"Province\"")
-    }
-    
+    params <- param.makeParameterList (ctx, task, 
+                  timePeriods=NULL, aggregate=aggregate, minAggregateCount=minAggregateCount, 
+                  markerSize=markerSize, markerColours=markerColours, markerFontSize=markerFontSize, 
+                  colourBy=colourBy, showNames=showNames, nameFontSize=nameFontSize, 
+                  ...)
+    #
     # measure param
-    if (type=="location") {
-        measure <- "Location"
-    } else if (type=="sampleCount") {
-        measure <- "NumberOfSamples"
-    }
+    #
     ui.checkSingleValue (measure, "measure")
+    mArg <- list(measure=measure)
+    if (type=="location") {
+        params$analysis.measures <- "Location"
+        
+    } else if (type=="sampleCount") {
+        params$analysis.measures <- "SampleCount"
+        
+    } else if (type=="drug") {
+        params$analysis.measures <- param.getArgParameter (mArg, "measure", type="character", validValues=c("ALL",config$drugs))
 
-    params <- list(
-        analysis.timeIntervals=NULL,	# TBD
-        analysis.measures=measure,
-        aggregation.levels=aggLevel,
-        map.aggregateCountMin=minAggregateCount,
-        map.markerColourAggLevel=colourAggLevel,
-        map.markerSize=markerSize,
-        map.markerNames=showNames,
-        map.diversity.markerColours=markerColours
-    )
-    params <- c(params, parsePlotParams(...))
+    } else if (type=="mutation") {
+        params$analysis.measures <- param.getArgParameter (mArg, "measure", type="character", validValues=c("ALL",config$drugResistanceMutations))
+        
+    } else if (type=="alleleProp") {
+        params$analysis.measures <- param.getArgParameter (mArg, "measure", type="character", 
+                                            validValues=c("ALL", config$countColumns, config$amplificationColumns, config$drugResistancePositions))
+        
+    } else if (type=="diversity") {
+        params$analysis.measures <- param.getArgParameter (mArg, "measure", type="character", validValues=c("ALL",markerMap.getDiversityMeasures()))
+        
+    }
 
-    plotInfo <- execute.makeMapOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, task=paste0("map/", type), params=params)
+    plotInfo <- execute.makeMapOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, task=task, params=params)
     plotInfo
 }
 #
@@ -93,7 +94,7 @@ map.makeSingleMap <- function(userCtx, sampleSetName, mapType, params) {		#;prin
     #
     # Deal with the legend - TBD
     #
-    #mapPlot <- map.processLegend (mapPlot, mapSpec)
+    #mapPlot <- map.processLegend (mapPlot, mapSpec, params)
     plotInfo <- list(mainPlot=mapPlot, legendPlot=NULL, data=NULL)
     plotInfo
 }

@@ -164,8 +164,16 @@ getGraphicsFilename <- function(graphicFilenameRoot) {
     return (paste(graphicFilenameRoot, fileExt, sep=""))
 }
 
-initializeGraphics <- function(graphicFilename, widthInch, heightInch, resolution=150, fontSize=14, background="white") {
-    grDevices::png(filename=graphicFilename, width=widthInch, height=heightInch, units="in", pointsize=fontSize, bg=background, res=resolution)
+initializeGraphics <- function(graphicFilename, params) {
+    width  <- params$plot.width
+    height <- params$plot.height
+    units  <- params$plot.units
+    dpi   <- params$plot.dpi
+    #format <- params$plot.file.format
+    defaultFontSize <- 14
+
+    grDevices::png(filename=graphicFilename, width=width, height=height, units=units, res=dpi, 
+                   pointsize=defaultFontSize, bg="white")
 }
 
 ###############################################################################

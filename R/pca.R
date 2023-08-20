@@ -136,10 +136,8 @@ pca.plotPrincipalComponents <- function(plotName, sampleMeta, legendData,
         plotFilename  <- paste(plotFilename, pcCIdx, sep="_")
     }
     print(paste("Plotting ", plotFilename))
-    plotSize <- param.getParam ("plot.size", params)		#; print(plotSize)
     graphicFilenameRoot  <- paste(plotsFolder, plotFilename, sep="/")
-    initializeGraphics (getGraphicsFilename (graphicFilenameRoot), 
-                        widthInch=plotSize$width, heightInch=plotSize$height, resolution=300)
+    initializeGraphics (getGraphicsFilename (graphicFilenameRoot), params)
     if (plotThree) {
         graphics::par(mfrow=c(2,2))
     } else {
@@ -170,7 +168,7 @@ pca.plotPrincipalComponents <- function(plotName, sampleMeta, legendData,
             grDevices::dev.off()
             plotFilename  <- paste("pca-",plotName,"-legend", sep="")
             graphicFilenameRoot  <- paste(plotsFolder, plotFilename, sep="/")
-            initializeGraphics (getGraphicsFilename (graphicFilenameRoot), widthInch=plotSize$width, heightInch=plotSize$height, resolution=300)
+            initializeGraphics (getGraphicsFilename (graphicFilenameRoot), params)
             graphics::plot.new()
             graphics::par(mar=c(0,0,0,0))
             graphics::legend("topleft", ncol=1, inset=0.05, cex=1.0, 
