@@ -24,7 +24,6 @@
 #' @name grcMalaria
 NULL
 
-
 #############################################################
 #
 #' Load a Genetic Report Card (GRC) data file
@@ -190,14 +189,13 @@ selectSampleSet <- function (ctx, sampleSetName, select) {
 #' @param colourBy Shows the aggregation level to be used to colour the markers (Country or Province)
 #' @param showNames If TRUE, labels are shown with the name of the aggregation unit (Province or District)
 #' @param nameFontSize Set the font size of the geographical name labels outside the markers on the map, if showNames=TRUE, default=5
-#' @param ... any of plot parameters, including: width, height, units, dpi, legendPosition, legendWidth. 
+#' @param ... any of plot parameters, including: width, height, units, dpi, legendPosition. 
 #'            width: the width of the plot (numeric), default=15
 #'            height: the height of the plot (numeric), default=15
 #'            units: the units in which the width and height are expressed. Supported values: "in" (default), "cm", "mm", "px"
 #'            dpi: the resolution of the plot output, expressed as dots per inch, default=300
 #'            format: the file format in which the plot will be saved. Supported values: "png" (default), "pdf"
 #'            legendPosition: specifies where the legend should be plotted. Supported values: "inset" (default), "separate"
-#'            legendWidth: specifies how wide a fixed width legend space should be, default:"NULL"
 #'
 #' @export
 #'
@@ -245,14 +243,13 @@ mapLocations <- function (ctx, sampleSet,
 #' @param colourBy Shows the aggregation level to be used to colour the markers (Country or Province)
 #' @param showNames If TRUE, labels are shown with the name of the aggregation unit (Province or District)
 #' @param nameFontSize Set the font size of the geographical name labels outside the markers on the map, if showNames=TRUE, default=5
-#' @param ... any of plot parameters, including: width, height, units, dpi, legendPosition, legendWidth. 
+#' @param ... any of plot parameters, including: width, height, units, dpi, legendPosition. 
 #'            width: the width of the plot (numeric), default=15
 #'            height: the height of the plot (numeric), default=15
 #'            units: the units in which the width and height are expressed. Supported values: "in" (default), "cm", "mm", "px"
 #'            dpi: the resolution of the plot output, expressed as dots per inch, default=300
 #'            format: the file format in which the plot will be saved. Supported values: "png" (default), "pdf"
 #'            legendPosition: specifies where the legend should be plotted. Supported values: "inset" (default), "separate"
-#'            legendWidth: specifies how wide a fixed width legend space should be, default:"NULL"
 #'
 #' @export
 #'
@@ -324,14 +321,13 @@ mapSampleCounts <- function (ctx, sampleSet, timePeriods=NULL,
 #' @param markerFontSize Set the font size of the value labels inside the markers on the map, default=6
 #' @param showNames If TRUE, labels are shown with the name of the aggregation unit (Province or District)
 #' @param nameFontSize Set the font size of the geographical name labels outside the markers on the map, if showNames=TRUE, default=5
-#' @param ... any of plot parameters, including: width, height, units, dpi, legendPosition, legendWidth. 
+#' @param ... any of plot parameters, including: width, height, units, dpi, legendPosition. 
 #'            width: the width of the plot (numeric), default=15
 #'            height: the height of the plot (numeric), default=15
 #'            units: the units in which the width and height are expressed. Supported values: "in" (default), "cm", "mm", "px"
 #'            dpi: the resolution of the plot output, expressed as dots per inch, default=300
 #'            format: the file format in which the plot will be saved. Supported values: "png" (default), "pdf"
 #'            legendPosition: specifies where the legend should be plotted. Supported values: "inset" (default), "separate"
-#'            legendWidth: specifies how wide a fixed width legend space should be, default:"NULL"
 #'
 #' @export
 #'
@@ -402,14 +398,13 @@ mapDrugResistancePrevalence <- function (ctx, sampleSet, timePeriods=NULL,
 #' @param markerFontSize Set the font size of the value labels inside the markers on the map, default=6
 #' @param showNames If TRUE, labels are shown with the name of the aggregation unit (Province or District).
 #' @param nameFontSize Set the font size of the geographical name labels outside the markers on the map, if showNames=TRUE, default=5
-#' @param ... any of plot parameters, including: width, height, units, dpi, legendPosition, legendWidth. 
+#' @param ... any of plot parameters, including: width, height, units, dpi, legendPosition. 
 #'            width: the width of the plot (numeric), default=15
 #'            height: the height of the plot (numeric), default=15
 #'            units: the units in which the width and height are expressed. Supported values: "in" (default), "cm", "mm", "px"
 #'            dpi: the resolution of the plot output, expressed as dots per inch, default=300
 #'            format: the file format in which the plot will be saved. Supported values: "png" (default), "pdf"
 #'            legendPosition: specifies where the legend should be plotted. Supported values: "inset" (default), "separate"
-#'            legendWidth: specifies how wide a fixed width legend space should be, default:"NULL"
 #'
 #' @export
 #'
@@ -474,14 +469,13 @@ mapMutationPrevalence <- function (ctx, sampleSet, timePeriods=NULL,
 #' @param markerSize Allows adjustment of the size of markers on the map
 #' @param showNames If TRUE, labels are shown with the name of the aggregation unit (Province or District)
 #' @param nameFontSize Set the font size of the geographical name labels outside the markers on the map, if showNames=TRUE, default=5
-#' @param ... any of plot parameters, including: width, height, units, dpi, legendPosition, legendWidth. 
+#' @param ... any of plot parameters, including: width, height, units, dpi, legendPosition. 
 #'            width: the width of the plot (numeric), default=15
 #'            height: the height of the plot (numeric), default=15
 #'            units: the units in which the width and height are expressed. Supported values: "in" (default), "cm", "mm", "px"
 #'            dpi: the resolution of the plot output, expressed as dots per inch, default=300
 #'            format: the file format in which the plot will be saved. Supported values: "png" (default), "pdf"
 #'            legendPosition: specifies where the legend should be plotted. Supported values: "inset" (default), "separate"
-#'            legendWidth: specifies how wide a fixed width legend space should be, default:"NULL"
 #'
 #' @export
 #' @seealso Useful links:
@@ -556,14 +550,13 @@ mapAlleleProportions <- function (ctx, sampleSet, timePeriods=NULL,
 #' @param markerColours The colour to indicate the level of genetic diversity. Default: "red3", other examples: "forestgreen", "cornflowerblue","darkgoldenrod3"
 #' @param showNames If TRUE, labels are shown with the name of the aggregation unit (Province or District)
 #' @param nameFontSize Set the font size of the geographical name labels outside the markers on the map, if showNames=TRUE, default=5
-#' @param ... any of plot parameters, including: width, height, units, dpi, legendPosition, legendWidth. 
+#' @param ... any of plot parameters, including: width, height, units, dpi, legendPosition. 
 #'            width: the width of the plot (numeric), default=15
 #'            height: the height of the plot (numeric), default=15
 #'            units: the units in which the width and height are expressed. Supported values: "in" (default), "cm", "mm", "px"
 #'            dpi: the resolution of the plot output, expressed as dots per inch, default=300
 #'            format: the file format in which the plot will be saved. Supported values: "png" (default), "pdf"
 #'            legendPosition: specifies where the legend should be plotted. Supported values: "inset" (default), "separate"
-#'            legendWidth: specifies how wide a fixed width legend space should be, default:"NULL"
 #'
 #' @export
 #'
@@ -632,14 +625,13 @@ mapDiversity <- function (ctx, sampleSet, timePeriods=NULL,
 #' @param markerSize Allows adjustment of the size of markers on the map.
 #' @param showNames If TRUE, labels are shown with the name of the aggregation unit (Province or District).
 #' @param nameFontSize Set the font size of the geographical name labels outside the markers on the map, if showNames=TRUE, default=5
-#' @param ... any of plot parameters, including: width, height, units, dpi, legendPosition, legendWidth. 
+#' @param ... any of plot parameters, including: width, height, units, dpi, legendPosition. 
 #'            width: the width of the plot (numeric), default=15
 #'            height: the height of the plot (numeric), default=15
 #'            units: the units in which the width and height are expressed. Supported values: "in" (default), "cm", "mm", "px"
 #'            dpi: the resolution of the plot output, expressed as dots per inch, default=300
 #'            format: the file format in which the plot will be saved. Supported values: "png" (default), "pdf"
 #'            legendPosition: specifies where the legend should be plotted. Supported values: "inset" (default), "separate"
-#'            legendWidth: specifies how wide a fixed width legend space should be, default:"NULL"
 #'
 #' @export
 #'
@@ -691,14 +683,13 @@ mapConnections <- function (ctx, sampleSet,
 #' @param markerScale Allows adjustment of the size of markers on the map, default: 0.8.
 #' @param showNames If TRUE, labels are shown with the name of the aggregation unit (Province or District).
 #' @param nameFontSize Set the font size of the geographical name labels outside the markers on the map, if showNames=TRUE, default=5
-#' @param ... any of plot parameters, including: width, height, units, dpi, legendPosition, legendWidth. 
+#' @param ... any of plot parameters, including: width, height, units, dpi, legendPosition. 
 #'            width: the width of the plot (numeric), default=15
 #'            height: the height of the plot (numeric), default=15
 #'            units: the units in which the width and height are expressed. Supported values: "in" (default), "cm", "mm", "px"
 #'            dpi: the resolution of the plot output, expressed as dots per inch, default=300
 #'            format: the file format in which the plot will be saved. Supported values: "png" (default), "pdf"
 #'            legendPosition: specifies where the legend should be plotted. Supported values: "inset" (default), "separate"
-#'            legendWidth: specifies how wide a fixed width legend space should be, default:"NULL"
 #'
 #' @export
 #'
@@ -797,14 +788,13 @@ findClusters <- function (ctx, sampleSet, clusterSet,
 #' @param clusterSet The name of the clustering set, defined in findClusters()
 #' @param graphLayout TBD, the default="fr"
 #' @param weightPower TBD, the default is 2
-#' @param ... any of plot parameters, including: width, height, units, dpi, legendPosition, legendWidth
+#' @param ... any of plot parameters, including: width, height, units, dpi, legendPosition
 #'            width: the width of the plot (numeric), default=15
 #'            height: the height of the plot (numeric), default=15
 #'            units: the units in which the width and height are expressed. Supported values: "in" (default), "cm", "mm", "px"
 #'            dpi: the resolution of the plot output, expressed as dots per inch, default=300
 #'            format: the file format in which the plot will be saved. Supported values: "png" (default), "pdf"
 #'            legendPosition: specifies where the legend should be plotted. Supported values: "inset" (default), "separate"
-#'            legendWidth: specifies how wide a fixed width legend space should be, default:"NULL"
 #'
 #' @return Produces network graphs of clusters assigned in findClusters function.
 #' @export
@@ -851,14 +841,13 @@ plotClusterGraph <- function (ctx, sampleSet, clusterSet,
 #' @param markerScale Allows adjustment of the size of markers on the map, default: 0.8.
 #' @param showNames If TRUE, labels are shown with the name of the aggregation unit (Province or District).
 #' @param nameFontSize Set the font size of the geographical name labels outside the markers on the map, if showNames=TRUE, default=5
-#' @param ... any of plot parameters, including: width, height, units, dpi, legendPosition, legendWidth
+#' @param ... any of plot parameters, including: width, height, units, dpi, legendPosition
 #'            width: the width of the plot (numeric), default=15
 #'            height: the height of the plot (numeric), default=15
 #'            units: the units in which the width and height are expressed. Supported values: "in" (default), "cm", "mm", "px"
 #'            dpi: the resolution of the plot output, expressed as dots per inch, default=300
 #'            format: the file format in which the plot will be saved. Supported values: "png" (default), "pdf"
 #'            legendPosition: specifies where the legend should be plotted. Supported values: "inset" (default), "separate"
-#'            legendWidth: specifies how wide a fixed width legend space should be, default:"NULL"
 #'
 #' @return Maps with cluster frequencies across administrative divisions
 #' @export
@@ -914,14 +903,13 @@ mapClusterSharing <- function (ctx, sampleSet, clusterSet,
 #' @param markerFontSize Set the font size of the value labels inside the markers on the map, default=6
 #' @param showNames If TRUE, labels are shown with the name of the aggregation unit (Province or District)
 #' @param nameFontSize Set the font size of the geographical name labels outside the markers on the map, if showNames=TRUE, default=5
-#' @param ... any of plot parameters, including: width, height, units, dpi, legendPosition, legendWidth
+#' @param ... any of plot parameters, including: width, height, units, dpi, legendPosition
 #'            width: the width of the plot (numeric), default=15
 #'            height: the height of the plot (numeric), default=15
 #'            units: the units in which the width and height are expressed. Supported values: "in" (default), "cm", "mm", "px"
 #'            dpi: the resolution of the plot output, expressed as dots per inch, default=300
 #'            format: the file format in which the plot will be saved. Supported values: "png" (default), "pdf"
 #'            legendPosition: specifies where the legend should be plotted. Supported values: "inset" (default), "separate"
-#'            legendWidth: specifies how wide a fixed width legend space should be, default:"NULL"
 #'
 #' @return For each assigned cluster a map with cluster prevalence and overlap in cluster prevalence across administrative divisions
 #' @export
@@ -1070,14 +1058,13 @@ loadGraphicAttributes <- function (ctx, name, field, file, sheet) {
 #' "nipals", "bpca" are methods applied to the set of genetic barcode genotypes (each barcode position is a variable).
 #' The default is "PCoA"
 #' @param plots The list of attributes for which plots will be created. See example below
-#' @param ... any of plot parameters, including: width, height, units, dpi, legendPosition, legendWidth
+#' @param ... any of plot parameters, including: width, height, units, dpi, legendPosition
 #'            width: the width of the plot (numeric), default=15
 #'            height: the height of the plot (numeric), default=15
 #'            units: the units in which the width and height are expressed. Supported values: "in" (default), "cm", "mm", "px"
 #'            dpi: the resolution of the plot output, expressed as dots per inch, default=300
 #'            format: the file format in which the plot will be saved. Supported values: "png" (default), "pdf"
 #'            legendPosition: specifies where the legend should be plotted. Supported values: "inset" (default), "separate"
-#'            legendWidth: specifies how wide a fixed width legend space should be, default:"NULL"
 #'
 #' @return Principal component plots and .tab data files.
 #' @export
@@ -1131,14 +1118,13 @@ plotPrincipalComponents <- function (ctx, sampleSet,
 #' @param type The method used to create the tree.
 #' Currently the only option "njt" which creates a neighbour-joining tree.
 #' @param plots The list of attributes for which plots will be created. See example below.
-#' @param ... any of plot parameters, including: width, height, units, dpi, legendPosition, legendWidth
+#' @param ... any of plot parameters, including: width, height, units, dpi, legendPosition
 #'            width: the width of the plot (numeric), default=15
 #'            height: the height of the plot (numeric), default=15
 #'            units: the units in which the width and height are expressed. Supported values: "in" (default), "cm", "mm", "px"
 #'            dpi: the resolution of the plot output, expressed as dots per inch, default=300
 #'            format: the file format in which the plot will be saved. Supported values: "png" (default), "pdf"
 #'            legendPosition: specifies where the legend should be plotted. Supported values: "inset" (default), "separate"
-#'            legendWidth: specifies how wide a fixed width legend space should be, default:"NULL"
 #'
 #' @return Phylogenetic tree plots, .tab data files, and a .newick tree file.
 #' @export

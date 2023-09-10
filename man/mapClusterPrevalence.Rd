@@ -37,14 +37,13 @@ below which the marker is not shown, default=5}
 
 \item{nameFontSize}{Set the font size of the geographical name labels outside the markers on the map, if showNames=TRUE, default=5}
 
-\item{...}{any of plot parameters, including: width, height, units, dpi, legendPosition, legendWidth
+\item{...}{any of plot parameters, including: width, height, units, dpi, legendPosition
 width: the width of the plot (numeric), default=15
 height: the height of the plot (numeric), default=15
 units: the units in which the width and height are expressed. Supported values: "in" (default), "cm", "mm", "px"
 dpi: the resolution of the plot output, expressed as dots per inch, default=300
 format: the file format in which the plot will be saved. Supported values: "png" (default), "pdf"
-legendPosition: specifies where the legend should be plotted. Supported values: "inset" (default), "separate"
-legendWidth: specifies how wide a fixed width legend space should be, default:"NULL"}
+legendPosition: specifies where the legend should be plotted. Supported values: "inset" (default), "separate"}
 }
 \value{
 For each assigned cluster a map with cluster prevalence and overlap in cluster prevalence across administrative divisions

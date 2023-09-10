@@ -12,7 +12,6 @@ param.getParam <- function (paramName, params) {
     }
     value
 }
-
 #
 ###################################################################
 # Argument parsing and translating to parameters
@@ -116,12 +115,7 @@ param.addPlotGeomParameters <- function (p, args, ...) {
     # Legend positioning
     #
     p$plot.legend.pos   <- param.getArgParameter (args, "legendPosition", defaultValue="inset", validValues=c("inset", "separate"))
-    p$plot.legend.width <- param.getArgParameter (args, "legendWidth", type="numeric", defaultValue=NULL)
-    if (!is.null(p$plot.legend.width)) {
-        if ((p$plot.legend.width <= 0) || (p$plot.legend.width > 0.5)) {
-            stop(paste("Invalid legend width (must be greater than 0 and less than 0.5):", p$plot.legend.width))
-        }
-    }
+    p$plot.legend.dir   <- param.getArgParameter (args, "legendDirection", defaultValue="vertical", validValues=c("vertical", "horizontal"))
 }
 #
 #

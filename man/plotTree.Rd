@@ -16,14 +16,13 @@ Currently the only option "njt" which creates a neighbour-joining tree.}
 
 \item{plots}{The list of attributes for which plots will be created. See example below.}
 
-\item{...}{any of plot parameters, including: width, height, units, dpi, legendPosition, legendWidth
+\item{...}{any of plot parameters, including: width, height, units, dpi, legendPosition
 width: the width of the plot (numeric), default=15
 height: the height of the plot (numeric), default=15
 units: the units in which the width and height are expressed. Supported values: "in" (default), "cm", "mm", "px"
 dpi: the resolution of the plot output, expressed as dots per inch, default=300
 format: the file format in which the plot will be saved. Supported values: "png" (default), "pdf"
-legendPosition: specifies where the legend should be plotted. Supported values: "inset" (default), "separate"
-legendWidth: specifies how wide a fixed width legend space should be, default:"NULL"}
+legendPosition: specifies where the legend should be plotted. Supported values: "inset" (default), "separate"}
 }
 \value{
 Phylogenetic tree plots, .tab data files, and a .newick tree file.

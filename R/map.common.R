@@ -53,42 +53,50 @@ map.execute <- function(userCtx, sampleSetName, mapType, params) {		#;print(mapT
 #
 map.processLegend <- function(mapPlot, mapSpec, params) {			#; print(mapSpec$master$type)
     if (map.isMarkerMap(mapSpec$master$type)) {
-        legPos <- params$plot.legend.pos
+        legPos <- params$plot.legend.pos					; print(legPos)
+        legDir <- params$plot.legend.dir					; print(legDir)
+        if (legDir == "horizontal") {
+            mapPlot <- mapPlot + ggplot2::theme(legend.position="bottom")
+        } else {
+            mapPlot <- mapPlot + ggplot2::theme(legend.position="right")
+        }
         if (legPos == "separate") {
             #
             # Separate the legend from the map, and set the map without the legend to be the plot to be wirtten to file
             #
             legendPlot <- cowplot::get_legend(mapPlot)				#; gtable::gtable_show_layout(legendPlot)
-            mapOnlyPlot <- mapPlot + ggplot2::theme(legend.position="none")
-            mapPlot <- mapOnlyPlot
+            mapPlot <- mapPlot + ggplot2::theme(legend.position="none")
             #
             # Find out the size of the legend (note, we write it out so we have a device for the size estimation)
             #
             legendFile <- paste0(mapSpec$plotFile, ".legend.png")
             grDevices::png(filename=legendFile, width=params$plot.width, height=params$plot.height, units=params$plot.units, res=params$plot.dpi)
-            legW <- grid::convertWidth(grid::widthDetails(legendPlot), params$plot.units, valueOnly=TRUE)	; print(paste(legW, params$plot.units))
-            legH <- grid::convertHeight(grid::heightDetails(legendPlot), params$plot.units, valueOnly=TRUE)	; print(paste(legH, params$plot.units))
+            legW <- grid::convertWidth(grid::widthDetails(legendPlot), params$plot.units, valueOnly=TRUE)	#; print(paste(legW, params$plot.units))
+            legH <- grid::convertHeight(grid::heightDetails(legendPlot), params$plot.units, valueOnly=TRUE)	#; print(paste(legH, params$plot.units))
             grDevices::dev.off()
             #
             # Write out the legend to a file of the exact size
             #
             legendPlot <- ggpubr::as_ggplot(legendPlot)
+            #legendPlot <- legendPlot + 
+            #              ggplot2::theme_minimal() + 
+            #              #ggplot2::theme(plot.margin=grid::unit(c(5.5, 20, 5.5, 20), "pt"))
+            #              ggplot2::theme(legend.margin=ggplot2::margin(l=20, r=20, unit='pt'))
             ggplot2::ggsave(plot=legendPlot, filename=legendFile, device="png", bg="white",
-                            width=legW, height=legH, units=params$plot.units, dpi=params$plot.dpi)
-        } else if (legPos == "inset") {
+                            width=legW*1.1, height=legH*1.1, units=params$plot.units, dpi=params$plot.dpi)
+        } else if (FALSE) {
             #
-            # If no width is specified, leave plot as-is
+            # REMOVED - could not make this work
             #
-            if (!is.null(params$plot.legend.width)) {
-                mapPlot <- mapPlot + ggplot2::theme(legend.position=c(0,0))
-                legendPlot <- cowplot::get_legend(mapPlot)
-                mapOnlyPlot <- mapPlot + ggplot2::theme(legend.position="none")
-                rplot <- legendPlot; lplot <- mapOnlyPlot
-                rwidth <- params$plot.legend.width; lwidth <- 1-rwidth
-                mapPlot <- cowplot::plot_grid(lplot, rplot, rel_widths=c(lwidth,rwidth))
-            }
+            #if (!is.null(params$plot.legend.width)) {				; print(params$plot.legend.width)
+            #    mapPlot <- mapPlot + ggplot2::theme(legend.position=c(0,0))
+            #    legendPlot <- cowplot::get_legend(mapPlot)
+            #    mapOnlyPlot <- mapPlot + ggplot2::theme(legend.position="none")
+            #    rplot <- legendPlot; lplot <- mapOnlyPlot
+            #    rwidth <- params$plot.legend.width; lwidth <- 1-rwidth
+            #    mapPlot <- cowplot::plot_grid(lplot, rplot, nrow=1, ncol=2, rel_widths=c(lwidth,rwidth))
+            #}
         }
-        mapPlot <- mapPlot + mapSpec$master$theme
     }
     mapPlot
 }
@@ -274,7 +282,6 @@ map.getTheme <- function(params) {
                          axis.title       = ggplot2::element_text(face="bold",size=ggplot2::rel(params$axisTitleSize)),
                          axis.title.y     = ggplot2::element_text(angle=90, vjust=2),
                          axis.title.x     = ggplot2::element_text(vjust=-0.2),
-                         #legend.spacing   = ggplot2::unit(params$legendSpacing, "pt"),
                          legend.key.size  = ggplot2::unit(params$legendKeySize, "lines")
                          )
     th
