@@ -40,10 +40,7 @@ setup.getSpeciesConfig <- function (species, version) {
     } else {
         stop (paste("Invalid species specified: ", species))
     }
-
-    versionLabel <- paste("v",version,sep="")
-    barcodeMeta <- barcode.metadata[[species]][[versionLabel]]
-
+    barcodeMeta <- barcode.metadata[[species]]
     config <- list (
         species=species,
         version=version,

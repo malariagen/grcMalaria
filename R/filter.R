@@ -5,7 +5,7 @@
 filter.createFilteredDataset <- function (ctx, loadFromCache=TRUE) {
     print("Initializing Filtered Dataset")
     filteredDs <- context.createDataset (ctx, "filtered")
-    
+
     unfilteredDs <- ctx$unfiltered
     config       <- ctx$config
 

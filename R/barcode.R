@@ -40,37 +40,38 @@ barcode.initializeBarcodes <- function (ctx, datasetName, loadFromCache=TRUE) {
 
     config <- ctx$config				#; print(config)
     dataset <- ctx[[datasetName]]
-
     barcodeDataFile <- barcode.getBarcodeDataFile (ctx, datasetName)
 
     if (loadFromCache & rdaFileExists(barcodeDataFile)) {
         barcodeData <- readRdaSampleData (barcodeDataFile)
         barcode.setDatasetBarcodes (ctx, datasetName, barcodeData, store=FALSE)
     } else {
+        #
         # Get barcode alleles, and discard samples that have too much missingness
-        barcodeMeta <- config$barcodeMeta
-        #print (barcodeMeta)
+        #
+        barcodeMeta <- config$barcodeMeta		#; print (barcodeMeta)        
         barcodeData <- barcode.getAllelesFromBarcodes (dataset$meta, GRC_BARCODE_COL, barcodeMeta)
         print(paste("Barcode alleles - Samples:", nrow(barcodeData), "x SNPs:", ncol(barcodeData)))
         print("Validating barcodes")
         barcode.validateBarcodeAlleles (barcodeData, barcodeMeta)
-
+        #
         # Filter the barcodes by typability, trying to throw away as little as possible
-        #barcode.writeBarcodeStats (dataset, datasetName, barcodeData, "noFiltering")
+        #
         barcode.writeBarcodeStats (ctx, datasetName, barcodeData, "noFiltering")
         minSampleTypability <- config$minSampleTypability
         minSnpTypability    <- config$minSnpTypability
         print(paste("Filtering barcodes by typability (samples:", minSampleTypability, ", SNPs:", minSnpTypability, ")",sep=""))
         #
         # 1) remove all samples with <0.5 typability, so they affect less the removal of SNPs
+        #
         filteredData <- barcode.filterByTypability (barcodeData, bySnp=FALSE, minTypability=0.5)
         #
         # 2) Refine further, using the thresholds specified
+        #
         filteredData <- barcode.filterByTypability (filteredData, bySnp=TRUE,  minTypability=minSnpTypability)
         filteredData <- barcode.filterByTypability (filteredData, bySnp=FALSE, minTypability=minSampleTypability)
         barcodeData <- filteredData
         #
-        #barcode.writeBarcodeStats (dataset, datasetName, barcodeData,
         barcode.writeBarcodeStats (ctx, datasetName, barcodeData,
                            paste("filtered-snps_", minSnpTypability, "-samples_", minSampleTypability, sep=""))
         print(paste("Barcode alleles after filtering - Samples:", nrow(barcodeData), "x SNPs:", ncol(barcodeData)))
@@ -89,6 +90,24 @@ barcode.initializeBarcodes <- function (ctx, datasetName, loadFromCache=TRUE) {
     ctx
 }
 #
+# Convert barcodes into a dataframe of alleles, filtering both samples and barcode SNPs by typability
+#
+barcode.getAllelesFromBarcodes <- function(sampleMetadata, barcodeColumnName, barcodeMeta) {	#;print (head(barcodeMeta))
+    barcodes <- toupper(as.character(sampleMetadata[,barcodeColumnName]))
+    names(barcodes) <- rownames(sampleMetadata)
+
+    # Eliminate all samples without barcode
+    validBcodeIdx <- which(!(barcodes %in% c("-","<NA>")))
+    barcodes <- barcodes[validBcodeIdx]		#; print (length(barcodes)); print (barcodes[1:10])
+    
+    # Split the barcodes into constituent alleles (extractBarcodeAlleles() is in a .cpp source)
+    #print (rownames(barcodeMeta))
+    alleleMat <- extractBarcodeAlleles (barcodes, rownames(barcodeMeta))
+    alleleData <- data.frame(alleleMat)
+    rownames(alleleData) <- names(barcodes);
+    alleleData
+}
+#
 # Verify all alleles extracted are valid
 #
 barcode.validateBarcodeAlleles <- function (barcodeData, barcodeMeta) {
@@ -104,13 +123,12 @@ barcode.validateBarcodeAlleles <- function (barcodeData, barcodeMeta) {
         snpAlleles <- c(snpMeta$Ref,snpMeta$Nonref,"X","N")	#; print(snpAlleles)
         badIdx <- which(!(calls %in% snpAlleles))		#; print(badIdx)
         if (length(badIdx) > 0) {
-            for (bIdx in 1:length(badIdx)) {
+            for (bIdx in badIdx) {
                 badAllele <- calls[bIdx]
-                badSampleIdx <- badIdx[bIdx]
-                badSample <- rownames(barcodeData)[badSampleIdx]
+                badSample <- rownames(barcodeData)[bIdx]
                 isNt <- (badAllele %in% validAlleles)
                 if (isNt) {
-                    problem <- "Warning: Unexpected allele"
+                    problem <- "Info: Unexpected allele"
                 } else {
                     errorCount <- errorCount+1
                     problem <- "Error: Invalid symbol"
@@ -122,23 +140,6 @@ barcode.validateBarcodeAlleles <- function (barcodeData, barcodeMeta) {
     if (errorCount > 0) {
         stop ("Validation errors were detected in the barcodes, the process will be stopped.")
     }
-}
-#
-# Convert barcodes into a dataframe of alleles, filtering both samples and barcode SNPs by typability
-#
-barcode.getAllelesFromBarcodes <- function(sampleMetadata, barcodeColumnName, barcodeMeta) {	#;print (head(barcodeMeta))
-    barcodes <- toupper(as.character(sampleMetadata[,barcodeColumnName]))
-    names(barcodes) <- rownames(sampleMetadata)
-
-    # Eliminate all samples without barcode
-    barcodes <- barcodes[which(barcodes != "-")]		#; print (length(barcodes)); print (barcodes[1:10])
-    
-    # Split the barcodes into constituent alleles
-    #print (rownames(barcodeMeta))
-    alleleMat <- extractBarcodeAlleles (barcodes, rownames(barcodeMeta))
-    alleleData <- data.frame(alleleMat)
-    rownames(alleleData) = names(barcodes);
-    alleleData
 }
 #
 ###############################################################################

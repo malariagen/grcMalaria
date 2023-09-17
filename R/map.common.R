@@ -387,14 +387,16 @@ map.buildBaseMap <- function(mapMaster) {
         #
         anAdm1GIDs <- cUnitList$adm1GIDs				#; print(adm1GIDs)
         anAdm1Lines <- cAdm1Lines[cAdm1Lines@data$GADM_GID_1 %in% anAdm1GIDs,]
-        for (idx in 1:nrow(anAdm1Lines)) {				#; print (anAdm1Lines@polygons[[idx]])
+        #for (idx in 1:nrow(anAdm1Lines)) {				#; print (anAdm1Lines@polygons[[idx]])
             #
             # Get the bounding box for the province
             # (a 2-column matrix; the first column has the minimum, the second the maximum values; rows represent the spatial dimensions)
             #
-            bbx <- sp::bbox(anAdm1Lines@polygons[[idx]])		#; print(bbx) 
-            xMin <- min(xMin,bbx[1,1]); xMax <- max(xMax,bbx[1,2]); yMin <- min(yMin,bbx[2,1]); yMax <- max(yMax,bbx[2,2])	#; print(c(xMin,xMax,yMin,yMax)) 
-        }
+        #   bbx <- sp::bbox(anAdm1Lines@polygons[[idx]])		#; print(bbx)
+        #   xMin <- min(xMin,bbx[1,1]); xMax <- max(xMax,bbx[1,2]); yMin <- min(yMin,bbx[2,1]); yMax <- max(yMax,bbx[2,2])	#; print(c(xMin,xMax,yMin,yMax)) 
+        #}
+        bbx <- anAdm1Lines@bbox
+        xMin <- min(xMin,bbx[1]); xMax <- max(xMax,bbx[3]); yMin <- min(yMin,bbx[2]); yMax <- max(yMax,bbx[4])	#; print(c(xMin,xMax,yMin,yMax)) 
         #
         # Append the data to those of other countries
         #

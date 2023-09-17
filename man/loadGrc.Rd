@@ -4,7 +4,7 @@
 \alias{loadGrc}
 \title{Load a Genetic Report Card (GRC) data file}
 \usage{
-loadGrc(file, sheet = "GRC", species = "Pf", version = "1.2")
+loadGrc(file, sheet = "GRC", species = "Pf", version = "1.4")
 }
 \arguments{
 \item{file}{The path to the GRC data Microsoft Excel file (use forward slashes in the path)}
@@ -29,7 +29,7 @@ and may have been updated to the latest version fo the format.
 # Change the path to where your file is located before running the code
 Data <- loadGrc("D:/myFiles/name_file.xlsx",
                sheet = "GRC",
-               species = "Pf", version = "1.2")
+               species = "Pf", version = "1.4")
 }
 }
 \seealso{

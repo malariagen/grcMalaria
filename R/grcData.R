@@ -95,7 +95,7 @@ grcData.readExcel <- function (grcDataFile, grcDataSheet) {
 #
 grcData.standardize <- function (grcSampleData, species, version) {
     if (species == "Pf") {
-         currentVersion <- "1.2"
+         currentVersion <- "1.4"
     } else if (version == "Pv") {
          currentVersion <- "1.0"
     } else {

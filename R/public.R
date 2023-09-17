@@ -47,10 +47,10 @@ NULL
 #' # Change the path to where your file is located before running the code
 #' Data <- loadGrc("D:/myFiles/name_file.xlsx",
 #'                sheet = "GRC",
-#'                species = "Pf", version = "1.2")
+#'                species = "Pf", version = "1.4")
 #'}
 #
-loadGrc <- function (file, sheet="GRC", species="Pf", version="1.2") {
+loadGrc <- function (file, sheet="GRC", species="Pf", version="1.4") {
     grcData <- grcData.load (file, sheet, species, version)
     grcData
 }

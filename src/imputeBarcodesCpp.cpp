@@ -7,7 +7,7 @@ using namespace Rcpp;
 
 // [[Rcpp::export]]
 StringMatrix imputeBarcodesCpp (DataFrame barcodeData, DataFrame barcodeMeta, DataFrame distData) {
-    
+
     int nsamples = barcodeData.nrow();
     int nsnps    = barcodeData.ncol();
     CharacterVector sampleNames = barcodeData.attr("row.names");
@@ -68,8 +68,12 @@ StringMatrix imputeBarcodesCpp (DataFrame barcodeData, DataFrame barcodeMeta, Da
                     } else if(allele == nrefAllele){
                         nrefScore += topScores[i];
                     } else {
+						/* Remove this code.
+						 * If there is a 2nd/3rd nonref allele, disregard it based on the assumption that not many samples carry these.
+						 *
                         String snpName = snpNames[vIdx];
                         stop("Unknown allele for sample %s at position %s: %s", sName.get_cstring(), snpName.get_cstring(), allele.get_cstring());
+                        */
                     }
                 }
                 String impAllele = (refScore > nrefScore) ? refAllele : nrefAllele;

@@ -32,9 +32,7 @@ impute.imputeBarcodes <- function (barcodeData, barcodeMeta, distData) {
     impMat <- imputeBarcodesCpp (barcodeData, barcodeMeta, distData)
     impBarcodeData <- data.frame(impMat)
     rownames(impBarcodeData) <- sampleNames
-    colnames(impBarcodeData) <- colnames(barcodeData)
-    #print(barcodeData[1:10,1:30])
-    #print(impBarcodeData[1:10,1:30])
+    colnames(impBarcodeData) <- colnames(barcodeData)		#; print(barcodeData[1:10,1:30]); print(impBarcodeData[1:10,1:30])
     impBarcodeData
 }
 
