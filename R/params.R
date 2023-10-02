@@ -72,7 +72,8 @@ param.makeParameterList <- function (ctx, task, ...) {
     } else if (taskName %in% c("pca", "tree")) {	#; print(args$plots)
         param.addPlotGeomParameters (p, args, ...)
         p$plot.plotList <- param.getArgParameter (args, "plots", type="list", defaultValue=NULL, multiValue=TRUE)
-
+        p$phylo.impute  <- param.getArgParameter (args, "impute", type="logical", defaultValue=FALSE)
+        
     } else if (taskName == "graph") {
         param.addPlotGeomParameters (p, args, ...)
         p$cluster.clusterSet.name <- param.getArgParameter (args, "clusterSet",  type="character")

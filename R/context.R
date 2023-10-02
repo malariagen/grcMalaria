@@ -2,10 +2,17 @@
 # Root Context - Contains all data needed from analysis
 ###################################################################
 #
-context.createRootContext <- function (grcData, config) {
+context.createRootContext <- function (grcData, config, clearCacheData=FALSE) {
     newCtx <- new.env()
 
     newCtx$id         <- digest::digest(grcData, algo="md5")
+    if (clearCacheData) {
+        print("Clearing data cache")
+        cacheRootFolder <- paste(config$folder.data, newCtx$id, sep="/")
+        if (file.exists(cacheRootFolder)) {
+            unlink(cacheRootFolder, recursive=TRUE)
+        }
+    }
     newCtx$rootCtx    <- newCtx			# This is a root context (user-created)
     newCtx$config     <- config
     newCtx$sampleSets <- new.env()
@@ -84,9 +91,6 @@ context.addTrimmedDatasetToContext <- function (ctx, datasetName, sampleNames, t
     }
     if (!is.null(dataset$genos)) {
         geno.setDatasetGenotypes (trimCtx, datasetName, dataset$genos[sampleNames,], store=FALSE)
-    }
-    if (!is.null(dataset$distance)) {
-        distance.setDatasetDistance (trimCtx, datasetName, dataset$distance[sampleNames,sampleNames], store=FALSE)
     }
     trimCtx
 }

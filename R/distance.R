@@ -1,32 +1,58 @@
 ###############################################################################
 # Caching data files
 ################################################################################
-distance.getDistanceDataFile <- function (ctx, datasetName) {
-    dataFile <- getContextCacheFile(ctx, datasetName, "distance", "sampleDistance")
-    dataFile
+distance.getCachedDistanceMatrixFilename <- function (ctx, datasetName) {
+    distDataFile <- getContextCacheFile(ctx$rootCtx, datasetName, "distance", "sampleDistance")
+    distDataFile
 }
 
-distance.initialize <- function (ctx, datasetName, loadFromCache=TRUE, store=TRUE) {
-    distDataFile <- distance.getDistanceDataFile(ctx, datasetName)
-    dataset <- ctx[[datasetName]]
-    if (loadFromCache & rdaFileExists(distDataFile)) {
+distance.initializeDistanceMatrix <- function (ctx, datasetName) {
+    distDataFile <- distance.getCachedDistanceMatrixFilename(ctx, datasetName)
+    if (!rdaFileExists(distDataFile)) {
+        distData <- distance.createDistanceMatrix(ctx, datasetName)
+    }
+}
+
+distance.retrieveDistanceMatrix <- function (ctx, datasetName) {
+    distDataFile <- distance.getCachedDistanceMatrixFilename(ctx, datasetName)
+    if (rdaFileExists(distDataFile)) {
         distData <- readRdaMatrix(distDataFile)
-        distance.setDatasetDistance(ctx, datasetName, distData, store=FALSE)
-        print(paste("Loaded", dataset$name, "distance matrix - Samples:", nrow(distData)))
     } else {
-        genoData <- dataset$genos
-        print(paste("Computing pairwise distances for",nrow(genoData),"samples using",ncol(genoData),"SNPs"))
-        distData <- computeDistances (as.matrix(genoData))
-        distance.setDatasetDistance(ctx, datasetName, distData, store=store)
+        distData <- distance.createDistanceMatrix(ctx, datasetName)
     }
-}
-
-distance.setDatasetDistance <- function (ctx, datasetName, distance, store=TRUE) {
+    #
+    # Trim the matrix  (eg. if this is a context from a sampleSet)
+    #
     dataset <- ctx[[datasetName]]
-    dataset$distance <- distance
-    if (store) {
-        distDataFile <- distance.getDistanceDataFile(ctx, datasetName)
-        writeRdaMatrix(distance, distDataFile)
-    }
+    sampleNames <- rownames(dataset$meta)
+    distData <- distData[sampleNames,sampleNames]
+    distData
 }
 
+distance.createDistanceMatrix <- function (ctx, datasetName) {
+    dataset <- ctx$rootCtx[[datasetName]]
+    genoData <- dataset$genos
+    print(paste("Computing pairwise distances for",nrow(genoData),"samples using",ncol(genoData),"SNPs"))
+    distData <- computeDistances (as.matrix(genoData))
+    distDataFile <- distance.getCachedDistanceMatrixFilename(ctx, datasetName)
+    writeRdaMatrix(distData, distDataFile)
+    distData
+}
+
+DEFAULT_MOST_SIMILAR_COUNT <- 100
+distance.findMostSimilarSamples <- function (ctx, datasetName, mostSimilarCount=DEFAULT_MOST_SIMILAR_COUNT) {
+    distData <- distance.retrieveDistanceMatrix (ctx, datasetName)
+    sampleNames <- colnames(distData)
+    msIdxData  <- data.frame(matrix(nrow=mostSimilarCount,ncol=0))
+    msDistData <- data.frame(matrix(nrow=mostSimilarCount,ncol=0))
+    for (sIdx in 1:ncol(distData)) {
+        sName <- sampleNames[sIdx]
+        sDist <- distData[,sIdx]
+        sOrder <- order(sDist)
+        sOrder <- sOrder[which(sOrder!=sIdx)]
+        sOrder <- sOrder[1:mostSimilarCount]
+        msIdxData[,sName]  <- sOrder
+        msDistData[,sName] <- sDist[sOrder]
+    }
+    list(indexes=msIdxData, distances=msDistData)
+}

@@ -29,9 +29,8 @@ testRcppFunctions <- function() {
   distMat <- computeDistances (genos)
   print (distMat)
 
-  
-  bcodesData <- data.frame (bcodeMat)
-  distData   <- data.frame (distMat)
-  mat <- imputeBarcodesCpp (bcodesData, bcodeMeta, distData)
-  print (mat)
+#  bcodesData <- data.frame (bcodeMat)
+#  distData   <- data.frame (distMat)
+#  mat <- imputeBarcodesCpp (bcodesData, bcodeMeta, distData)
+#  print (mat)
 }

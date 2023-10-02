@@ -33,24 +33,10 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// imputeBarcodesCpp
-StringMatrix imputeBarcodesCpp(DataFrame barcodeData, DataFrame barcodeMeta, DataFrame distData);
-RcppExport SEXP _grcMalaria_imputeBarcodesCpp(SEXP barcodeDataSEXP, SEXP barcodeMetaSEXP, SEXP distDataSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< DataFrame >::type barcodeData(barcodeDataSEXP);
-    Rcpp::traits::input_parameter< DataFrame >::type barcodeMeta(barcodeMetaSEXP);
-    Rcpp::traits::input_parameter< DataFrame >::type distData(distDataSEXP);
-    rcpp_result_gen = Rcpp::wrap(imputeBarcodesCpp(barcodeData, barcodeMeta, distData));
-    return rcpp_result_gen;
-END_RCPP
-}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_grcMalaria_computeDistances", (DL_FUNC) &_grcMalaria_computeDistances, 1},
     {"_grcMalaria_extractBarcodeAlleles", (DL_FUNC) &_grcMalaria_extractBarcodeAlleles, 2},
-    {"_grcMalaria_imputeBarcodesCpp", (DL_FUNC) &_grcMalaria_imputeBarcodesCpp, 3},
     {NULL, NULL, 0}
 };
 

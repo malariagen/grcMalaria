@@ -4,9 +4,10 @@
 clusterGraph.execute <- function (userCtx, sampleSetName, params) {
     sampleSet <- userCtx$sampleSets[[sampleSetName]]
     ctx     <- sampleSet$ctx
-    dataset <- ctx$imputed
-    distance <- dataset$distance
+    datasetName <- "imputed"
+    dataset <- ctx[[datasetName]]
     meta     <- dataset$meta
+    distance <- distance.retrieveDistanceMatrix (ctx, datasetName)
     
     # Set up output folders
     dataFolder <- getOutFolder(ctx$config, sampleSetName, c("graph", "data"))
@@ -176,23 +177,23 @@ clusterGraph.buildGraph <- function (distance, clusterSetInfo, clustersOnly, par
         
     # Use the cluster memberships to reduce the distance matrix by collapsing the cluster samples and replacing them with the clusters
     # The resulting table is a table of node distance rather than sample distance
-    distData <- clusterGraph.buildNodeDistances (distance, clusterMembers)
+    nodeDistData <- clusterGraph.buildNodeDistances (distance, clusterMembers)
 
     # If we're only doing the clusters, trim out the loose samples
     if (clustersOnly) {
         clusterIds <- clusterData$ClusterId
-        distData <- distData[clusterIds,clusterIds]
+        nodeDistData <- nodeDistData[clusterIds,clusterIds]
     }
 
     # Create a node table, incorporating both newly found clusters and non-cluster samples
-    nodeNames <- rownames(distData)
+    nodeNames <- rownames(nodeDistData)
     nodeData <- clusterGraph.buildNodeData (nodeNames, clusterData)
 
     # Trim data to include only the nodes that are connected by edges; but make sure we preserve all clusters
     #minIdentity <- param.getParam ("graph.connectIdentityMin", params)
     minConnectIdentity <- minIdentity / 2
     #minConnectIdentity <- 0
-    edgeData <- clusterGraph.getWeightedEdgeData (distData, minConnectIdentity, params)
+    edgeData <- clusterGraph.getWeightedEdgeData (nodeDistData, minConnectIdentity, params)
     nodeNames <- unique(c(as.character(edgeData$Sample1),as.character(edgeData$Sample2)))
 
     # Create graph from connectivity data
@@ -212,7 +213,7 @@ clusterGraph.buildGraph <- function (distance, clusterSetInfo, clustersOnly, par
         clusterSetInfo = clusterSetInfo,
         nodeData = nodeData,
         edgeData = edgeData,
-        distData = distData,
+        distData = nodeDistData,
         clustersOnly = clustersOnly
     )
     graphInfo
@@ -221,9 +222,9 @@ clusterGraph.buildGraph <- function (distance, clusterSetInfo, clustersOnly, par
 # Given a table of cluster memberships, remove the relevant samples from the distance matrix and 
 # replace them with the clusters, using the mean distances as replacement
 #
-clusterGraph.buildNodeDistances <- function (distData, clusterMembers) {
+clusterGraph.buildNodeDistances <- function (nodeDistData, clusterMembers) {
     if (nrow(clusterMembers) == 0) {
-        return (distData)
+        return (nodeDistData)
     }
     clNames <- unique(clusterMembers$Cluster)
     for (cldx in 1:length(clNames)) {
@@ -231,22 +232,22 @@ clusterGraph.buildNodeDistances <- function (distData, clusterMembers) {
         clSamples <- clusterMembers$Sample[which(clusterMembers$Cluster == clName)]        #; print(clSamples)
 
         # Get a matrix of distance between cluster samples (cols) and other samples (rows)
-        clDist <- distData[,clSamples]
+        clDist <- nodeDistData[,clSamples]
 
         # Compute the mean distance of cluster samples vs all others, and then stick it a first column and row
         clMeans <- rowMeans(clDist)
-        sNames <- c(clName, colnames(distData))
-        distData <- rbind(clMeans, distData)
+        sNames <- c(clName, colnames(nodeDistData))
+        nodeDistData <- rbind(clMeans, nodeDistData)
         clMeans <- c(0.0, clMeans)
-        distData <- cbind(clMeans, distData)
-        rownames(distData) <- sNames
-        colnames(distData) <- sNames
+        nodeDistData <- cbind(clMeans, nodeDistData)
+        rownames(nodeDistData) <- sNames
+        colnames(nodeDistData) <- sNames
        
         # Remove cluster samples from distance matrix
-        distData <- distData[!(rownames(distData) %in% clSamples),]
-        distData <- distData[,!(colnames(distData) %in% clSamples)]
+        nodeDistData <- nodeDistData[!(rownames(nodeDistData) %in% clSamples),]
+        nodeDistData <- nodeDistData[,!(colnames(nodeDistData) %in% clSamples)]
     }
-    distData
+    nodeDistData
 }
 #
 # Build a table of nodes, to distinguish clusters from individual nodes, and giving them a size
@@ -274,9 +275,9 @@ clusterGraph.buildNodeData <- function (nodeNames, clusterData) {
 # Get Weighted Graph Edge Data
 # Return a table with edge definition, plus weights (based on distance via a transformation function)
 #
-clusterGraph.getWeightedEdgeData <- function (distData, minIdentity, params) {
+clusterGraph.getWeightedEdgeData <- function (nodeDistData, minIdentity, params) {
     # Get a table of pairwise distance/identity values for all pairs of samples that meet the threshold
-    pairData <- clusterGraph.getPairwiseIdentityData (distData, minIdentity, params)
+    pairData <- clusterGraph.getPairwiseIdentityData (nodeDistData, minIdentity, params)
     # Compute the link weights
     power <- param.getParam ("graph.weightPower", params)
     pairData$weight <- 100 * (pairData$Identity^power)
@@ -286,8 +287,8 @@ clusterGraph.getWeightedEdgeData <- function (distData, minIdentity, params) {
 # Get Unweighted Graph Edge Data
 # Turn the distance matrix into a table of pairwise identity with four columns: "Sample1", "Sample2", "Distance", "Identity"
 #
-clusterGraph.getPairwiseIdentityData <- function (distData, minIdentity, params) {
-    mat <- as.matrix(distData)
+clusterGraph.getPairwiseIdentityData <- function (nodeDistData, minIdentity, params) {
+    mat <- as.matrix(nodeDistData)
     mat[lower.tri(mat,diag=TRUE)] = NA
     pairData <- as.data.frame(as.table(mat))
     pairData <- stats::na.omit(pairData) # remove NA

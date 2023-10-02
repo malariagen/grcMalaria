@@ -4,7 +4,7 @@
 \alias{plotTree}
 \title{Plot Trees}
 \usage{
-plotTree(ctx, sampleSet, type = "njt", plots, ...)
+plotTree(ctx, sampleSet, type = "njt", plots, impute = FALSE, ...)
 }
 \arguments{
 \item{ctx}{The analysis context, created by intializeContext().}
@@ -15,6 +15,8 @@ plotTree(ctx, sampleSet, type = "njt", plots, ...)
 Currently the only option "njt" which creates a neighbour-joining tree.}
 
 \item{plots}{The list of attributes for which plots will be created. See example below.}
+
+\item{impute}{To use imputed or filtered data. The default is TRUE.}
 
 \item{...}{any of plot parameters, including: width, height, units, dpi, legendPosition
 width: the width of the plot (numeric), default=15

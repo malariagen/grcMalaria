@@ -230,8 +230,6 @@ markerMap.estimateMeasures <- function(ctx, datasetName, aggLevel, aggUnitData, 
     dataset <- ctx[[datasetName]]
     sampleMeta   <- dataset$meta
     barcodeData  <- dataset$barcodes
-    distData     <- dataset$distance
-
     # Create aggregation index for each sample (the id of the aggregation unit where the sample originates)
     aggIndex <- map.getAggregationUnitIds (aggLevel, sampleMeta)
     
@@ -249,9 +247,8 @@ markerMap.estimateMeasures <- function(ctx, datasetName, aggLevel, aggUnitData, 
         
         # Get the admin division values from the first sample of this unit (assuming the values are the same for all)
         if (mapType=="diversity") {
-            aggBarcodes <- barcodeData[aggSamples,]
-            aggDist <- distData[aggSamples,aggSamples]
-            cValues <- markerMap.estimateDiversityMeasures (ctx, aggBarcodes, aggDist, measures)
+            cValues <- markerMap.estimateDiversityMeasures (ctx, datasetName, aggSamples, 
+                                                            barcodeData, measures)
         } else if (mapType=="drug") {
             cValues <- meta.getResistancePrevalence (ctx, aggSamplesMeta, measures, params)
         } else if (mapType=="mutation") {
@@ -276,7 +273,8 @@ markerMap.estimateMeasures <- function(ctx, datasetName, aggLevel, aggUnitData, 
 # Diversity measure estimates from genetic barcodes.
 # Note that this is executed over imputed barcodes, and therefore there is not missingness or het genotypes in the barcodes.
 #
-markerMap.estimateDiversityMeasures <- function (ctx, barcodeData, distData, measures) {
+markerMap.estimateDiversityMeasures <- function (ctx, datasetName, sampleNames, barcodeData, measures) {
+    barcodeData <- barcodeData[sampleNames,]
     result <- c()
     for (mIdx in 1:length(measures)) {
         measure <- measures[mIdx]
@@ -290,7 +288,8 @@ markerMap.estimateDiversityMeasures <- function (ctx, barcodeData, distData, mea
             hets <- apply(barcodeData, 2, pegas::heterozygosity)
             value <- mean(hets)
         } else if (measure == "medianDistance") {
-            mat <- as.matrix(distData)
+            distData <- distance.retrieveDistanceMatrix (ctx, datasetName)
+            mat <- as.matrix(distData[sampleNames,sampleNames])
             mat[lower.tri(mat,diag=TRUE)] <- NA
 	    value <- stats::median(mat, na.rm=TRUE)
         } else {

@@ -9,7 +9,3 @@ extractBarcodeAlleles <- function(barcodes, snpNames) {
     .Call(`_grcMalaria_extractBarcodeAlleles`, barcodes, snpNames)
 }
 
-imputeBarcodesCpp <- function(barcodeData, barcodeMeta, distData) {
-    .Call(`_grcMalaria_imputeBarcodesCpp`, barcodeData, barcodeMeta, distData)
-}
-

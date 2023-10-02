@@ -94,12 +94,15 @@ mergeGrc <- function (srcGrc, newGrc, overwrite=FALSE, extendColumns=FALSE) {
 #'
 #' Initialize a GRC dataset (obtained from function loadGrc()) so that it is ready for analysis.
 #' It performs barcode imputation, computes genetic distances, and initializes data that will subsequently be used in analyses.
+#' The resulting data is stored in a cache and reused whenever you re-analyze the same GRC dataset. If you want to recompute everything from scratch, set clearCacheData=TRUE.
 #' It creates a folder where output of future analyses will be saved. It will take a while to create a context object which will be used for the subsequent analysis tasks (can take as long as 5 mins to run).
 #'
 #' @param grcData The data obtained from reading the GRC Excel data.
 #' @param dir The folder where the outputs from this and subsequent analyses will be stored.
 #' @param minSnpTypability The minimum proportion of non-missing samples for a barcode position to be retained in analysis.
-#' @param minSampleTypability The minimum proportion of non-missing positions for a sample to be retained in analysis.
+#' @param minSampleTypability The minimum proportion of non-missing barcode positions for a sample to be retained in analysis.
+#' @param maxImputedProportion The maximum proportion of barcode positions to be imputed for a filtered sample to be included in the imputed dataset
+#' @param clearCacheData Removes previously stored data from analyzing the same dataset.
 #'
 #' @return An analysis context object, which is a list that contains all the data for analysis, which will be passed to subsequent analysis tasks.
 #' @export
@@ -113,13 +116,15 @@ mergeGrc <- function (srcGrc, newGrc, overwrite=FALSE, extendColumns=FALSE) {
 #'}
 #
 initializeContext <- function (grcData, dir=".", 
-                               minSnpTypability=0.8, 
-                               minSampleTypability=0.75) {
+                               minSnpTypability=0.8,
+                               minSampleTypability=0.75,
+                               maxImputedProportion=0.2,
+                               clearCacheData=FALSE) {
     options(scipen=10)
     options(stringsAsFactors=FALSE)
 
-    config <- setup.getConfig (grcData, dir, minSnpTypability, minSampleTypability)
-    ctx <- context.createRootContext (grcData$data, config)
+    config <- setup.getConfig (grcData, dir, minSnpTypability, minSampleTypability, maxImputedProportion)
+    ctx <- context.createRootContext (grcData$data, config, clearCacheData)
     ctx
 }
 
@@ -1058,6 +1063,7 @@ loadGraphicAttributes <- function (ctx, name, field, file, sheet) {
 #' "nipals", "bpca" are methods applied to the set of genetic barcode genotypes (each barcode position is a variable).
 #' The default is "PCoA"
 #' @param plots The list of attributes for which plots will be created. See example below
+#' @param impute To use imputed or filtered data. The default is TRUE.
 #' @param ... any of plot parameters, including: width, height, units, dpi, legendPosition
 #'            width: the width of the plot (numeric), default=15
 #'            height: the height of the plot (numeric), default=15
@@ -1084,7 +1090,7 @@ loadGraphicAttributes <- function (ctx, name, field, file, sheet) {
 #'}
 #
 plotPrincipalComponents <- function (ctx, sampleSet, 
-                                     type="PCoA", plots,
+                                     type="PCoA", plots, impute=FALSE, 
                                      ...) {
                                      
     # Construct a list of arguments so we can use the params.getArgParameter utility function
@@ -1092,8 +1098,10 @@ plotPrincipalComponents <- function (ctx, sampleSet,
     pcaType  <- param.getArgParameter (args, "type", defaultValue="PCoA", validValues=c("PCoA", "nipals", "bpca"))
     task <- paste("pca", pcaType, sep="/")
     params <- param.makeParameterList (ctx, task,
-                  plots=plots, 
+                  plots=plots,
+                  impute=impute,
                   ...)
+                  
     execute.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, task=task, params=params)
 }
 
@@ -1118,6 +1126,7 @@ plotPrincipalComponents <- function (ctx, sampleSet,
 #' @param type The method used to create the tree.
 #' Currently the only option "njt" which creates a neighbour-joining tree.
 #' @param plots The list of attributes for which plots will be created. See example below.
+#' @param impute To use imputed or filtered data. The default is TRUE.
 #' @param ... any of plot parameters, including: width, height, units, dpi, legendPosition
 #'            width: the width of the plot (numeric), default=15
 #'            height: the height of the plot (numeric), default=15
@@ -1144,7 +1153,7 @@ plotPrincipalComponents <- function (ctx, sampleSet,
 #'}
 #
 plotTree <- function (ctx, sampleSet, 
-                      type="njt", plots,
+                      type="njt", plots, impute=FALSE,
                       ...) {
 
     # Construct a list of arguments so we can use the params.getArgParameter utility function
@@ -1152,7 +1161,8 @@ plotTree <- function (ctx, sampleSet,
     treeType  <- param.getArgParameter (args, "type", defaultValue="njt", validValues=c("njt"))
     task <- paste("tree", treeType, sep="/")
     params <- param.makeParameterList (ctx, task,
-                  plots=plots, 
+                  plots=plots,
+                  impute=impute,
                   ...)
     execute.executeOnSampleSet (userCtx=ctx, sampleSetName=sampleSet, task=task, params=params)
 }

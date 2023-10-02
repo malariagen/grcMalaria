@@ -136,7 +136,7 @@ connectMap.estimateMeasures <- function (ctx, datasetName, sampleSetName, aggLev
     dataset <- ctx[[datasetName]]
     sampleMeta   <- dataset$meta
     barcodeData  <- dataset$barcodes
-    distData     <- dataset$distance
+    distData     <- distance.retrieveDistanceMatrix (ctx, datasetName)
 
     # Create aggregation index for each sample (the id of the aggregation unit where the sample originates)
     sampleGids <- as.character(map.getAggregationUnitIds (aggLevel, sampleMeta))
@@ -182,9 +182,9 @@ connectMap.estimateMeasures <- function (ctx, datasetName, sampleSetName, aggLev
     aggUnitPairData
 }
 #
-connectMap.estimateDistMeasures <- function (distData, measures) {
+connectMap.estimateDistMeasures <- function (pairDistData, measures) {
     result <- c()
-    dist <- unlist(distData)
+    dist <- unlist(pairDistData)
     for (mIdx in 1:length(measures)) {
         measure <- measures[mIdx]
         if (startsWith(measure, "similarity")) {

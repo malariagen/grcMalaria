@@ -8,7 +8,7 @@ options(warn=1)
 # #####################################################################################
 # Build configuration
 # #####################################################################################
-setup.getConfig <- function (grc, dir, minSnpTypability, minSampleTypability) {
+setup.getConfig <- function (grc, dir, minSnpTypability, minSampleTypability, maxImputedProportion) {
     data <- grc$data
     speciesConfig <- grc$speciesConfig
 
@@ -20,6 +20,7 @@ setup.getConfig <- function (grc, dir, minSnpTypability, minSampleTypability) {
         folder.out=getSubFolder (dir, "out"),
         minSnpTypability=minSnpTypability,
         minSampleTypability=minSampleTypability,
+        maxImputedProportion=maxImputedProportion,
         defaultPalette=setup.getDefaultPalette(),
         defaultTextPalette=graphics.makeTextPalette(setup.getDefaultPalette())
     )

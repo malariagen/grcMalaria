@@ -8,7 +8,9 @@ initializeContext(
   grcData,
   dir = ".",
   minSnpTypability = 0.8,
-  minSampleTypability = 0.75
+  minSampleTypability = 0.75,
+  maxImputedProportion = 0.2,
+  clearCacheData = FALSE
 )
 }
 \arguments{
@@ -18,7 +20,11 @@ initializeContext(
 
 \item{minSnpTypability}{The minimum proportion of non-missing samples for a barcode position to be retained in analysis.}
 
-\item{minSampleTypability}{The minimum proportion of non-missing positions for a sample to be retained in analysis.}
+\item{minSampleTypability}{The minimum proportion of non-missing barcode positions for a sample to be retained in analysis.}
+
+\item{maxImputedProportion}{The maximum proportion of barcode positions to be imputed for a filtered sample to be included in the imputed dataset}
+
+\item{clearCacheData}{Removes previously stored data from analyzing the same dataset.}
 }
 \value{
 An analysis context object, which is a list that contains all the data for analysis, which will be passed to subsequent analysis tasks.
@@ -26,6 +32,7 @@ An analysis context object, which is a list that contains all the data for analy
 \description{
 Initialize a GRC dataset (obtained from function loadGrc()) so that it is ready for analysis.
 It performs barcode imputation, computes genetic distances, and initializes data that will subsequently be used in analyses.
+The resulting data is stored in a cache and reused whenever you re-analyze the same GRC dataset. If you want to recompute everything from scratch, set clearCacheData=TRUE.
 It creates a folder where output of future analyses will be saved. It will take a while to create a context object which will be used for the subsequent analysis tasks (can take as long as 5 mins to run).
 }
 \examples{

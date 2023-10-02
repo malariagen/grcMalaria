@@ -2,17 +2,17 @@
 # Filtered Data, with high-missingness barcodes removed
 ###################################################################
 #
-filter.createFilteredDataset <- function (ctx, loadFromCache=TRUE) {
+filter.createFilteredDataset <- function (ctx) {
     print("Initializing Filtered Dataset")
     filteredDs <- context.createDataset (ctx, "filtered")
-
+    #
     unfilteredDs <- ctx$unfiltered
     config       <- ctx$config
-
+    #
     filteredMetaFile        <- meta.getMetaDataFile(ctx, "filtered")
     filteredBarcodeFile     <- barcode.getBarcodeDataFile(ctx, "filtered")
-
-    if (loadFromCache & rdaFileExists(filteredMetaFile) & rdaFileExists(filteredBarcodeFile)) {
+    #
+    if (rdaFileExists(filteredMetaFile) & rdaFileExists(filteredBarcodeFile)) {
         meta <- readRdaSampleData (filteredMetaFile)		#; print(colnames(meta))
         meta.setDatasetMeta (ctx, "filtered", meta, store=FALSE)
         barcodeData <- readRdaSampleData (filteredBarcodeFile)
@@ -29,15 +29,12 @@ filter.createFilteredDataset <- function (ctx, loadFromCache=TRUE) {
 
     # Get the genotypes, distance matrix and execute the pop structure analysis
     geno.initialize(ctx, "filtered")
-    distance.initialize(ctx, "filtered")
+    distance.initializeDistanceMatrix (ctx, "filtered")
 }
+#
+#
 #
 filter.filterSampleData <- function (data, sNames) {
     data <- data[sNames,]
     data
 }
-#
-#filter.filterMatrix <- function (matrixData, sampleNames) {
-#    matrixData <- matrixData[sampleNames,sampleNames]
-#    matrixData
-#}

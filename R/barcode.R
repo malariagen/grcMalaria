@@ -35,14 +35,14 @@ barcode.setDatasetBarcodes <- function (ctx, datasetName, barcodes, store=TRUE) 
 ###############################################################################
 # Barcode retrieval, validating and filtering
 ################################################################################
-barcode.initializeBarcodes <- function (ctx, datasetName, loadFromCache=TRUE) {
+barcode.initializeBarcodes <- function (ctx, datasetName) {
     GRC_BARCODE_COL <- "GenBarcode"			# TODO  This may need to be configured globally
 
     config <- ctx$config				#; print(config)
     dataset <- ctx[[datasetName]]
     barcodeDataFile <- barcode.getBarcodeDataFile (ctx, datasetName)
 
-    if (loadFromCache & rdaFileExists(barcodeDataFile)) {
+    if (rdaFileExists(barcodeDataFile)) {
         barcodeData <- readRdaSampleData (barcodeDataFile)
         barcode.setDatasetBarcodes (ctx, datasetName, barcodeData, store=FALSE)
     } else {

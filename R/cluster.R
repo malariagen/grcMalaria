@@ -199,14 +199,12 @@ cluster.graphCommunityMethods <- c("louvain")
 cluster.graphMethods          <- c("allNeighbours", cluster.graphCommunityMethods)
 
 cluster.findClustersFromGraph <- function (ctx, clusterSetName, method, minIdentity, imputeBarcodes, params) {
-    dataset <- ctx$imputed
-    if (!imputeBarcodes) {
-        dataset <- ctx$filtered
-    }
+    datasetName <- ifelse (imputeBarcodes, "imputed", "filtered")
     config <- ctx$config
 
     # Get a table of pairwise distance/identity values for all pairs of samples that meet the threshold
-    distData  <- dataset$distance						#; print(nrow(distData))
+    distData  <- distance.retrieveDistanceMatrix (ctx, datasetName)		#; print(nrow(distData))
+
     edgeData <- clusterGraph.getPairwiseIdentityData (distData, minIdentity, params)
     edgeData$weight <- (edgeData$Identity * edgeData$Identity)			#; print(nrow(edgeData))
     

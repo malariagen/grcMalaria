@@ -53,8 +53,8 @@ map.execute <- function(userCtx, sampleSetName, mapType, params) {		#;print(mapT
 #
 map.processLegend <- function(mapPlot, mapSpec, params) {			#; print(mapSpec$master$type)
     if (map.isMarkerMap(mapSpec$master$type)) {
-        legPos <- params$plot.legend.pos					; print(legPos)
-        legDir <- params$plot.legend.dir					; print(legDir)
+        legPos <- params$plot.legend.pos					#; print(legPos)
+        legDir <- params$plot.legend.dir					#; print(legDir)
         if (legDir == "horizontal") {
             mapPlot <- mapPlot + ggplot2::theme(legend.position="bottom")
         } else {
@@ -619,8 +619,6 @@ map.getAggregationUnitData <- function(plotCtx, datasetName, aggLevel, analysisN
     
     dataset <- plotCtx[[datasetName]]
     sampleMeta   <- dataset$meta[validSamples,]
-    barcodeData  <- dataset$barcodes[validSamples,]
-    distData     <- dataset$distance[validSamples,validSamples]
 
     adminLevelCols  <- map.getAggregationColumns()
 
@@ -648,8 +646,6 @@ map.getAggregationUnitData <- function(plotCtx, datasetName, aggLevel, analysisN
         aggUnitName <- admDivNames[aggUnitGid]
         aggSamplesMeta <- sampleMeta[which(aggIndex == aggUnitGid),]		#; print(nrow(aggSamplesMeta))
         aggSamples <- rownames(aggSamplesMeta)
-        aggBarcodes <- barcodeData[aggSamples,]
-        aggDist <- distData[aggSamples,aggSamples]
         #
         # Get the admin division values from the first sample of this unit
         #

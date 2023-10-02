@@ -15,7 +15,6 @@ phylo.pcCount <- 10
 pca.execute <- function(userCtx, sampleSetName, method, params) {
     sampleSet <- userCtx$sampleSets[[sampleSetName]]
     ctx <- sampleSet$ctx
-    dataset <- ctx$imputed
     #
     # Get the output folders
     #
@@ -24,9 +23,12 @@ pca.execute <- function(userCtx, sampleSetName, method, params) {
     #
     # Get the metadata, distance and genotypes
     #
+    useImputed <- param.getParam ("phylo.impute", params)	#; print(useImputed)
+    datasetName <- ifelse (useImputed, "imputed", "filtered")
+    dataset <- ctx[[datasetName]]
     sampleMeta <- dataset$meta
-    distData  <- dataset$distance
     genosData <- dataset$genos
+    distData  <- distance.retrieveDistanceMatrix (ctx, datasetName)
     #
     # Compute the Principal components
     #

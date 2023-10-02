@@ -200,7 +200,7 @@ meta.defaultDateFormat <- "%d/%m/%Y"
 #
 meta.filterByDate <- function(sampleMeta, startDate, endDate, format=meta.defaultDateFormat) {
     metaDates <- meta.getSampleDates (sampleMeta, format)		#; print(head(metaDates))
-    selectIdx <- rep(TRUE, length(metaDates))
+    selectIdx <- !is.na(metaDates)
     if (!is.null(startDate)) {
         selectIdx <- selectIdx & (metaDates>=startDate)
     }								#; print(selectIdx[1:10])
@@ -217,13 +217,28 @@ meta.filterByDate <- function(sampleMeta, startDate, endDate, format=meta.defaul
 #
 #
 meta.getSampleDates <- function (sampleMeta, format=meta.defaultDateFormat) {
+    sampleCount <- nrow(sampleMeta)
     if ("CollectionDate" %in% colnames(sampleMeta)) {
-        metaDatesIn <- sampleMeta$CollectionDate
+        metaDatesIn <- as.character(sampleMeta$CollectionDate)
     } else {
         #message("Your GRC data does not contain the CollectionDate Field. Using the Year field instead- see the documentation.")
-        years <- as.integer(sampleMeta$Year)
-        metaDatesIn <- paste0("31/12/", years)		#; print(head(metaDatesIn))
+        metaDatesIn <- rep("-", sampleCount)
+    }									#; print(metaDatesIn[1:500])
+    #
+    # If date is missing, use the year which shoul be there
+    #
+    missingDateIndexes <- which (metaDatesIn == "-")			#; print(missingDateIndexes)
+    if (length(missingDateIndexes) > 0) {
+        years <- suppressWarnings(as.integer(sampleMeta$Year))		#; print(years[1:500])
+        yearDates <- paste0("31/12/", years)				#; print(yearDates[1:500])
+        for (mdIdx in missingDateIndexes) {
+            if (is.na(years[mdIdx])) {
+                metaDatesIn[mdIdx] <- "-"
+            } else {
+                metaDatesIn[mdIdx] <- yearDates[mdIdx]
+            }
+        }								#; print(metaDatesIn[1:500])
     }
-    metaDates <- as.Date(metaDatesIn, tryFormats=format, optional=TRUE)		#; print(head(metaDates))
+    metaDates <- as.Date(metaDatesIn, tryFormats=format, optional=TRUE)		#; print(metaDates[1:500])
     metaDates
 }

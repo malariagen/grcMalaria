@@ -17,7 +17,6 @@ tree.sampleLabels     <- FALSE
 tree.execute <- function(userCtx, sampleSetName, method, params) {
     sampleSet <- userCtx$sampleSets[[sampleSetName]]
     ctx <- sampleSet$ctx
-    dataset <- ctx$imputed
     #
     # Get the output folders
     #
@@ -26,8 +25,11 @@ tree.execute <- function(userCtx, sampleSetName, method, params) {
     #
     # Get the metadata and distance and genotypes
     #
+    useImputed <- param.getParam ("phylo.impute", params)	#; print(useImputed)
+    datasetName <- ifelse (useImputed, "imputed", "filtered")
+    dataset <- ctx[[datasetName]]
     sampleMeta <- dataset$meta
-    distData  <- dataset$distance
+    distData  <- distance.retrieveDistanceMatrix (ctx, datasetName)
     #
     # Build a Tree (currently only NJ trees supported)
     #

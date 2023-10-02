@@ -39,11 +39,6 @@ getOutFolder <- function (config, analysisName, subnames=NULL, create=TRUE) {
     sub
 }
 #
-#getCacheFolder <- function (config, subnames, create=TRUE) {
-#    sub <- getSubFolder (config$folder.data, subnames, recursive=TRUE, create)
-#    sub
-#}
-#
 # Datafile Naming - prefix with context name so that datafiles are not overwritten
 #
 getContextCacheFile <- function (ctx, datasetName, subnames, filename) {
