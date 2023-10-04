@@ -367,11 +367,13 @@ map.buildBaseMap <- function(mapMaster) {
     }
     #
     # Silly trick to make the package checker happy... :-(
-    long <- lat <- group <- st_geometry <- st_polygon <- st_set_crs <- NULL
+    long <- lat <- group <- NULL
     #
     # Get the boundaries for all provinces (AdmDiv1) needed for this map, and calculate the bounding box
     #
     #sl <- sp::Line(cbind(c(1,2,3),c(3,2,2)))	# This loads the sp package, or else we get an error later
+    dummy <- sf::st_point(1:2)			# This loads the sf package, or else we get an error later
+    #
     geo <- map.getGeoTables()
     adm1Spdf <- NULL
     xMin <- 1000; xMax <- -1000; yMin <- 1000; yMax <- -1000
@@ -445,8 +447,8 @@ map.buildBaseMap <- function(mapMaster) {
                       anBB$xMax, anBB$yMax,
                       anBB$xMax, anBB$yMin,
                       anBB$xMin, anBB$yMin), ncol = 2, byrow = TRUE))
-    anBBExt <- st_polygon(anBBCoords)
-    anBBExt <- st_geometry(anBBExt)
+    anBBExt <- sf::st_polygon(anBBCoords)
+    anBBExt <- sf::st_geometry(anBBExt)
     #
     #anBBExt <- sp::SpatialPolygons(
     #               list(
@@ -458,7 +460,7 @@ map.buildBaseMap <- function(mapMaster) {
     #
     CRS.WGS84 <- geo$crs
     #anBBExt <- sf::st_transform(anBBExt, CRS.WGS84)
-    anBBExt <- st_set_crs(anBBExt, CRS.WGS84)
+    anBBExt <- sf::st_set_crs(anBBExt, CRS.WGS84)
 
     #sp::proj4string(anBBExt) <- CRS.WGS84
     #
