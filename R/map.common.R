@@ -366,9 +366,12 @@ map.buildBaseMap <- function(mapMaster) {
         unitList[[cIdx]] <- list(name=countryData$CountryName, iso2=countryData$IsoCode2, iso3=countryData$IsoCode3, adm1GIDs=adm1GIDs) 
     }
     #
+    # Silly trick to make the package checker happy... :-(
+    long <- lat <- group <- st_geometry <- st_polygon <- st_set_crs <- NULL
+    #
     # Get the boundaries for all provinces (AdmDiv1) needed for this map, and calculate the bounding box
     #
-    sl <- sp::Line(cbind(c(1,2,3),c(3,2,2)))	# This loads the sp package, or else we get an error later
+    #sl <- sp::Line(cbind(c(1,2,3),c(3,2,2)))	# This loads the sp package, or else we get an error later
     geo <- map.getGeoTables()
     adm1Spdf <- NULL
     xMin <- 1000; xMax <- -1000; yMin <- 1000; yMax <- -1000
@@ -381,21 +384,13 @@ map.buildBaseMap <- function(mapMaster) {
         #
         # Get the provinces for this country (used for drawing province boundaries)
         #
-        cAdm1Lines <- geo$admDiv1.lines[[cIso2]]
+        cAdm1Lines <- geo$admDiv1.lines[[cIso2]]			#; print(class(cAdm1Lines))
         #
         # Filter to select the provinces we need in the present analysis (used to define a bounding box)
         #
         anAdm1GIDs <- cUnitList$adm1GIDs				#; print(adm1GIDs)
-        anAdm1Lines <- cAdm1Lines[cAdm1Lines@data$GADM_GID_1 %in% anAdm1GIDs,]
-        #for (idx in 1:nrow(anAdm1Lines)) {				#; print (anAdm1Lines@polygons[[idx]])
-            #
-            # Get the bounding box for the province
-            # (a 2-column matrix; the first column has the minimum, the second the maximum values; rows represent the spatial dimensions)
-            #
-        #   bbx <- sp::bbox(anAdm1Lines@polygons[[idx]])		#; print(bbx)
-        #   xMin <- min(xMin,bbx[1,1]); xMax <- max(xMax,bbx[1,2]); yMin <- min(yMin,bbx[2,1]); yMax <- max(yMax,bbx[2,2])	#; print(c(xMin,xMax,yMin,yMax)) 
-        #}
-        bbx <- anAdm1Lines@bbox
+        anAdm1Lines <- cAdm1Lines[which(cAdm1Lines$GADM_GID_1 %in% anAdm1GIDs),]	#; print(class(cAdm1Lines))
+        bbx <- sf::st_bbox(anAdm1Lines)
         xMin <- min(xMin,bbx[1]); xMax <- max(xMax,bbx[3]); yMin <- min(yMin,bbx[2]); yMax <- max(yMax,bbx[4])	#; print(c(xMin,xMax,yMin,yMax)) 
         #
         # Append the data to those of other countries
@@ -442,49 +437,61 @@ map.buildBaseMap <- function(mapMaster) {
     #
     # Create a bounding box, specifying WGS84 (EPSG:4326) to be the coordinates system 
     #
-    anBB <- adjustMapBoundingBox(xMin, xMax, yMin, yMax, params$plot.aspectRatio)
+    anBB <- adjustMapBoundingBox(xMin, xMax, yMin, yMax, params$plot.aspectRatio)	#; print(anBB)
     #
-    anBBCoords <- matrix(c(
+    anBBCoords <- list(matrix(c(
                       anBB$xMin, anBB$yMin,
                       anBB$xMin, anBB$yMax,
                       anBB$xMax, anBB$yMax,
                       anBB$xMax, anBB$yMin,
-                      anBB$xMin, anBB$yMin), ncol = 2, byrow = TRUE)
-    anBBExt <- sp::SpatialPolygons(
-                   list(
-                       sp::Polygons(list(sp::Polygon(anBBCoords)), ID="bb")
-                   )
-               )
+                      anBB$xMin, anBB$yMin), ncol = 2, byrow = TRUE))
+    anBBExt <- st_polygon(anBBCoords)
+    anBBExt <- st_geometry(anBBExt)
+    #
+    #anBBExt <- sp::SpatialPolygons(
+    #               list(
+    #                   sp::Polygons(list(sp::Polygon(anBBCoords)), ID="bb")
+    #               )
+    #           )
     #
     # Specify WGS84 (EPSG:4326) to be the coordinates system 
     #
     CRS.WGS84 <- geo$crs
-    sp::proj4string(anBBExt) <- CRS.WGS84
+    #anBBExt <- sf::st_transform(anBBExt, CRS.WGS84)
+    anBBExt <- st_set_crs(anBBExt, CRS.WGS84)
+
+    #sp::proj4string(anBBExt) <- CRS.WGS84
     #
     # Get and Crop the country boundaries
     #
-    if (OVERRIDE_EXTERNAL_WARNINGS) options(warn=-1)
-    adm0 <- geo$country.lines
-    adm0 <- adm0[anBBExt,]
-    adm0_df <- suppressMessages(ggplot2::fortify(adm0))    		#; print(colnames(adm0$spdf))
-    options(warn=1)
+    #if (OVERRIDE_EXTERNAL_WARNINGS) options(warn=-1)
+    adm0 <- sf::st_make_valid(geo$country.lines)						#; print("adm0"); print(colnames(adm0))
+    adm0 <- sf::st_transform(adm0, CRS.WGS84)
+    adm0 <- suppressWarnings(sf::st_intersection(adm0, anBBExt))
+    #adm0 <- sf::st_crop(adm0, xmin=anBB$xMin, ymin=anBB$yMin, xmax=anBB$xMax, ymax=anBB$yMax)   #; print(colnames(adm0))
+    #adm0 <- adm0[anBBExt,]
+    adm0_df <- ggplot2::fortify(adm0)    							#; print(colnames(adm0_df))
+    #options(warn=1)
     #
-    rivers <- geo$river.lines
-    rivers <- rivers[anBBExt,]
+    rivers <- sf::st_make_valid(geo$river.lines)						#; print("rivers"); print(colnames(rivers))
+    rivers <- sf::st_transform(rivers, CRS.WGS84)
+    rivers <- suppressWarnings(sf::st_intersection(rivers, anBBExt))
+    #rivers <- sf::st_crop(rivers, xmin=anBB$xMin, ymin=anBB$yMin, xmax=anBB$xMax, ymax=anBB$yMax)  #; print(colnames(rivers))
+    #rivers <- rivers[anBBExt,]
     river_df <- NULL
     if (!is.null(rivers) & (nrow(rivers)>0)) {
-        river_df <- suppressMessages(ggplot2::fortify(rivers))		#; print(colnames(rivers))
+        river_df <- ggplot2::fortify(rivers)	    						#; print(colnames(river_df))				
     }
     #
-    lakes <- geo$lake.lines
-    lakes <- lakes[anBBExt,]
+    lakes <- sf::st_make_valid(geo$lake.lines)							#; print("lakes"); print(colnames(lakes))
+    lakes <- sf::st_transform(lakes, CRS.WGS84)
+    lakes <- suppressWarnings(sf::st_intersection(lakes, anBBExt))
+    #lakes <- sf::st_crop(lakes, xmin=anBB$xMin, ymin=anBB$yMin, xmax=anBB$xMax, ymax=anBB$yMax) #; print(colnames(lakes))
+    #lakes <- lakes[anBBExt,]
     lakes_df <- NULL
     if (!is.null(lakes) & (nrow(lakes)>0)) {
-        lakes_df <- suppressMessages(ggplot2::fortify(lakes))		#; print(colnames(lakes))
+        lakes_df <- ggplot2::fortify(lakes)							#; print(colnames(lakes_df))
     }
-    #
-    # Silly trick to make the package checker happy... :-(
-    long <- lat <- group <- NULL
     #
     mapLineWidth    <- map.getBordersThickness (anBB, params)	#; print(mapLineWidth)
     adm0BorderWidth <- mapLineWidth * params$adm0BorderWidth	#; print(adm0BorderWidth)
@@ -494,26 +501,34 @@ map.buildBaseMap <- function(mapMaster) {
     #
     # Construct a base plot for completing subsequent maps
     #
+    #print(names(adm0_df))
+    #print(names(adm1_df))
     baseMapPlot <- ggplot2::ggplot(bg=map.colour.sea) +
-    	    ggplot2::coord_quickmap(xlim=c(anBB$xMin, anBB$xMax), ylim=c(anBB$yMin, anBB$yMax), expand=FALSE) +
-            ggplot2::geom_polygon(data=adm0_df, ggplot2::aes(x=long, y=lat, group=group), 
-                                  fill=map.colour.land, col=NA) +
+    	    #ggplot2::coord_quickmap(xlim=c(anBB$xMin, anBB$xMax), ylim=c(anBB$yMin, anBB$yMax), expand=FALSE) +
+            ggplot2::geom_sf(data=adm0_df, fill=map.colour.land, col=NA) +
+            #ggplot2::geom_polygon(data=adm0_df, ggplot2::aes(x=longitude, y=latitude, group=group), 
+            #                      fill=map.colour.land, col=NA) +
     	    ggplot2::labs(x="Longitude", y="Latitude") +
-    	    ggplot2::geom_polygon(data=adm1_df, ggplot2::aes(x=long, y=lat, group=group),
-    	                          fill=NA, col=map.colour.border.admdiv1, linewidth=adm1BorderWidth) +
-            ggplot2::geom_polygon(data=adm0_df, ggplot2::aes(x=long, y=lat, group=group), 
-                                  fill=NA, col=map.colour.border.country, linewidth=adm0BorderWidth)
+            ggplot2::geom_sf(data=adm1_df, fill=NA, col=map.colour.border.admdiv1, linewidth=adm1BorderWidth) +
+    	    #ggplot2::geom_polygon(data=adm1_df, ggplot2::aes(x=longitude, y=latitude, group=group),
+    	    #                      fill=NA, col=map.colour.border.admdiv1, linewidth=adm1BorderWidth) +
+            ggplot2::geom_sf(data=adm0_df, fill=NA, col=map.colour.border.country, linewidth=adm0BorderWidth)
+            #ggplot2::geom_polygon(data=adm0_df, ggplot2::aes(x=longitude, y=latitude, group=group), 
+            #                      fill=NA, col=map.colour.border.country, linewidth=adm0BorderWidth)
     if (!is.null(river_df)) {	                         
         baseMapPlot <- baseMapPlot +
-    	    ggplot2::geom_path(data=river_df, ggplot2::aes(x=long, y=lat, group=group), 
-    	                       col=map.colour.river, linewidth=riverWidth)
+            ggplot2::geom_sf(data=river_df, col=map.colour.river, linewidth=riverWidth)
+    	#    ggplot2::geom_path(data=river_df, ggplot2::aes(x=longitude, y=latitude, group=group), 
+    	#                       col=map.colour.river, linewidth=riverWidth)
     }
     if (!is.null(lakes_df)) {	                         
         baseMapPlot <- baseMapPlot +
-    	    ggplot2::geom_polygon(data=lakes_df, ggplot2::aes(x=long, y=lat, group=group), 
-    	                          fill=map.colour.river, col=map.colour.river, linewidth=lakeshoreWidth)
+            ggplot2::geom_sf(data=lakes_df, fill=map.colour.river, col=map.colour.river, linewidth=lakeshoreWidth)
+    	#    ggplot2::geom_polygon(data=lakes_df, ggplot2::aes(x=longitude, y=latitude, group=group), 
+    	#                          fill=map.colour.river, col=map.colour.river, linewidth=lakeshoreWidth)
     }
     baseMapPlot <- baseMapPlot +
+            ggplot2::coord_sf(xlim=c(anBB$xMin,anBB$xMax), ylim=c(anBB$yMin,anBB$yMax), expand=FALSE) +
     	    ggplot2::theme(panel.background=ggplot2::element_rect(fill=map.colour.sea))
 
     # Return all the elements
