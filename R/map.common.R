@@ -392,8 +392,31 @@ map.buildBaseMap <- function(mapMaster) {
         #
         anAdm1GIDs <- cUnitList$adm1GIDs				#; print(adm1GIDs)
         anAdm1Lines <- cAdm1Lines[which(cAdm1Lines$GADM_GID_1 %in% anAdm1GIDs),]	#; print(class(cAdm1Lines))
-        bbx <- sf::st_bbox(anAdm1Lines)
-        xMin <- min(xMin,bbx[1]); xMax <- max(xMax,bbx[3]); yMin <- min(yMin,bbx[2]); yMax <- max(yMax,bbx[4])	#; print(c(xMin,xMax,yMin,yMax)) 
+        #
+        # TEMPORARY FIX (hopefully)
+        # Not all GADM_GID_1 identifiers have an entry in the naturalearth dataset. For this reason, anAdm1Lines may
+        # contain fewer rows, or none.This is not something we can fix in a hurry, if at all.
+        # It affects two thing: the calculation of the bounding box, and the drawing of the provice boundaries.
+        # Here, we fix the bounding box which otherwise causes a fatal error; the drawing of the province boundaries
+        # cannot be solved as easily, and for now the province boundaries will not be drawn for the provinces affected.
+        #
+        if (nrow(anAdm1Lines) == length(anAdm1GIDs)) {
+            # All the rows are there, we can calculate the bounding box normally
+            bbx <- sf::st_bbox(anAdm1Lines)
+            xMin <- min(xMin,bbx$xmin); yMin <- min(yMin,bbx$ymin) 
+            xMax <- max(xMax,bbx$xmax); yMax <- max(yMax,bbx$ymax)	#; print(c(xMin,xMax,yMin,yMax)) 
+        } else {
+            #
+            # Remedial code: we roughly estimate the bounding boxes by adding a certain amount to the "notional"
+            # latitude and longitude of the admdiv (estimated at 0.7 degrees for now)
+            #
+            adj <- 0.7
+            divs <- geo$admDivs
+            divs <- divs[which(divs$GID %in% anAdm1GIDs),]
+            lat <- divs$Latitude; lon <- divs$Longitude
+            xMin <- min(xMin,(min(lon)-adj)); yMin <- min(yMin,(min(lat)-adj)) 
+            xMax <- max(xMax,(max(lon)+adj)); yMax <- max(yMax,(max(lat)+adj))	#; print(c(xMin,xMax,yMin,yMax)) 
+        }
         #
         # Append the data to those of other countries
         #
