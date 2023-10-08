@@ -400,7 +400,7 @@ map.buildBaseMap <- function(mapMaster) {
         # Here, we fix the bounding box which otherwise causes a fatal error; the drawing of the province boundaries
         # cannot be solved as easily, and for now the province boundaries will not be drawn for the provinces affected.
         #
-        if (nrow(anAdm1Lines) == length(anAdm1GIDs)) {
+        if (!is.null(anAdm1Lines) && (nrow(anAdm1Lines) == length(anAdm1GIDs))) {
             # All the rows are there, we can calculate the bounding box normally
             bbx <- sf::st_bbox(anAdm1Lines)
             xMin <- min(xMin,bbx$xmin); yMin <- min(yMin,bbx$ymin) 

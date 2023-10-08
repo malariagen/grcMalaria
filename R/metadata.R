@@ -197,6 +197,7 @@ meta.select <- function(sampleMeta, selectDefs) {
 # Select sample metadata within a given time period (start and end date inclusive)
 #
 meta.defaultDateFormat <- "%d/%m/%Y"
+meta.naDate <- "01/01/1000"		# Date value to use instead of NA or "-"
 #
 meta.filterByDate <- function(sampleMeta, startDate, endDate, format=meta.defaultDateFormat) {
     metaDates <- meta.getSampleDates (sampleMeta, format)		#; print(head(metaDates))
@@ -217,6 +218,7 @@ meta.filterByDate <- function(sampleMeta, startDate, endDate, format=meta.defaul
 #
 #
 meta.getSampleDates <- function (sampleMeta, format=meta.defaultDateFormat) {
+    .naDate <- 
     sampleCount <- nrow(sampleMeta)
     if ("CollectionDate" %in% colnames(sampleMeta)) {
         metaDatesIn <- as.character(sampleMeta$CollectionDate)
@@ -233,12 +235,18 @@ meta.getSampleDates <- function (sampleMeta, format=meta.defaultDateFormat) {
         yearDates <- paste0("31/12/", years)				#; print(yearDates[1:500])
         for (mdIdx in missingDateIndexes) {
             if (is.na(years[mdIdx])) {
-                metaDatesIn[mdIdx] <- "-"
+                #
+                # Silly workaround. Placing a "-" can cause as.Date() errors if it is in the first element of the vector!!!
+                # So we put a valid but improbably date instead. Not ideal, but avoids errors
+                #
+                #metaDatesIn[mdIdx] <- "-" 
+                metaDatesIn[mdIdx] <- meta.naDate 
             } else {
                 metaDatesIn[mdIdx] <- yearDates[mdIdx]
             }
         }								#; print(metaDatesIn[1:500])
     }
     metaDates <- as.Date(metaDatesIn, tryFormats=format, optional=TRUE)		#; print(metaDates[1:500])
+    metaDates[which(metaDates==meta.naDate)] <- NA
     metaDates
 }
