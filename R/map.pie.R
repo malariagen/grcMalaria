@@ -71,7 +71,7 @@ pieMap.executeMap <- function(map) {
     #
     # Now add the markers, coloured according to the palette
     #
-    valuePalette <- pieMap.getMeasurePalette (ctx, sampleSet$name, measure)	#; print(valuePalette)
+    valuePalette <- pieMap.getCategoryPalette (ctx, sampleSet$name, measure)	#; print(valuePalette)
     #
     # Now add the pie chart markers
     #
@@ -101,7 +101,7 @@ pieMap.executeMap <- function(map) {
 # Graphical rendition of site markers
 ################################################################################
 #
-pieMap.computeLabelCoordinates <- function(pieMapData, labelRadius=0.5) {		#; print(pieMapData)
+pieMap.computeLabelCoordinates <- function(pieMapData, labelRadius=0.5) {	#; print(pieMapData)
     resultDf <- NULL
     aggUnitIds <- as.character(unique(pieMapData$UnitId))
     for (uIdx in 1:length(aggUnitIds)) {
@@ -131,7 +131,7 @@ pieMap.computeLabelCoordinates <- function(pieMapData, labelRadius=0.5) {		#; pr
 }
             
 
-pieMap.getAggUnitPieSizes <- function(aggUnitData, params) {		#; print(nrow(aggUnitData))
+pieMap.getAggUnitPieSizes <- function(aggUnitData, params) {			#; print(nrow(aggUnitData))
     if (nrow(aggUnitData) == 0) {
         return (numeric(0))
     }
@@ -158,7 +158,7 @@ pieMap.getAggUnitPieSizes <- function(aggUnitData, params) {		#; print(nrow(aggU
 }
 #
 ###############################################################################
-# Estimation of marker measures (drug resistance and diversity)
+# Estimation of marker measures
 ################################################################################
 #
 # Check the allele proportion measures specified are valid.
@@ -177,29 +177,16 @@ pieMap.resolveMeasures <- function(ctx, sampleSetName, params) {
         measures <- allMeasures
     }
     #
-    # Check the measure name is valid and ensure the relevant colour palette is loaded measure name is valid
+    # Check the measure name is valid
     #
-    sampleSet <- userCtx$sampleSets[[sampleSetName]]
-    palettesList <- sampleSet$valuePalettes
     #for (i in 1 : 2) {
     for (i in 1 : length(measures)) {
         measure <- measures[i]							#; print(measure)
         if (!(measure %in% allMeasures)) {
             stop(paste("Invalid allele for allele proportions:", measure))
         }
-        p <- palettesList[[measure]]						#; print(p)
-        if (is.null(p)) {
-            p <- pieMap.loadMeasurePalette (userCtx, sampleSetName, measure)	#; print(paste("Loading palette",measure))
-            palettesList[[measure]] <- p					#; print(palettesList[[measure]])
-        }
     }
     measures
-}
-#
-pieMap.getMeasurePalette  <- function(ctx, sampleSetName, measure) {		#; print(names(ctx$rootCtx$sampleSets[[sampleSetName]]))
-    sampleSet <- ctx$rootCtx$sampleSets[[sampleSetName]]	#; print(ctx$rootCtx$sampleSets[[sampleSetName]]$valuePalettes[[measure]])
-    p <- sampleSet$valuePalettes[[measure]]			#; print(p)
-    p
 }
 #
 pieMap.getMeasureAttributes <- function(config, measure) {
@@ -243,15 +230,6 @@ pieMap.getMeasureAllValues <- function(ctx, sampleSetName, measure, excludeMulti
     values
 }
 #
-pieMap.loadMeasurePalette <- function(ctx, sampleSetName, measure) {
-    userCtx <- ctx$rootCtx
-    values <- pieMap.getMeasureAllValues (userCtx, sampleSetName, measure)	#; print(values)
-    userPalette <- graphics.getColourPalette (userCtx)
-    measurePalette <- rep_len(userPalette, length(values))	#; print(measurePalette)
-    names(measurePalette) <- values				#; print(measurePalette)
-    measurePalette
-}
-#
 # For each aggregation unit, we get a count of each unique allele, ordered according to the palette order
 #
 pieMap.buildCountData <- function(ctx, datasetName, sampleSetName, aggLevel, aggUnitData, measure) {
@@ -266,7 +244,7 @@ pieMap.buildCountData <- function(ctx, datasetName, sampleSetName, aggLevel, agg
     aggIndex <- map.getAggregationUnitIds (aggLevel, sampleMeta)		#; print(aggIndex)
     
     # Get the palette for this measure, which will give us both the colours and the order of the alleles
-    valuePalette <- pieMap.getMeasurePalette (ctx, sampleSetName, measure)	#; print(valuePalette)
+    valuePalette <- pieMap.getCategoryPalette (ctx, sampleSetName, measure)	#; print(valuePalette)
     valueOrder <- 1:length(valuePalette)					#; print(valueOrder)
     names(valueOrder) <- names(valuePalette)
     
@@ -284,24 +262,24 @@ pieMap.buildCountData <- function(ctx, datasetName, sampleSetName, aggLevel, agg
         if (length(vCounts) == 0) {
             next
         }
-	vNames <- names(vCounts)				#; print(vNames)
-	vOrder <- as.integer(valueOrder[vNames])		#; print(vOrder)
-	vColour <- valuePalette[vNames]				#; print(vColour)
+	vNames <- names(vCounts)						#; print(vNames)
+	vOrder <- as.integer(valueOrder[vNames])				#; print(vOrder)
+	vColour <- valuePalette[vNames]						#; print(vColour)
 	
 	# Create a dataframe with the necessary data for this unit, copying the unit data in each row
-        unitData <- aggUnitData[aIdx,]				#; print(unitData)
+        unitData <- aggUnitData[aIdx,]						#; print(unitData)
         df <- data.frame(matrix(unitData,ncol=ncol(aggUnitData),nrow=length(vCounts),byrow=TRUE))
-        colnames(df) <- colnames(aggUnitData)			#; print(df)
+        colnames(df) <- colnames(aggUnitData)					#; print(df)
         # Now add the allele counts, sort and merge with previous units
         df$Allele      <- vNames
         df$AlleleCount <- vCounts
         df$Order       <- vOrder
-        df$Colour      <- vColour				#; print(df)
+        df$Colour      <- vColour						#; print(df)
         
-        df <- df[order(df$Order),]				#; print(df)
+        df <- df[order(df$Order),]						#; print(df)
         if (is.null(countData)) {
             countData <- df
-        } else {						#; print(str(df))
+        } else {								#; print(str(df))
             countData <- rbind(countData, df)
         }
     }
@@ -316,3 +294,23 @@ pieMap.buildCountData <- function(ctx, datasetName, sampleSetName, aggLevel, agg
     countData
 }
 
+###############################################################################
+# Categorical Colour Palettes
+###############################################################################
+#
+# Get the palette to be used for this measure in this sampleset
+# (the same palette may be used for multiple time slices, so we keep it in the context for reuse)
+#
+pieMap.getCategoryPalette <- function (ctx, sampleSetName, measure) {
+    userCtx <- ctx$rootCtx
+    sampleSet <- userCtx$sampleSets[[sampleSetName]]
+    p <- sampleSet$categoryPalettes[[measure]]
+    if (is.null(p)) {
+        values <- pieMap.getMeasureAllValues (userCtx, sampleSetName, measure)	#; print(values)
+        userPalette <- graphics.getColourPalette (userCtx)
+        p <- rep_len(userPalette, length(values))				#; print(p)
+        names(p) <- values							#; print(p)
+        sampleSet$categoryPalettes[[measure]] <- p	
+    }
+    p
+}

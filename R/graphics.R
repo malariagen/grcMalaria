@@ -179,48 +179,25 @@ initializeGraphics <- function(graphicFilename, params) {
 ###############################################################################
 # Colour Palettes
 ###############################################################################
-graphics.getColourPalette <- function (userCtx) {
-    palette <- userCtx$userColourPalette
+graphics.getColourPalette <- function (ctx) {
+    userCtx <- ctx$rootCtx
+    palette <- userCtx$userColourPalette			#; print(palette)
     if (is.null(palette)) {
         palette <- userCtx$config$defaultPalette
-    }
+    }								#; print(palette)
     palette
 }
 
-graphics.getTextColourPalette <- function (userCtx) {
-    palette <- userCtx$userTextColourPalette
-    if (is.null(palette)) {
-        palette <- userCtx$config$defaultTextPalette
-    }
-    palette
-}
-
-graphics.resetColourPalette <- function (userCtx) {
+graphics.resetColourPalette <- function (ctx) {
+    userCtx <- ctx$rootCtx
     if ("userColourPalette" %in% names(userCtx)) {
         rm("userColourPalette", envir=userCtx)
     }
-    if ("userTextColourPalette" %in% names(userCtx)) {
-        rm("userTextColourPalette", envir=userCtx)
-    }
-    graphics.removeAllValuePalettes(userCtx)
 }
 
-graphics.setColourPalette <- function (userCtx, palette) {
+graphics.setColourPalette <- function (ctx, palette) {
+    userCtx <- ctx$rootCtx
     userCtx$userColourPalette <- palette
-    userCtx$userTextColourPalette <- graphics.makeTextPalette(palette)
-    graphics.removeAllValuePalettes(userCtx)
-}
-
-graphics.removeAllValuePalettes <- function (userCtx) {
-    sampleSetNames <- names(userCtx$sampleSets)
-    if (length(sampleSetNames) > 0) {
-        for (i in 1 : length(sampleSetNames)) {
-            sampleSetName <- sampleSetNames[i]
-            sampleSet <- userCtx$sampleSets[[sampleSetName]]
-            sampleSet$valuePalettes <- new.env()
-            sampleSet$valueTextPalettes <- new.env()
-        }
-    }
 }
 
 graphics.makeTextPalette <- function (palette) {

@@ -15,6 +15,13 @@ GID_COLUMNS     <- c("Country", "AdmDiv1_GID", "AdmDiv2_GID")
 #
 map.execute <- function(userCtx, sampleSetName, mapType, params) {		#;print(mapType)	;print(params)
     #
+    # For pie chart maps, we will need to create "category palettes" to ensure consistent colour mappings across time periods
+    #
+    if (mapType=="alleleProp") {
+        sampleSet <- userCtx$sampleSets[[sampleSetName]] 
+        sampleSet$categoryPalettes <- new.env()
+    }
+    #
     # Get the set of specs for the maps to be produced
     #
     mapSpecs <- map.createMapSpecs (userCtx, sampleSetName, mapType, params)	#;print(mapSpecs)
