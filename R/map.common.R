@@ -53,8 +53,8 @@ map.execute <- function(userCtx, sampleSetName, mapType, params) {		#;print(mapT
 #
 map.processLegend <- function(mapPlot, mapSpec, params) {			#; print(mapSpec$master$type)
     if (map.isMarkerMap(mapSpec$master$type)) {
-        legPos <- params$plot.legend.pos					#; print(legPos)
-        legDir <- params$plot.legend.dir					#; print(legDir)
+        legPos <- params$plot.legend.pos					; print(legPos)
+        legDir <- params$plot.legend.dir					; print(legDir)
         if (legDir == "horizontal") {
             mapPlot <- mapPlot + ggplot2::theme(legend.position="bottom")
         } else {
