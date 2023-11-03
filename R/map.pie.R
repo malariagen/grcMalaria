@@ -209,7 +209,7 @@ pieMap.getMeasureAllValues <- function(ctx, sampleSetName, measure, excludeMulti
     userCtx <- ctx$rootCtx
     sampleSet <- userCtx$sampleSets[[sampleSetName]]
     dataset <- sampleSet$ctx$unfiltered
-    sampleMeta <- dataset$meta					#; print(nrow(sampleMeta))
+    sampleMeta <- dataset$meta						#; print(nrow(sampleMeta))
     #	
     attr <- pieMap.getMeasureAttributes (userCtx$config, measure)	#; print(attr)
     columnName <- attr$columnName

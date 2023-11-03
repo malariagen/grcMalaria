@@ -22,13 +22,20 @@ meta.getMetaDataFile <- function (ctx, datasetName) {
 # Returns a tabulated array of alleles sample counts in a column, sorted by decreasing sample count
 # The names of the elements are the allele labels. Missing and <NA> are discarded.
 #
-meta.getColumnValueCounts <- function (sampleMeta, colName, excludeMultiValues=TRUE) {
+meta.getColumnValueCounts <- function (sampleMeta, colName, excludeMultiValues=TRUE, excludeHets=TRUE) {
     vals <- sampleMeta[,colName]			#; print(vals)
-    vals <- vals[which(!(vals %in% c("-","<NA>")))]	#; print(vals)
+    vals <- vals[which(!(vals == "<NA>"))]		#; print(vals)
+    vals <- vals[which(!grepl("-", vals, fixed=TRUE))]	#; print(vals)
     if (excludeMultiValues) {
         multi <- which(grepl(",", vals))		#; print(multi)
         if (length(multi) > 0) {
             vals <- vals[-multi]			#; print(vals)
+        }
+    }
+    if (excludeHets) {
+        het <- which(grepl("\\*", vals))			#; print(het)
+        if (length(het) > 0) {
+            vals <- vals[-het]				#; print(vals)
         }
     }
     counts <- table(vals)				#; print(counts)
