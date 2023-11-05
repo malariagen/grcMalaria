@@ -8,7 +8,7 @@ options(warn=1)
 # #####################################################################################
 # Build configuration
 # #####################################################################################
-setup.getConfig <- function (grc, dir, minSnpTypability, minSampleTypability, maxImputedProportion) {
+setup.getConfig <- function (grc, dir, outDir, minSnpTypability, minSampleTypability, maxImputedProportion) {
     data <- grc$data
     speciesConfig <- grc$speciesConfig
 
@@ -17,7 +17,7 @@ setup.getConfig <- function (grc, dir, minSnpTypability, minSampleTypability, ma
         version=grc$version,
         folder.root=dir,
         folder.data=getSubFolder (dir, "data"),
-        folder.out=getSubFolder (dir, "out"),
+        folder.out=getSubFolder (dir, outDir),
         minSnpTypability=minSnpTypability,
         minSampleTypability=minSampleTypability,
         maxImputedProportion=maxImputedProportion,

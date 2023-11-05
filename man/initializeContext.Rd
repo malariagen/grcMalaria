@@ -7,6 +7,7 @@
 initializeContext(
   grcData,
   dir = ".",
+  outDir = "out",
   minSnpTypability = 0.8,
   minSampleTypability = 0.75,
   maxImputedProportion = 0.2,
@@ -16,7 +17,9 @@ initializeContext(
 \arguments{
 \item{grcData}{The data obtained from reading the GRC Excel data.}
 
-\item{dir}{The folder where the outputs from this and subsequent analyses will be stored.}
+\item{dir}{The folder where data will be stored when analyzing this context .}
+
+\item{outDir}{The subfolder of dir where the analysis outputs (tables and maps) will be written. Default: subfolder "out"}
 
 \item{minSnpTypability}{The minimum proportion of non-missing samples for a barcode position to be retained in analysis.}
 

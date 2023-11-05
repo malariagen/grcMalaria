@@ -111,7 +111,7 @@ param.addPlotGeomParameters <- function (p, args, ...) {
     } else if (units == "px") {  inW <- width/dpi;  inH <- height/dpi
     }
     inMax <- min(inW, inH)
-    p$plot.scaleFactor <- 16 / inMax
+    p$plot.scaleFactor <- 16 / inMax								#; print(p$plot.scaleFactor)
     #
     # Legend positioning
     #
@@ -146,8 +146,13 @@ param.addMapParameters <- function (ctx, p, args, taskMethod, ...) {
     # Markers and geographical names
     #
     if (taskMethod %in% c("location", "sampleCount", "drug", "mutation", "alleleProp", "diversity", "connect", "clusterPrevalence")) {
-        defMarkerSize <- ifelse (taskMethod == "connect", 6, 16)			#; print (paste("defMarkerSize:",defMarkerSize))
-        p$map.markerSize <- param.getArgParameter (args, "markerSize", type="numeric", multiValue=TRUE, defaultValue=defMarkerSize, scaleFactor=scale)
+        defMarkerSize <- ifelse (taskMethod == "connect", 6, 16)				#; print (paste("defMarkerSize:",defMarkerSize))
+        if (taskMethod == "alleleProp") {
+            # For pie chartts, do not scale
+            p$map.markerSize <- param.getArgParameter (args, "markerSize", type="numeric", multiValue=TRUE, defaultValue=defMarkerSize)
+        } else {
+            p$map.markerSize <- param.getArgParameter (args, "markerSize", type="numeric", multiValue=TRUE, defaultValue=defMarkerSize, scaleFactor=scale)
+        }											#; print(p$map.markerSize)
         if (!(taskMethod %in% c("location", "connect"))) {
             p$map.markerValueFontSize <- param.getArgParameter (args, "markerFontSize", type="numeric", defaultValue=6, scaleFactor=scale)
         }
@@ -203,6 +208,7 @@ param.addMapParameters <- function (ctx, p, args, taskMethod, ...) {
     } else if (taskMethod == "alleleProp") {
         p$analysis.measures <- param.getArgParameter (args, "mutations", type="character", multiValue=TRUE, defaultValue="ALL", 
                          validValues=c("ALL", config$countColumns, config$amplificationColumns, config$drugResistancePositions))
+        p$map.alleleColours <- param.getArgParameter (args, "alleleColours", multiValue=TRUE, defaultValue=NULL)
 
     } else if (taskMethod == "diversity") {
         p$analysis.measures <- param.getArgParameter (args, "measures", type="character", multiValue=TRUE, defaultValue="ALL", validValues=c("ALL",markerMap.getDiversityMeasures()))

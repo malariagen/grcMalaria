@@ -1,7 +1,7 @@
 Package: grcMalaria
 Type: Package
 Title: Package for processing and analyzing SpotMalaria Genetic Report Cards
-Version: 1.4.7
+Version: 1.5.0
 Date: 2023-11-03
 Author: Olivo Miotto
 Maintainer: Olivo Miotto <olivo@tropmedres.ac>
@@ -16,7 +16,7 @@ Imports:
     readxl,
     ape, pegas, pcaMethods,
     igraph,
-    sf, ggplot2 (>= 3.0.0), ggrepel, ggforce, cowplot, ggpubr
+    sf, ggplot2 (>= 3.0.0), ggrepel, ggforce, cowplot, ggpubr, scatterpie
 Depends: 
     R (>= 3.5.0)
 LinkingTo: Rcpp

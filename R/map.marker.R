@@ -183,7 +183,7 @@ markerMap.getAggUnitMarkerSizes <- function(aggUnitData, params) {
     # If only one size was given in the config, then the markers will be constant size/
     # If there are two sizes, then markers will be sized proportional to the number of samples, with the smaller
     # size representing 1 sample, and the larger size representing the numer of samples in the largest aggregation
-    mSizeParam <- param.getParam ("map.markerSize", params)	#; print(mSizeParam); print(length(mSizeParam))
+    mSizeParam <- param.getParam ("map.markerSize", params)	#; print(mSizeParam) #; print(length(mSizeParam))
     if (length(mSizeParam) > 1) {
         minSize  <- mSizeParam[1]
         maxSize  <- mSizeParam[2]

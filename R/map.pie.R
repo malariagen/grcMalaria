@@ -16,7 +16,7 @@ pieMap.executeMap <- function(map) {
     #
     # Get the context, trimmed by time interval
     #
-    ctx        <- map$mapCtx				#; print(str(ctx))
+    ctx        <- map$mapCtx							#; print(str(ctx))
     dataset    <- ctx[[datasetName]]
     sampleMeta <- dataset$meta
     if (nrow(sampleMeta)==0) {
@@ -39,11 +39,10 @@ pieMap.executeMap <- function(map) {
     aggLevel <- as.integer(map$aggregation)     				#; print(aggLevel)   
     aggUnitData <- map$aggUnitData						#; print(aggUnitData)
     #
-    # Select the aggregation units to be plotted
-    # In this case, those that have allele count data for the measure being plotted
+    # Get a table of aggregation units and the sample count for each allele
     #
-    pieMapData <- pieMap.buildCountData (ctx, datasetName, sampleSet$name, aggLevel, aggUnitData, measure)	#; print(pieMapData)
-    selAggUnitIds <- unique(pieMapData$UnitId)
+    pieMapData <- pieMap.buildCountData (ctx, datasetName, sampleSet$name, aggLevel, aggUnitData, measure, params)	#; print(pieMapData)
+    selAggUnitIds <- pieMapData$UnitId
     selAggUnitData <- aggUnitData[which(aggUnitData$UnitId %in% selAggUnitIds),]				#; print(selAggUnitData)
     if (nrow(selAggUnitData) == 0) {
         return(NULL)
@@ -51,12 +50,8 @@ pieMap.executeMap <- function(map) {
     #
     # Compute pie chart sizes.
     #
-    pieSizes <- pieMap.getAggUnitPieSizes (selAggUnitData, params)		#; print(pieSizes); print(pieMapData$UnitId)
+    pieSizes <- pieMap.getAggUnitPieSizes (pieMapData, params)			#; print(pieSizes)   #; print(pieMapData$UnitId)
     pieMapData$PieSize <- as.numeric(pieSizes[pieMapData$UnitId])		#; print(pieMapData)
-    #
-    # Compute label coordinates for the pie chart segments
-    #
-    pieMapData <- pieMap.computeLabelCoordinates (pieMapData, 1.2)		#; print(pieMapData)
     #
     # Do the actual plot, starting with the background map
     #
@@ -66,97 +61,160 @@ pieMap.executeMap <- function(map) {
     #
     showMarkerNames <- param.getParam ("map.markerNames", params)
     if (showMarkerNames) {
-        mapPlot <- map.addAggregationUnitNameLayer (mapPlot, selAggUnitData, baseMapInfo, params, markerSize=sqrt(selAggUnitData$SampleCount))
+        objectSizes <- (pieSizes * 80) / params$plot.scaleFactor		#; print(objectSizes)
+        mapPlot <- map.addAggregationUnitNameLayer (mapPlot, selAggUnitData, baseMapInfo, params, markerSize=objectSizes)
     }
     #
-    # Now add the markers, coloured according to the palette
+    # Get the categorical palette for this measure, which will give us both the colours and the order of the alleles
     #
-    valuePalette <- pieMap.getCategoryPalette (ctx, sampleSet$name, measure)	#; print(valuePalette)
+    catPalette <- pieMap.getCategoryPalette (ctx, sampleSet$name, measure, params)	#; print(catPalette)
+    alleleNames <- names(catPalette)
     #
-    # Now add the pie chart markers
+    # Plot the pies
     #
     # Nasty trick we have to do because there is no linewidth aesthetic at present
     ggplot2::update_geom_defaults(ggforce::GeomArcBar, ggplot2::aes(linewidth=!!params$pieLineWidth))
     mapPlot <- mapPlot +
-        ggforce::geom_arc_bar(ggplot2::aes(x0=Longitude, y0=Latitude, r0=0, r=PieSize, fill=Allele, amount=AlleleCount),
-                              data=pieMapData, stat="pie", inherit.aes=FALSE, 
-                              colour="gray25", show.legend=TRUE) +
-        ggplot2::scale_fill_manual(values=valuePalette)
-    #
-    # Now add the pie slice labels
-    #
-    showAlleleCounts <- FALSE			# TBD
-    if (showAlleleCounts) {
-        mapPlot <- mapPlot +
-	    ggplot2::geom_text(data=pieMapData, ggplot2::aes(x=LabelX, y=LabelY, label=AlleleCount),
-	                       show.legend=FALSE)
-    }
-    #
-    # Return map plot for completion and saving to file
-    #
+        scatterpie::geom_scatterpie (ggplot2::aes(x=Longitude, y=Latitude, r=PieSize),
+                                     data=pieMapData, cols=names(catPalette), sorted_by_radius=TRUE) +
+        ggplot2::scale_fill_manual(values=catPalette, breaks=alleleNames)
     mapPlot
 }
-#
+
 ###############################################################################
-# Graphical rendition of site markers
-################################################################################
+# Allele Counts for Aggregation Units
+###############################################################################
 #
-pieMap.computeLabelCoordinates <- function(pieMapData, labelRadius=0.5) {	#; print(pieMapData)
-    resultDf <- NULL
-    aggUnitIds <- as.character(unique(pieMapData$UnitId))
-    for (uIdx in 1:length(aggUnitIds)) {
-        unitId <- aggUnitIds[uIdx]
-        unitData <- pieMapData[which(pieMapData$UnitId == unitId),]
-        unitData <- unitData[order(unitData$Order),]				#; print(unitData)
-        
-        counts <- unitData$AlleleCount
-        ctotal <- sum(counts)
-        counts <- c(0, cumsum(counts))
-        c1 <- counts[1:(length(counts)-1)]
-        c2 <- counts[2:length(counts)]
-        cmid <- (c1 + c2) / 2
-        angle <- 2 * pi * cmid / ctotal
-        lRadius <- unitData$PieSize * labelRadius
-
-        unitData$LabelX <- unitData$Longitude + (sin(angle) * lRadius)
-        unitData$LabelY <- unitData$Latitude  + (cos(angle) * lRadius)
-
-        if (is.null(resultDf)) {
-            resultDf <- unitData
-        } else {
-            resultDf <- rbind(resultDf, unitData)
+# For each aggregation unit, we get a count of each unique allele, ordered according to the palette order
+#
+pieMap.buildCountData <- function(ctx, datasetName, sampleSetName, aggLevel, aggUnitData, measure, params) {
+    dataset <- ctx[[datasetName]]
+    sampleMeta <- dataset$meta							#; print(str(sampleMeta))
+    #
+    # Get all aggregation unit ids
+    #
+    aggUnitGids <- rownames(aggUnitData)					#; print(aggUnitGids)
+    aggUnitCount <- length(aggUnitGids)						#; print(aggUnitCount)
+    #
+    # Create aggregation index for each sample (the id of the aggregation unit where the sample originates)
+    #
+    aggIndex <- map.getAggregationUnitIds (aggLevel, sampleMeta)		#; print(aggIndex)
+    #
+    # Get the categorical palette for this measure, which will give us both the colours and the order of the alleles
+    #
+    catPalette <- pieMap.getCategoryPalette (ctx, sampleSetName, measure, params)	#; print(catPalette)
+    catNames <- names(catPalette)						#; print(catNames)
+    catCount <- length(catPalette)						#; print(catCount)
+    catOrder <- 1:catCount
+    names(catOrder) <- catNames							#; print(catOrder)
+    #
+    #  Create a matrix for the allele counts 
+    #
+    m <- matrix(0, nrow=aggUnitCount, ncol=catCount, dimnames=list(aggUnitGids, catNames))
+    otherCounts <- vector(mode="integer", length=aggUnitCount)
+    totals      <- vector(mode="integer", length=aggUnitCount)
+    #
+    # Get the allele counts and other data for each aggregation units
+    #
+    for (aIdx in 1:aggUnitCount) {
+        #
+        # Get the sample data to be aggregated for this unit
+        #
+        aggUnitGid <- aggUnitGids[aIdx]						#; print(aggUnitGid)
+        aggMeta <- sampleMeta[which(aggIndex == aggUnitGid),]			#; print(nrow(aggMeta))
+        #
+        # Get the allele counts and add them to the matrix
+        #
+        attr <- pieMap.getMeasureAttributes (ctx$config, measure)					#; print(attr)
+        vCounts <- meta.getColumnValueCounts (aggMeta, attr$columnName, excludeMultiValues=TRUE)	#; print(vCounts)
+        if (length(vCounts) == 0) {
+            next
         }
+        vNames <- names(vCounts)						#; print(vNames)
+        total <- 0
+        for (i in 1:length(vCounts)) {						#; print(pieMapData[i,])
+            vName <- vNames[i]; vCount <- vCounts[i]
+            if (vName %in% catNames) {
+                m[aIdx,vName] <- vCount
+            } else {
+                otherCounts[aIdx] <- otherCounts[aIdx] + vCount
+            }
+            total <- total + vCount
+        }
+        totals[aIdx] <- total
     }
-    resultDf									#; print(resultDf)
+    #
+    # Add the necessary mapping data to the allele counts
+    #
+    countData <- as.data.frame(m)
+    if ("Other" %in% catNames) {
+        countData$Other <- otherCounts
+    } else {
+        countData <- cbind(countData, Other=otherCounts)
+    }
+    countData <- cbind(countData, Latitude=aggUnitData$Latitude, Longitude=aggUnitData$Longitude, 
+                       SampleCount=aggUnitData$SampleCount, UnitId=aggUnitData$UnitId, AdmDivName=aggUnitData$AdmDivName)
+    rownames(countData) <- countData$UnitId
+    countData
 }
-            
 
-pieMap.getAggUnitPieSizes <- function(aggUnitData, params) {			#; print(nrow(aggUnitData))
-    if (nrow(aggUnitData) == 0) {
+###############################################################################
+# Sizes of pie plots
+###############################################################################
+#
+pieMap.getAggUnitPieSizes <- function(pieMapData, params) {			#; print(pieMapData)
+    if (nrow(pieMapData) == 0) {
         return (numeric(0))
     }
     # Compute pie chart sizes. 
     # If only one size was given in the config, then the markers will be constant size/
     # If there are two sizes, then merkers will be sized proportional to the number of samples, with the smaller
     # size representing 1 sample, and the larger size representing the numer of samples in the largest aggregation
-    mSizeParam <- param.getParam ("map.markerSize", params)		#; print(mSizeParam)
+    mSizeParam <- param.getParam ("map.markerSize", params)			#; print(mSizeParam)
     if (length(mSizeParam) > 1) {
         minSize  <- mSizeParam[1]
         maxSize  <- mSizeParam[2]
         sizeRange  <- maxSize - minSize
-        counts <- aggUnitData$SampleCount
+        counts <- pieMapData$SampleCount					#; print(counts)
         minCount <- 1
         maxCount <- max(counts)
         countRange <- maxCount - minCount
         markerSizes <- minSize + (sizeRange * ((counts - minCount) / countRange))
     } else {
-        markerSizes <- rep(mSizeParam, nrow(aggUnitData))
+        markerSizes <- rep(mSizeParam, nrow(pieMapData))
     }
-    markerSizes <- as.numeric(markerSizes / 100)		# The /100 is an arbitrary scaling factor, will fix later 
-    names(markerSizes) <- aggUnitData$UnitId
-    markerSizes								#; print(markerSizes)
+    markerSizes <- as.numeric(markerSizes) / 80		# The /80 is an arbitrary scaling factor, determined by visual comparison with other plots
+    names(markerSizes) <- pieMapData$UnitId
+    markerSizes									#; print(markerSizes)
 }
+
+###############################################################################
+# Categorical Colour Palettes
+###############################################################################
 #
+# Get the palette to be used for this measure in this sampleset
+# (the same palette may be used for multiple time slices, so we keep it in the context for reuse)
+#
+pieMap.getCategoryPalette <- function (ctx, sampleSetName, measure, params) {
+    userCtx <- ctx$rootCtx
+    sampleSet <- userCtx$sampleSets[[sampleSetName]]
+    p <- sampleSet$categoryPalettes[[measure]]
+    if (is.null(p)) {
+        p <- params$map.alleleColours
+        if (is.null(p)) {
+            values <- pieMap.getMeasureAllValues (userCtx, sampleSetName, measure)	#; print(values)
+            userPalette <- graphics.getColourPalette (userCtx)
+            p <- rep_len(userPalette, length(values))					#; print(p)
+            names(p) <- values
+        }
+        if (!("Other" %in% names(p))) {
+            p <- c(p, Other="white")
+        }
+        sampleSet$categoryPalettes[[measure]] <- p					#; print(p)
+    }
+    p
+}
+
 ###############################################################################
 # Estimation of marker measures
 ################################################################################
@@ -228,89 +286,4 @@ pieMap.getMeasureAllValues <- function(ctx, sampleSetName, measure, excludeMulti
         }
     }
     values
-}
-#
-# For each aggregation unit, we get a count of each unique allele, ordered according to the palette order
-#
-pieMap.buildCountData <- function(ctx, datasetName, sampleSetName, aggLevel, aggUnitData, measure) {
-
-    dataset <- ctx[[datasetName]]
-    sampleMeta <- dataset$meta							#; print(str(sampleMeta))
-
-    # Get all aggregation unit ids
-    aggUnitGids <- rownames(aggUnitData)					#; print(aggUnitGids)
-    
-    # Create aggregation index for each sample (the id of the aggregation unit where the sample originates)
-    aggIndex <- map.getAggregationUnitIds (aggLevel, sampleMeta)		#; print(aggIndex)
-    
-    # Get the palette for this measure, which will give us both the colours and the order of the alleles
-    valuePalette <- pieMap.getCategoryPalette (ctx, sampleSetName, measure)	#; print(valuePalette)
-    valueOrder <- 1:length(valuePalette)					#; print(valueOrder)
-    names(valueOrder) <- names(valuePalette)
-    
-    # Get the data for all aggregation units
-    countData <- NULL
-    for (aIdx in 1:length(aggUnitGids)) {
-    
-        # Get the sample data to be aggregated for this unit
-        aggUnitGid <- aggUnitGids[aIdx]						#; print(aggUnitGid)
-        aggMeta <- sampleMeta[which(aggIndex == aggUnitGid),]			#; print(nrow(aggMeta))
-        
-        # Get the allele counts
-        attr <- pieMap.getMeasureAttributes (ctx$config, measure)					#; print(attr)
-        vCounts <- meta.getColumnValueCounts (aggMeta, attr$columnName, excludeMultiValues=TRUE)	#; print(vCounts)
-        if (length(vCounts) == 0) {
-            next
-        }
-	vNames <- names(vCounts)						#; print(vNames)
-	vOrder <- as.integer(valueOrder[vNames])				#; print(vOrder)
-	vColour <- valuePalette[vNames]						#; print(vColour)
-	
-	# Create a dataframe with the necessary data for this unit, copying the unit data in each row
-        unitData <- aggUnitData[aIdx,]						#; print(unitData)
-        df <- data.frame(matrix(unitData,ncol=ncol(aggUnitData),nrow=length(vCounts),byrow=TRUE))
-        colnames(df) <- colnames(aggUnitData)					#; print(df)
-        # Now add the allele counts, sort and merge with previous units
-        df$Allele      <- vNames
-        df$AlleleCount <- vCounts
-        df$Order       <- vOrder
-        df$Colour      <- vColour						#; print(df)
-        
-        df <- df[order(df$Order),]						#; print(df)
-        if (is.null(countData)) {
-            countData <- df
-        } else {								#; print(str(df))
-            countData <- rbind(countData, df)
-        }
-    }
-    countData$UnitId <- as.character(countData$UnitId)
-    countData$Allele <- factor(countData$Allele)
-    countData$AlleleCount <- as.integer(countData$AlleleCount)
-    countData$Order <- as.integer(countData$Order)
-    countData$Latitude <- as.numeric(countData$Latitude)
-    countData$Longitude <- as.numeric(countData$Longitude)
-    countData$SampleCount <- as.numeric(countData$SampleCount)
-    
-    countData
-}
-
-###############################################################################
-# Categorical Colour Palettes
-###############################################################################
-#
-# Get the palette to be used for this measure in this sampleset
-# (the same palette may be used for multiple time slices, so we keep it in the context for reuse)
-#
-pieMap.getCategoryPalette <- function (ctx, sampleSetName, measure) {
-    userCtx <- ctx$rootCtx
-    sampleSet <- userCtx$sampleSets[[sampleSetName]]
-    p <- sampleSet$categoryPalettes[[measure]]
-    if (is.null(p)) {
-        values <- pieMap.getMeasureAllValues (userCtx, sampleSetName, measure)	#; print(values)
-        userPalette <- graphics.getColourPalette (userCtx)
-        p <- rep_len(userPalette, length(values))				#; print(p)
-        names(p) <- values							#; print(p)
-        sampleSet$categoryPalettes[[measure]] <- p	
-    }
-    p
 }

@@ -38,7 +38,7 @@ map.execute <- function(userCtx, sampleSetName, mapType, params) {		#;print(mapT
         #
         # Add the "look and feel" elements to the map plot
         #
-        mapPlot <- mapPlot + mapSpec$master$theme			#; plot(mapPlot)
+        mapPlot <- mapPlot + mapSpec$master$theme				#; plot(mapPlot)
         #
         # Deal with the legend 
         #
@@ -52,9 +52,9 @@ map.execute <- function(userCtx, sampleSetName, mapType, params) {		#;print(mapT
 }
 #
 map.processLegend <- function(mapPlot, mapSpec, params) {			#; print(mapSpec$master$type)
-    if (map.isMarkerMap(mapSpec$master$type)) {
-        legPos <- params$plot.legend.pos					; print(legPos)
-        legDir <- params$plot.legend.dir					; print(legDir)
+    if (mapSpec$master$type %in% c("drug", "mutation", "alleleProp", "diversity", "sampleCount", "location")) {
+        legPos <- params$plot.legend.pos					#; print(legPos)
+        legDir <- params$plot.legend.dir					#; print(legDir)
         if (legDir == "horizontal") {
             mapPlot <- mapPlot + ggplot2::theme(legend.position="bottom")
         } else {
@@ -84,18 +84,6 @@ map.processLegend <- function(mapPlot, mapSpec, params) {			#; print(mapSpec$mas
             #              ggplot2::theme(legend.margin=ggplot2::margin(l=20, r=20, unit='pt'))
             ggplot2::ggsave(plot=legendPlot, filename=legendFile, device="png", bg="white",
                             width=legW*1.1, height=legH*1.1, units=params$plot.units, dpi=params$plot.dpi)
-        } else if (FALSE) {
-            #
-            # REMOVED - could not make this work
-            #
-            #if (!is.null(params$plot.legend.width)) {				; print(params$plot.legend.width)
-            #    mapPlot <- mapPlot + ggplot2::theme(legend.position=c(0,0))
-            #    legendPlot <- cowplot::get_legend(mapPlot)
-            #    mapOnlyPlot <- mapPlot + ggplot2::theme(legend.position="none")
-            #    rplot <- legendPlot; lplot <- mapOnlyPlot
-            #    rwidth <- params$plot.legend.width; lwidth <- 1-rwidth
-            #    mapPlot <- cowplot::plot_grid(lplot, rplot, nrow=1, ncol=2, rel_widths=c(lwidth,rwidth))
-            #}
         }
     }
     mapPlot

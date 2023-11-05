@@ -12,6 +12,7 @@ mapAlleleProportions(
   aggregate = "Province",
   minAggregateCount = 10,
   markerSize = 16,
+  alleleColours = NULL,
   showNames = TRUE,
   nameFontSize = 5,
   ...
@@ -35,6 +36,12 @@ To specify a mutation put it in between quotation marks e.g. "Pfkelch13", or  c(
 \item{minAggregateCount}{The minimum count of aggregated samples. To avoid estimating on very small samples, one can set a minimum count of samples, below which the marker is not shown}
 
 \item{markerSize}{Allows adjustment of the size of markers on the map}
+
+\item{alleleColours}{A vector of R colours (specified either as R colour names, or HTML colour codes) which is used to colour the slices in the pie symbols of the plot.
+All elements of the vector must be named with the name of the value (allele) they will represent. 
+The sequence of names will determine the order in which the values are displayed.
+The name "Other" will indicate the colour used to group together samples that carry alleles other than those names. Usually, "Other" will be listed at the end of the sequence.     
+It no colour is specified for "Other" in the sequence, then an additional "Other"="white" element will be automaticvally added to the end of thesequence.}
 
 \item{showNames}{If TRUE, labels are shown with the name of the aggregation unit (Province or District)}
 
@@ -65,6 +72,14 @@ Maps and data are located in .../output/out/sampleSetName/map-alleleProp/.
 mapAlleleProportions (ctx, sampleSet="Cambodia", 
                       mutations="ALL",
                       aggregate="Province", minAggregateCount=10,
+                      showNames=TRUE, markerSize=c(10,25))
+
+# Produce maps of some most common kelch13 allele (WT, C580Y, R539T and Y493H), 
+# and group together the other alleles
+kelch13Col <- c(WT="green",C580Y="red",R539T="orange",Y493H="yellow",Other="gray")
+mapAlleleProportions (ctx, sampleSet="Cambodia", 
+                      mutations="Pfkelch13", alleleColours=kelch13Col,
+                      aggregate="District", minAggregateCount=10,
                       showNames=TRUE, markerSize=c(10,25))
 }
 }
