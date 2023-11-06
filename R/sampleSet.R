@@ -19,6 +19,7 @@ sampleSet.selectSampleSet <- function (userCtx, sampleSetName, select) {
     sampleSet$samples=sampleNames
     sampleSet$ctx=trimCtx
     sampleSet$clusters=new.env()
+    sampleSet$baseMaps=new.env()
     
     userCtx$sampleSets[[sampleSetName]] <- sampleSet
     

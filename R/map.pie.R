@@ -77,7 +77,7 @@ pieMap.executeMap <- function(map) {
     mapPlot <- mapPlot +
         scatterpie::geom_scatterpie (ggplot2::aes(x=Longitude, y=Latitude, r=PieSize),
                                      data=pieMapData, cols=names(catPalette), sorted_by_radius=TRUE) +
-        ggplot2::scale_fill_manual(values=catPalette, breaks=alleleNames)
+        ggplot2::scale_fill_manual(values=catPalette, breaks=alleleNames, name=measure)
     mapPlot
 }
 

@@ -1,5 +1,4 @@
 
-
 UI.SUPPORTED_MAP_TYPES <- c("location", "sampleCount", "drug", "mutation", "alleleProp", "diversity")
 
 ui.makeSingleMap <- function (ctx, sampleSet, type,
@@ -21,7 +20,7 @@ ui.makeSingleMap <- function (ctx, sampleSet, type,
                   timePeriods=NULL, aggregate=aggregate, minAggregateCount=minAggregateCount, 
                   markerSize=markerSize, markerColours=markerColours, markerFontSize=markerFontSize, 
                   colourBy=colourBy, showNames=showNames, nameFontSize=nameFontSize, 
-                  ...)
+                  ...)											#; print(as.list(params))
     #
     # measure param
     #
@@ -96,7 +95,6 @@ map.makeSingleMap <- function(userCtx, sampleSetName, mapType, params) {		#;prin
     #
     # Deal with the legend - TBD
     #
-    #mapPlot <- map.processLegend (mapPlot, mapSpec, params)
-    plotInfo <- list(mainPlot=mapPlot, legendPlot=NULL, data=NULL)
+    plotInfo <- map.processLegend (mapPlot, mapSpec, params)
     plotInfo
 }

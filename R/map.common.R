@@ -42,16 +42,23 @@ map.execute <- function(userCtx, sampleSetName, mapType, params) {		#;print(mapT
         #
         # Deal with the legend 
         #
-        mapPlot <- map.processLegend (mapPlot, mapSpec, params)			#; plot(mapPlot)
+        plotInfo <- map.processLegend (mapPlot, mapSpec, params)			#; plot(mapPlot)
+        if (!is.null(plotInfo$legend)) {
+            legFile <- paste0(mapSpec$plotFile, ".legend.png")
+            legend <- plotInfo$legend
+            ggplot2::ggsave(plot=legend$plot, filename=legFile, device="png", bg="white",
+	                    width=legend$width*1.1, height=legend$height*1.1, units=params$plot.units, dpi=params$plot.dpi)
+        }
         #
         # Save to file. The size in inches is given in the config.
         #
-        ggplot2::ggsave(plot=mapPlot, filename=mapSpec$plotFile, device=params$plot.file.format, 
+        ggplot2::ggsave(plot=plotInfo$mainPlot, filename=mapSpec$plotFile, device=params$plot.file.format, 
                         width=params$plot.width, height=params$plot.height, units=params$plot.units, dpi=params$plot.dpi)
     }
 }
 #
 map.processLegend <- function(mapPlot, mapSpec, params) {			#; print(mapSpec$master$type)
+    legendInfo <- NULL
     if (mapSpec$master$type %in% c("drug", "mutation", "alleleProp", "diversity", "sampleCount", "location")) {
         legPos <- params$plot.legend.pos					#; print(legPos)
         legDir <- params$plot.legend.dir					#; print(legDir)
@@ -78,15 +85,11 @@ map.processLegend <- function(mapPlot, mapSpec, params) {			#; print(mapSpec$mas
             # Write out the legend to a file of the exact size
             #
             legendPlot <- ggpubr::as_ggplot(legendPlot)
-            #legendPlot <- legendPlot + 
-            #              ggplot2::theme_minimal() + 
-            #              #ggplot2::theme(plot.margin=grid::unit(c(5.5, 20, 5.5, 20), "pt"))
-            #              ggplot2::theme(legend.margin=ggplot2::margin(l=20, r=20, unit='pt'))
-            ggplot2::ggsave(plot=legendPlot, filename=legendFile, device="png", bg="white",
-                            width=legW*1.1, height=legH*1.1, units=params$plot.units, dpi=params$plot.dpi)
+            legendInfo <- list(plot=legendPlot, width=legW, height=legH)
         }
     }
-    mapPlot
+    plotInfo <- list(mainPlot=mapPlot, legend=legendInfo)
+    plotInfo
 }
 #
 ###############################################################################
@@ -252,7 +255,7 @@ map.createMapMaster <- function (userCtx, sampleSetName, mapType, params) {		#; 
     #
     # Get the base map to use as a background for all plots
     #
-    baseMapInfo <- baseMap.buildBaseMap (mapMaster)
+    baseMapInfo <- baseMap.getBaseMap (userCtx, sampleSetName, params)
     mapMaster$baseMapInfo <- baseMapInfo
     mapMaster
 }

@@ -9,18 +9,18 @@ map.colour.river <- "#CDDBDB"
 # Creation of the physical/political background map
 ################################################################################
 #
-baseMap.buildBaseMap <- function(mapMaster) {
+baseMap.getBaseMap <- function(userCtx, sampleSetName, params) {
     #
-    # Get the sample metadata
+    sampleSet <- userCtx$rootCtx$sampleSets[[sampleSetName]]
+    ctx <- sampleSet$ctx
+    sampleMeta  <- ctx$unfiltered$meta
     #
-    userCtx     <- mapMaster$userCtx
-    config      <- userCtx$config
-    datasetName <- mapMaster$datasetNames[1]
-    sampleSet   <- mapMaster$sampleSet
-    ctx         <- sampleSet$ctx
-    dataset     <- ctx[[datasetName]]
-    sampleMeta  <- dataset$meta
-    params      <- mapMaster$params
+    # Check if the base map already exists for this aspect ratio; if so, skip creation
+    #
+    aspectRatioLabel <- paste0("",params$plot.aspectRatio)
+    if (aspectRatioLabel %in% names(sampleSet$baseMaps)) {
+        return (sampleSet$baseMaps[[aspectRatioLabel]])
+    }
     #
     # Read the countries needed in this analysis, so we can get the boundary contours
     #
@@ -99,7 +99,7 @@ baseMap.buildBaseMap <- function(mapMaster) {
         } else {
             adm1Spdf <- rbind(adm1Spdf, cAdm1Lines)
         }
-    }    
+    }
     adm1_df <- suppressMessages(ggplot2::fortify(adm1Spdf))	#; print(colnames(adm1Spdf@data)); print(colnames(adm1_df))
     #
     # Create a bounding box, specifying WGS84 (EPSG:4326) to be the coordinates system 
@@ -163,9 +163,9 @@ baseMap.buildBaseMap <- function(mapMaster) {
     baseMapPlot <- baseMapPlot +
             ggplot2::coord_sf(xlim=c(anBB$xMin,anBB$xMax), ylim=c(anBB$yMin,anBB$yMax), expand=FALSE) +
     	    ggplot2::theme(panel.background=ggplot2::element_rect(fill=map.colour.sea))
-
     # Return all the elements
     baseMapInfo <- list(baseMap=baseMapPlot, anBB=anBB, adm0_df=adm0_df, adm1_df=adm1_df)
+    sampleSet$baseMaps[[aspectRatioLabel]] <- baseMapInfo
     baseMapInfo
 }
 #
