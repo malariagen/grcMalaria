@@ -30,10 +30,11 @@ baseMap.getBaseMap <- function(userCtx, sampleSetName, params) {
     # Get all the possible marker positions for this map and work out the boundaries
     #
     geo <- map.getGeoTables()
-    admDivInfo <- geo$admDivs
-    mkGids <- unique(c(sampleMeta$AdmDiv1_GID, sampleMeta$AdmDiv2_GID))
-    mkLat <- admDivInfo[mkGids,"Latitude"]
-    mkLon <- admDivInfo[mkGids,"Longitude"]
+    admDivInfo <- geo$admDivs						#;print(rownames(admDivInfo))
+    mkGids <- unique(c(sampleMeta$AdmDiv1_GID, sampleMeta$AdmDiv2_GID))	#;print(length(mkGids)) ;print(mkGids)
+    mkGids <- mkGids[which(mkGids %in% rownames(admDivInfo))]		#;print(length(mkGids)) ;print(mkGids)
+    mkLat <- admDivInfo[mkGids,"Latitude"]				#;print(mkLat)
+    mkLon <- admDivInfo[mkGids,"Longitude"]				#;print(mkLon)
     #
     # Work out the extent of the markers, and add a margin to determine a bounding box
     #
