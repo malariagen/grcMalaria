@@ -23,37 +23,38 @@ mapBarcodeFrequencies(
 
 \item{type}{Frequency of barcode groups can be visualized either as a "bar" and/or a "pie".}
 
-\item{aggregate}{The administrative level at which we perform pairwise comparisons}
+\item{aggregate}{The administrative level at which we aggregate. Separate maps are created for each administrative level.}
 
 \item{minAggregateCount}{The minimum count of aggregated samples. To avoid estimating on very small samples, one can set a minimum count of samples, below which the marker is not shown.}
 
 \item{markerScale}{Allows adjustment of the size of markers on the map, default: 0.8.}
 
-\item{showNames}{If TRUE, labels are shown with the name of the aggregation unit (Province or District).}
+\item{showNames}{If TRUE, labels are shown with the name of the aggregation unit (Province or District)}
 
 \item{nameFontSize}{Set the font size of the geographical name labels outside the markers on the map, if showNames=TRUE, default=5}
 
-\item{...}{any of plot parameters, including: width, height, units, dpi, legendPosition. 
+\item{...}{Aesthetics: any of the following plot parameters,
 width: the width of the plot (numeric), default=15
 height: the height of the plot (numeric), default=15
 units: the units in which the width and height are expressed. Supported values: "in" (default), "cm", "mm", "px"
 dpi: the resolution of the plot output, expressed as dots per inch, default=300
 format: the file format in which the plot will be saved. Supported values: "png" (default), "pdf"
-legendPosition: specifies where the legend should be plotted. Supported values: "inset" (default), "separate"}
+legendPosition: specifies where the legend should be plotted. Supported values: "inset" (default), "separate"
+legendWidth: specifies how wide a fixed width legend space should be, default="NULL"
+legendDirection: specifies location of legend. Supported values: "vertical" (default), "horizontal"
+legendFontSize: specifies font size of the legend (numeric), default=4
+axisTitleSize: specifies axis label font size (numeric), default=1}
 }
 \description{
 Creates a map showing the frequency of groups of Plasmodium samples with identical a 'genetic barcode' within administrative divisions.
-The 'genetic barcode' consists of 101 SNPs determined for each sample. These SNPs are distributed across all nuclear chromosomes.
-SNP positions were chosen based on their ability to differentiate populations and their power to recapitulate genetic distance.
-The samples are grouped according to identical barcode within each administrative division, at the desired administrative level: Province, or District.
-Barcode groups are not compared between administrative divisions. To compare barcode groups between administrative divisions please use mapClusterSharing(). Use command ?mapClusterSharing for more information.
-To avoid estimating on very small samples, one can set a minimum count of samples, below which the marker is not shown.
-Additionally, data files are created. Created .tab files can be opened with for example Excel.
-Maps and data are located in .../output/out/sampleSetName/map-barcodeFrequency/.
+The samples are grouped according to identical barcode within each administrative division.
+Barcode groups are not compared between administrative divisions. To compare barcode groups between administrative divisions please use mapClusterSharing().
+The presence of a few large segments suggests that the location is dominated by several large groups with identical genetic barcodes.
+Observed "black" colors in the bar or pie chart indicate the presence of many overlapping segment edges. This suggests the existence of numerous groups with low frequency. Therefore, the color black can serve as an indicator of diversity.
 }
 \examples{
 \dontrun{
-# Map barcode group frequencies in both bar and pie form, for sampleSet "Laos", 
+# Map barcode group frequencies in both bar and pie form, for sampleSet "Laos",
 # at both Province and District level
 mapBarcodeFrequencies (ctx, sampleSet="Laos",
                        type=c("bar","pie"),

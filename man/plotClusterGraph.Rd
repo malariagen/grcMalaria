@@ -24,13 +24,17 @@ plotClusterGraph(
 
 \item{weightPower}{TBD, the default is 2}
 
-\item{...}{any of plot parameters, including: width, height, units, dpi, legendPosition
+\item{...}{Aesthetics: any of the following plot parameters,
 width: the width of the plot (numeric), default=15
 height: the height of the plot (numeric), default=15
 units: the units in which the width and height are expressed. Supported values: "in" (default), "cm", "mm", "px"
 dpi: the resolution of the plot output, expressed as dots per inch, default=300
 format: the file format in which the plot will be saved. Supported values: "png" (default), "pdf"
-legendPosition: specifies where the legend should be plotted. Supported values: "inset" (default), "separate"}
+legendPosition: specifies where the legend should be plotted. Supported values: "inset" (default), "separate"
+legendWidth: specifies how wide a fixed width legend space should be, default="NULL"
+legendDirection: specifies location of legend. Supported values: "vertical" (default), "horizontal"
+legendFontSize: specifies font size of the legend (numeric), default=4
+axisTitleSize: specifies axis label font size (numeric), default=1}
 }
 \value{
 Produces network graphs of clusters assigned in findClusters function.
@@ -39,11 +43,6 @@ Produces network graphs of clusters assigned in findClusters function.
 Creates graphs of cluster networks within a sampleset of Plasmodium samples.
 The graphs are based on a cluster analysis, which needs to be produced with the findClusters function in advance.
 The findClusters function partitions the Plasmodium samples into clusters with a similar genetic background, based on the 'genetic barcode' similarity.
-Use command ?findClusters for more information.
-The genetic barcode consists of 101 SNPs determined for each sample. These SNPs are distributed across all nuclear chromosomes.
-SNP positions were chosen based on their ability to differentiate populations and their power to recapitulate genetic distance.
-Additionally, data files are created. Created .tab files can be opened with for example Excel.
-Maps and data are located in .../output/out/(sampleSetName)/graph/.
 }
 \examples{
 \dontrun{

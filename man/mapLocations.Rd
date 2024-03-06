@@ -22,36 +22,35 @@ mapLocations(
 
 \item{aggregate}{The administrative level at which we aggregate (Province/District/Site). Separate maps are created for each administrative level.}
 
-\item{markerSize}{Allows adjustment of the size of markers on the map. If only one value is passed, 
-all markers will be that size; if two values are passed, they will be used as the min 
-and max size of the marker, whose size will reflect the number of samples.}
+\item{markerSize}{Allows adjustment of the size of markers on the map. If only one value is passed, all markers will be of that size; if two values are passed, they will be used as the min and max size of the marker, whose size will reflect the number of samples.}
 
-\item{colourBy}{Shows the aggregation level to be used to colour the markers (Country or Province)}
+\item{colourBy}{Shows the aggregation level to be used to colour the markers (”Province” or “Country”). For each aggregation unit, we place a marker on the map, coloured according to the level of resistance to the drug or mutation, with a label indicating the prevalence.}
 
 \item{showNames}{If TRUE, labels are shown with the name of the aggregation unit (Province or District)}
 
 \item{nameFontSize}{Set the font size of the geographical name labels outside the markers on the map, if showNames=TRUE, default=5}
 
-\item{...}{any of plot parameters, including: width, height, units, dpi, legendPosition. 
+\item{...}{Aesthetics: any of the following plot parameters,
 width: the width of the plot (numeric), default=15
 height: the height of the plot (numeric), default=15
 units: the units in which the width and height are expressed. Supported values: "in" (default), "cm", "mm", "px"
 dpi: the resolution of the plot output, expressed as dots per inch, default=300
 format: the file format in which the plot will be saved. Supported values: "png" (default), "pdf"
-legendPosition: specifies where the legend should be plotted. Supported values: "inset" (default), "separate"}
+legendPosition: specifies where the legend should be plotted. Supported values: "inset" (default), "separate"
+legendWidth: specifies how wide a fixed width legend space should be, default="NULL"
+legendDirection: specifies location of legend. Supported values: "vertical" (default), "horizontal"
+legendFontSize: specifies font size of the legend (numeric), default=4
+axisTitleSize: specifies axis label font size (numeric), default=1#'}
 }
 \description{
 Creates maps showing markers for all Provinces/Districts/Sites where samples were collected.
-For each location, we place a marker on the map, coloured according to the administrative
-division it is in.
-Additionally data files are created. Created .tab files can be opened with for example Excel.
-Maps and data are located in .../output/out/sampleSetName/map-location/.
+For each location, we place a marker on the map, coloured according to the administrative division it is in.
 }
 \examples{
 \dontrun{
 # Create 2 maps showing the locations for sampleSet Cambodia on a Province, and a District level
-mapLocations (ctx, sampleSet="Cambodia", aggregate=c("Province", "District"), 
-             markerSize=5, colourBy="Country", showNames=FALSE, 
+mapLocations (ctx, sampleSet="Cambodia", aggregate=c("Province", "District"),
+             markerSize=5, colourBy="Country", showNames=FALSE,
              width=18, height=10, units="in", format="pdf")
 }
 }

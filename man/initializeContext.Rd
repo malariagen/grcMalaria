@@ -2,7 +2,7 @@
 % Please edit documentation in R/public.R
 \name{initializeContext}
 \alias{initializeContext}
-\title{Initialize a Genetics Report Card (GRC) dataset}
+\title{Initialize a Genetics Report Card (GRC) Dataset}
 \usage{
 initializeContext(
   grcData,
@@ -15,35 +15,44 @@ initializeContext(
 )
 }
 \arguments{
-\item{grcData}{The data obtained from reading the GRC Excel data.}
+\item{grcData}{The data obtained from reading the GRC data with loadGrc().}
 
-\item{dir}{The folder where data will be stored when analyzing this context .}
+\item{dir}{You will want to change the path and folder name to where you want the output file to be stored on your computer.}
 
 \item{outDir}{The subfolder of dir where the analysis outputs (tables and maps) will be written. Default: subfolder "out"}
 
-\item{minSnpTypability}{The minimum proportion of non-missing samples for a barcode position to be retained in analysis.}
+\item{minSnpTypability}{The minimum proportion of non-missing samples for a barcode position to be retained in analysis. The default is 0.8. This means SNPs where the allele is missing in more than 20 percent of samples are removed.}
 
-\item{minSampleTypability}{The minimum proportion of non-missing barcode positions for a sample to be retained in analysis.}
+\item{minSampleTypability}{he minimum proportion of non-missing positions for a sample to be retained in analysis. The default is 0.75. This means samples where more than 25 percent of the remaining SNPs are missing are removed.}
 
-\item{maxImputedProportion}{The maximum proportion of barcode positions to be imputed for a filtered sample to be included in the imputed dataset}
+\item{maxImputedProportion}{The maximum proportion of barcode positions to be imputed for a filtered sample to be included in the imputed dataset.}
 
 \item{clearCacheData}{Removes previously stored data from analyzing the same dataset.}
 }
 \value{
-An analysis context object, which is a list that contains all the data for analysis, which will be passed to subsequent analysis tasks.
+A analysis context object, which is a list that contains all the data for analysis, which will be passed to subsequent analysis tasks.
 }
 \description{
-Initialize a GRC dataset (obtained from function loadGrc()) so that it is ready for analysis.
-It performs barcode imputation, computes genetic distances, and initializes data that will subsequently be used in analyses.
-The resulting data is stored in a cache and reused whenever you re-analyze the same GRC dataset. If you want to recompute everything from scratch, set clearCacheData=TRUE.
-It creates a folder where output of future analyses will be saved. It will take a while to create a context object which will be used for the subsequent analysis tasks (can take as long as 5 mins to run).
+This function creates a datafolder for subsequent analysis, removes samples and SNPs with high missingness, based on the thresholds specified.
+It then performs barcode imputation and calculates genetic distance matrices using the remaining data.
+Filtering is performed to minimise errors that can occur due to insufficient DNA concentrations for sequencing.
+Insufficiency in DNA could be attributed to low parasitemia, or incorrect Plasmodium species classification.
+By default, SNPs with missing calls in more than 20% of samples (minSnpTypability=0.8),
+and samples with missing alleles in more than 25% of the remaining SNPs (minSampleTypability=0.75), are removed.
+}
+\details{
+The function creates two directories, ‘data’, and ‘out’, within the specified path.
+The ‘data’ directory contains a subdirectory for each GRC dataset. Within this subdirectories, four folders are created:
+(i) ‘barcode’: contains filtered and imputed barcodes in tabular and fasta format
+(ii) ‘distance’: contains a filtered and an imputed distance matrix
+(iii) ‘genotype’: contains filtered and imputed genotypes
+(iv) ‘meta’: contains unfiltered, filtered, and imputed sample metadata
 }
 \examples{
 \dontrun{
-Data <- loadGrc("D:/myFiles/name_file.xlsx", sheet = "GRC",
-               species = "Pf", version = "1.2")
-
 # Change the path to where you want output file to be
-ctx <- initializeContext(Data, dir="/path/to/my/folder")
+ctx <- initializeContext(Data,
+                              dir="D:/...", #Change the path to where you want output file to be
+                              minSnpTypability=0.8, minSampleTypability=0.75)
 }
 }

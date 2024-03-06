@@ -9,7 +9,7 @@ selectSampleSet(ctx, sampleSetName, select)
 \arguments{
 \item{ctx}{The analysis context, created by intializeContext().}
 
-\item{sampleSetName}{The name of the sample set, to be used to identifty it when calling analysis tasks. This will create a folder with the same name e.g. ?Laos?, or "Test170522".}
+\item{sampleSetName}{Select a name for the sample set. You will use this for subsequent analysis tasks. This will create a folder with the same name e.g. “Laos”.}
 
 \item{select}{The criteria for sample selection. Selected samples will match all specified criteria. The values must be a list. "field" corresponds to a column name in the datafile. "values" correspond to an array of possible values that can be matched for a sample to be selected. Use "," to add additional parameters inside a quotation mark " ".}
 }
@@ -17,36 +17,31 @@ selectSampleSet(ctx, sampleSetName, select)
 The analysis context, augmented with the new sample set
 }
 \description{
-Selects a set of samples for analysis, based on their metadata values.
-A given analysis context can contain multiple sample sets. These will be labelled with different names.
-The selection criteria are specified as a list containing a sequence of lists wth two elements each:
+Selects a set of sample for analysis, based on their metadata values.
+A given analysis context can contain multiple sample sets. These can be labelled with different names.
+The selection criteria are specified as a list containing a sequence of lists with two elements each:
 "field" which is the column name to be checked, and "values" which is an array of possible values that can be matched for a sample to be selected.
 A selected sample must match all the criteria.
+Repeat this step for the different sample sets you would like to analyze
 }
 \examples{
 \dontrun{
-Data <- loadGrc("D:/myFiles/name_file.xlsx", sheet = "GRC",
-               species = "Pf", version = "1.2")
-ctx <- initializeContext(Data, dir="/path/to/my/folder")
+## Select a sample set to work on ##
 
-# Create a SampleSet named "Laos", based on "Timepoint" and "Study"
-selectSampleSet(ctx, sampleSet="Laos", 
-                select=list(
-                    list(field="TimePoint", values=c("D00H00","-")),
-                    list(field="Study", values="1208-PF-LA-CMPE-GENRE") 
-                 ))
+# To select samples from 1 field (1 column in the GRC)
+selectSampleSet(ctx, sampleSetName="EBKK", select=list(
+                                list(field="Country", values=c("VN", "KH", "LA")) ))
 
-# Create a SampleSet named "Test170522", containing only isolates from 2018, and 2019 from Vietnam
-selectSampleSet(ctx, sampleSet="Test170522",
-                select=list(
-                    list(field="Year", values=c("2018","2019")),
-                    list(field="Country", values="VN")
-                ))
+# To select samples from 2 fields
+selectSampleSet(ctx, sampleSetName="Laos", select=list(
+                                list(field="TimePoint", values=c("D00H00","-")),
+                                list(field="Study", values=c("1208-PF-LA-CMPE-GENRE")) ))
 
-# Create a SampleSet named "C580Y", containing only isolates with the C580Y genotype
-selectSampleSet(ctx, sampleSet="C580Y", 
-                select=list(
-                    list(field="Kelch", values="C580Y") 
-                 ))
+# To select samples from 3 fields
+selectSampleSet(ctx, sampleSetName="SouthLA_2017", select=list(
+                                list(field="Country", values="LA"),
+                                list(field="AdmDiv1", values=c("Attapeu", "Champasak")),
+                                list(field="Year", values=c("2017", "2018")) ))
+
 }
 }

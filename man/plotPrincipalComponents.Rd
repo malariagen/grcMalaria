@@ -2,7 +2,7 @@
 % Please edit documentation in R/public.R
 \name{plotPrincipalComponents}
 \alias{plotPrincipalComponents}
-\title{Plot Population structure (PCA)}
+\title{Principal Component Analyses (PCA)}
 \usage{
 plotPrincipalComponents(
   ctx,
@@ -23,36 +23,38 @@ plotPrincipalComponents(
 "nipals", "bpca" are methods applied to the set of genetic barcode genotypes (each barcode position is a variable).
 The default is "PCoA"}
 
-\item{plots}{The list of attributes for which plots will be created. See example below}
+\item{plots}{The list of attributes for which plots will be created.}
 
 \item{impute}{To use imputed or filtered data. The default is TRUE.}
 
-\item{...}{any of plot parameters, including: width, height, units, dpi, legendPosition
+\item{...}{Aesthetics: any of the following plot parameters,
 width: the width of the plot (numeric), default=15
 height: the height of the plot (numeric), default=15
 units: the units in which the width and height are expressed. Supported values: "in" (default), "cm", "mm", "px"
 dpi: the resolution of the plot output, expressed as dots per inch, default=300
 format: the file format in which the plot will be saved. Supported values: "png" (default), "pdf"
-legendPosition: specifies where the legend should be plotted. Supported values: "inset" (default), "separate"}
+legendPosition: specifies where the legend should be plotted. Supported values: "inset" (default), "separate"
+legendWidth: specifies how wide a fixed width legend space should be, default="NULL"
+legendDirection: specifies location of legend. Supported values: "vertical" (default), "horizontal"
+legendFontSize: specifies font size of the legend (numeric), default=4
+axisTitleSize: specifies axis label font size (numeric), default=1}
 }
 \value{
 Principal component plots and .tab data files.
 }
 \description{
-This function produces principal component analysis (PCA) plots, in which the population (i.e. samples in the sampleSet),
-is structured in principal components based on their genetic barcode.
-The genetic barcode consists of 101 SNPs determined for each sample. These SNPs are distributed across all nuclear chromosomes.
-SNP positions were chosen based on their ability to differentiate populations and their power to recapitulate genetic distance.
-One plot is created for each specified attribute in the parameter 'plots', in which the samples are coloured according to user input.
+Principal Component Analysis (PCA) or Principal Coordinate Analysis (PCoA) are methods of reducing complexity of the data (in this case distances of 101-SNP genetic barcodes) down to two dimensions, while preserving as much information contained in the original data as possible.
+This was done by creating principal components that explain most of the observed variance in the dataset.
+PCoA is the default method in the grcMalaria but other PCA methods are available.
+One plot is created for each specified graphical attribute in the parameter 'plots', in which the samples are coloured according to user input.
 Graphical display of attributes needs to be specified before using this function.
-Give command ?loadGraphicAttributes for more information.
-Additionally, data files are created. Created .tab files can be opened with for example Excel.
-Plots and data are located in .../output/out/(sampleSetName)/(PCA-method, see parameter 'type')/.
+The PC (Principal Components) are arranged in descending order of explained variance, with PC1 axis showing the largest variation and PC2 axis showing the second the largest variation and so on.
+Samples that are close to each other means they are similar to each other. Well separated clusters means there are differences between samples.
 }
 \examples{
 \dontrun{
-# Perform a principal component analysis for province, kelch13, plasmepsin2/3 amplification status, 
-# and kelch13 in combination with plasmepsin2/3 amplification status,
+# Perform a principal component analysis for province, kelch13, plasmepsin2/3 amplification
+# status, and kelch13 in combination with plasmepsin2/3 amplification status,
 # using the "PCoA" method on sampleSet "Laos"
 plotPrincipalComponents (ctx, sampleSet="Laos", type="PCoA",
     plots=list(
@@ -60,7 +62,7 @@ plotPrincipalComponents (ctx, sampleSet="Laos", type="PCoA",
               list(name="ByKelch13",        attributes="k13"),
               list(name="ByPm23",           attributes="pm23"),
               list(name="ByKelch13AndPm23", attributes=c("k13","pm23-noColour"))
-           ), 
+           ),
     width=15, height=10)
 }
 }

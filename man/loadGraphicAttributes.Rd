@@ -26,7 +26,6 @@ The analysis context, augmented with the new sample set
 This function allows for specification of the graphical display of samples based on their metadata,
 that can subsequently be used to plot the population structure with a principal component analysis (plotPrincipalComponents()),
 or creation of a neighbour-joining tree (plotTree()).
-Give command ?plotPrincipalComponents, or ?plotTree for more information.
 Specification based on metadata (i.e. attributes) is done by loading an Excel spreadsheet into R.
 The spreadsheet and instructions can be found in the grcMalaria user-guide, see link in 'See also' section.
 }
@@ -36,7 +35,7 @@ The spreadsheet and instructions can be found in the grcMalaria user-guide, see 
 gaFile <- "/path/to/my/file/GenRe-GraphicAttributes.xlsx"
 
 #Load graphical attributes for province, kelch13, and plasmepsin2/3 amplification status
-ctx <- loadGraphicAttributes (ctx, name="province", field="AdmDiv1",       
+ctx <- loadGraphicAttributes (ctx, name="province", field="AdmDiv1",
                               file=gaFile, sheet="Provinces")
 ctx <- loadGraphicAttributes (ctx, name="k13", field="Kelch",
                               file=gaFile, sheet="Kelch13")
@@ -49,6 +48,6 @@ ctx <- loadGraphicAttributes (ctx, name="pm23-noColour", field="Plasmepsin2/3",
 \seealso{
 grcMalaria user-guide:
 \itemize{
- \item {\url{https://cutt.ly/grcMalaria-R-UserGuide}}
+ \item {\url{https://genremekong.org/tools/grcmalaria-r-package-user-guide}}
 }
 }

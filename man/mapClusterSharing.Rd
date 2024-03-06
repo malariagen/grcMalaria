@@ -2,7 +2,7 @@
 % Please edit documentation in R/public.R
 \name{mapClusterSharing}
 \alias{mapClusterSharing}
-\title{Map cluster sharing}
+\title{Cluster Group Sharing Maps}
 \usage{
 mapClusterSharing(
   ctx,
@@ -22,47 +22,44 @@ mapClusterSharing(
 
 \item{sampleSet}{The name of the sample set being used, which must have been previously created by selectSampleSet().}
 
-\item{clusterSet}{The name of the clustering set, defined in findClusters().}
+\item{clusterSet}{The name of the cluster set, defined in findClusters().}
 
 \item{type}{Frequency of clusters can be visualized either as a "bar" and/or a "pie". The default is c("bar", "pie").}
 
-\item{aggregate}{The administrative level at which we perform pairwise comparisons, either "Province" and/or "District".}
+\item{aggregate}{The administrative level at which we aggregate. Separate maps are created for each administrative level.}
 
-\item{minAggregateCount}{The minimum count of aggregated samples. To avoid estimating on very small samples, one can set a minimum count of samples,
-below which the marker is not shown.The default is 5.}
+\item{minAggregateCount}{The minimum count of aggregated samples. To avoid estimating on very small samples, one can set a minimum count of samples, below which the marker is not shown.}
 
 \item{markerScale}{Allows adjustment of the size of markers on the map, default: 0.8.}
 
-\item{showNames}{If TRUE, labels are shown with the name of the aggregation unit (Province or District).}
+\item{showNames}{If TRUE, labels are shown with the name of the aggregation unit (Province or District)}
 
 \item{nameFontSize}{Set the font size of the geographical name labels outside the markers on the map, if showNames=TRUE, default=5}
 
-\item{...}{any of plot parameters, including: width, height, units, dpi, legendPosition
+\item{...}{Aesthetics: any of the following plot parameters,
 width: the width of the plot (numeric), default=15
 height: the height of the plot (numeric), default=15
 units: the units in which the width and height are expressed. Supported values: "in" (default), "cm", "mm", "px"
 dpi: the resolution of the plot output, expressed as dots per inch, default=300
 format: the file format in which the plot will be saved. Supported values: "png" (default), "pdf"
-legendPosition: specifies where the legend should be plotted. Supported values: "inset" (default), "separate"}
+legendPosition: specifies where the legend should be plotted. Supported values: "inset" (default), "separate"
+legendWidth: specifies how wide a fixed width legend space should be, default="NULL"
+legendDirection: specifies location of legend. Supported values: "vertical" (default), "horizontal"
+legendFontSize: specifies font size of the legend (numeric), default=4
+axisTitleSize: specifies axis label font size (numeric), default=1}
 }
 \value{
 Maps with cluster frequencies across administrative divisions
 }
 \description{
-Creates maps showing the frequency of clusters, allowing for comparison across administrative divisions.
-Each colour in the bar/pie represents a different cluster.
+This creates a map showing the proportions of assigned clusters for different administrative divisions.
+The different colours represent different haplotype groups.
 White represents samples that do not belong to a cluster because they did not meet the specified parameter criteria.
 The maps are based on the cluster analysis context, which needs to be produced with the findClusters function in advance.
-The findClusters function partitions the Plasmodium samples into clusters with a similar genetic background, based on the 'genetic barcode' similarity.
-Use command ?findClusters for more information.
-The 'genetic barcode' consists of 101 SNPs determined for each sample. These SNPs are distributed across all nuclear chromosomes.
-SNP positions were chosen based on their ability to differentiate populations and their power to recapitulate genetic distance.
-Additionally, data files are created. Created .tab files can be opened with for example Excel.
-Maps and data are located in .../output/out/(sampleSetName)/map-clusterSharing/.
 }
 \examples{
 \dontrun{
-# Map cluster frequencies in both bar and pie form, for sampleset "Laos", 
+# Map cluster frequencies in both bar and pie form, for sampleset "Laos",
 # and clusterset "LAclust" at both Province and District level,
 mapClusterSharing (ctx, sampleSet="Laos", clusterSet = "LAclust",
                    type=c("bar", "pie"),

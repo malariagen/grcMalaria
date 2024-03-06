@@ -2,7 +2,7 @@
 % Please edit documentation in R/public.R
 \name{mergeGrc}
 \alias{mergeGrc}
-\title{Combine two Genetic Report Cards (GRC) datasets}
+\title{Combine two Genetic Report Card (GRC) datasets}
 \usage{
 mergeGrc(srcGrc, newGrc, overwrite = FALSE, extendColumns = FALSE)
 }
@@ -19,20 +19,20 @@ mergeGrc(srcGrc, newGrc, overwrite = FALSE, extendColumns = FALSE)
 A list containing a data frame with the merged data ready to be analyzed, plus some configuration metadata
 }
 \description{
-Merge two GRC datasets which have been loaded from data files. The new dataset is added to the source dataset. 
-If the new dataset contains new columns, they can be either ignored, or the same columns are added to the source dataset, 
-with null values. If the new dataset contains sample data that is already in the source dataset, they can be either ignored, 
+Merge two GRC datasets which have been loaded from data files. The new dataset is added to the source dataset.
+If the new dataset contains new columns, they can be either ignored, or the same columns are added to the source dataset,
+with null values. If the new dataset contains sample data that is already in the source dataset, they can be either ignored,
 or the source data rows can be overwritten.
 }
 \examples{
 \dontrun{
-# Load spreadsheet 1
-Sheet1 <- loadGrc("D:/myFiles/sheet1.xlsx",
-                 sheet="GRC", species="Pf", version="1.2")
-# Load spreadsheet 2
-Sheet2 <- loadGrc("D:/myFiles/sheet2.xlsx",
-                 sheet="GRC", species="Pf", version="1.2")
-# Merge datasets
+## Load spreadsheet 1 ##
+Sheet1 <- loadGrc("D:/.../sheet1.xlsx",
+                 sheet="GRC", species="Pf", version="1.4")
+## Load spreadsheet 2 ##
+Sheet2 <- loadGrc("D:/.../sheet2.xlsx",
+                 sheet="GRC", species="Pf", version="1.4")
+## Merge datasets ##
 mergeData <- mergeGrc(Sheet1, Sheet2)
 }
 }

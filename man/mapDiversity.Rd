@@ -24,9 +24,10 @@ mapDiversity(
 
 \item{sampleSet}{The name of the sample set being used, which must have been previously created by selectSampleSet().}
 
-\item{timePeriods}{A separately given list of time period objects for partitioning samples into time-interval plots. Each list specifies a time period, with three parameters: name, type and, start. 
-Parameter type can currently only be year. Parameter start must be a date in the format ?dd-MMM-yyyy?, and parameter name must be provided. The string passed in the name parameter is added to the end of the file name of the produced files.
-Currently, the public GRC data only contains years, so only the year in the provided ?start? date is used.}
+\item{timePeriods}{Time-sequence maps can be implemented using a parameter called timePeriods parameter. When this is passed to a function, it will partition samples into time-interval plots. Time intervals parameters are available in 5 analyses: mapSampleCounts(), mapDrugResistancePrevalence(), mapMutationPrevalence(), mapAlleleProportions() and mapDiversity().
+Why use time-intervals parameter:
+It will produce maps with consistent geographical boundaries
+Users can slice up the dataset in any specified time period}
 
 \item{measures}{This can be "ALL", or any vector containing one or more of c("maxHaploFreq","haploHet", "meanSnpHet","medianDistance").
 The method "maxHaploFreq" is a measure of loss of diversity. This measure gives the proportion of samples carrying the most common haplotype (defined as samples with identical barcodes).
@@ -44,13 +45,13 @@ The output ranges from 0-1, with a low value corresponding to low diversity (low
 The method "medianDistance" is a measure that gives the median genetic distance in a assessed group.
 The is calculated using pairwise genetic distance as the proportion of SNPs differing between two samples. Then taking the median of these in the group of samples of interest}
 
-\item{aggregate}{The administrative level at which we aggregate}
+\item{aggregate}{The administrative level at which we aggregate. Separate maps are created for each administrative level.}
 
-\item{minAggregateCount}{The minimum count of aggregated samples. To avoid estimating on very small samples, one can set a minimum count of samples, below which the marker is not shown}
+\item{minAggregateCount}{The minimum count of aggregated samples. To avoid estimating on very small samples, one can set a minimum count of samples, below which the marker is not shown.}
 
-\item{markerSize}{Allows adjustment of the size of markers on the map}
+\item{markerSize}{Allows adjustment of the size of markers on the map. If only one value is passed, all markers will be of that size; if two values are passed, they will be used as the min and max size of the marker, whose size will reflect the number of samples.}
 
-\item{markerFontSize}{Set the font size of the value labels inside the markers on the map, default=6}
+\item{markerFontSize}{Allows adjustment of the font size shown on the markers (numeric), default=6.}
 
 \item{markerColours}{The colour to indicate the level of genetic diversity. Default: "red3", other examples: "forestgreen", "cornflowerblue","darkgoldenrod3"}
 
@@ -58,25 +59,25 @@ The is calculated using pairwise genetic distance as the proportion of SNPs diff
 
 \item{nameFontSize}{Set the font size of the geographical name labels outside the markers on the map, if showNames=TRUE, default=5}
 
-\item{...}{any of plot parameters, including: width, height, units, dpi, legendPosition. 
+\item{...}{Aesthetics: any of the following plot parameters,
 width: the width of the plot (numeric), default=15
 height: the height of the plot (numeric), default=15
 units: the units in which the width and height are expressed. Supported values: "in" (default), "cm", "mm", "px"
 dpi: the resolution of the plot output, expressed as dots per inch, default=300
 format: the file format in which the plot will be saved. Supported values: "png" (default), "pdf"
-legendPosition: specifies where the legend should be plotted. Supported values: "inset" (default), "separate"}
+legendPosition: specifies where the legend should be plotted. Supported values: "inset" (default), "separate"
+legendWidth: specifies how wide a fixed width legend space should be, default="NULL"
+legendDirection: specifies location of legend. Supported values: "vertical" (default), "horizontal"
+legendFontSize: specifies font size of the legend (numeric), default=4
+axisTitleSize: specifies axis label font size (numeric), default=1}
 }
 \description{
-Creates a map showing the calculated genetic diversity of the collected Plasmodium samples in the selected sampleSet.
+This creates maps of expected heterozygosity or genetic diversity for different administrative divisions.
 Genetic diversity can be calculated using four different measures: "maxHaploFreq","haploHet", "meanSnpHet", and "medianDistance".
 Calculations are based on the 'genetic barcode', which consists of 101 SNPs determined for each sample. These SNPs are distributed across all nuclear chromosomes.
 SNP positions were chosen based on their ability to differentiate populations and their power to recapitulate genetic distance.
 If multiple measures are specified, then a map will be created for each measure.
-The genetic diversity is aggregated at the desired administrative level: Province (level 1), or District (level 2).
 For each aggregation unit, we place a marker on the map, coloured according to the genetic diversity, with a label indicating the genetic diversity.
-To avoid estimating on very small samples, one can set a minimum count of samples, below which the marker is not shown.
-Additionally data files are created. Created .tab files can be opened with for example Excel.
-Maps and data are located in .../output/out/sampleSetName/map-diversity/.
 }
 \examples{
 \dontrun{
@@ -87,7 +88,7 @@ periods <- list(
                list(name="2020", type="year", start="1-Jan-2020")
            )
 
-# Produce genetic diversity maps for all available measures, for sampleSet "Laos", 
+# Produce genetic diversity maps for all available measures, for sampleSet "Laos",
 # at District level, and for calendar years 2018-2020.
 mapDiversity (ctx, sampleSet="Laos", timePeriods=periods,
               measures="ALL", aggregate="District", markerColours="red3",

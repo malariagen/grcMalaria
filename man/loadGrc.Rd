@@ -2,26 +2,32 @@
 % Please edit documentation in R/public.R
 \name{loadGrc}
 \alias{loadGrc}
-\title{Load a Genetic Report Card (GRC) data file}
+\title{Load a Genetic Report Card data file}
 \usage{
 loadGrc(file, sheet = "GRC", species = "Pf", version = "1.4")
 }
 \arguments{
 \item{file}{The path to the GRC data Microsoft Excel file (use forward slashes in the path)}
 
-\item{sheet}{The name of the datasheet or tab name within the Excel file containing the GRC data}
+\item{sheet}{Name of datasheet or tab name within the Excel file containing the GRC data}
 
-\item{species}{The species being analyzed ("Pf" (i.e. Plasmodium falciparum) or "Pv" (i.e. Plasmodium vivax))}
+\item{species}{The species being analysed. Currently, the platform can only analysed "Pf" (i.e. Plasmodium falciparum)}
 
-\item{version}{The version number of the GRC data file format. This found is in the documentation when you receive or download the file.}
+\item{version}{The version number of the GRC data file format. Current version is 1.4.}
 }
 \value{
 A list containing a data frame with the data ready to be analyzed, plus some configuration metadata
 }
 \description{
-Load a GRC data file, ready for analysis.
-The data frame returned contains a data table whose values and structure may have been manipulated after being read from the file,
-and may have been updated to the latest version fo the format.
+Load a GRC data file (Microsoft Excel Worksheet format), by indicating the file path in the loadGrc() function.
+Save the GRC onto your computer in order to load onto grcMalaria
+All types of GRC data files are supported, whether it is a public data file, or privately owned GRC data for study owners.
+A GRC data file consists of groups of variables, including metadata fields with geographical and spatial data (grey headers),
+private metadata (pink, not included in public data), predicted drug resistance (orange),
+sample characteristics including species determination, and complexity of infection (light blue),
+drug resistance amino acid haplotypes (green), amino acid variant for individual drug resistance variants (blue),
+quantitative polymerase chain reaction (qPCR) results for gene copy number variation (CNV) for plasmepsim2/3 (pm23),
+and multidrug resistance protein 1 (Pfmdr1) (purple), and lastly genotypes used for genetic barcodes (red).
 }
 \examples{
 \dontrun{
@@ -31,7 +37,5 @@ Data <- loadGrc("D:/myFiles/name_file.xlsx",
                sheet = "GRC",
                species = "Pf", version = "1.4")
 }
-}
-\seealso{
-Information on the GRC input file {\url{https://cutt.ly/grcMalaria-R-UserGuide}}
+
 }

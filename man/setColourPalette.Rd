@@ -12,13 +12,13 @@ setColourPalette(ctx, palette)
 \item{palette}{The desired palette, specified as separate HTML colour codes}
 }
 \description{
-Users can define their own colour palette instead of using the default colours. 
+Users can define their own colour palette instead of using the default colours.
 This function needs to be executed before sample selection, and after running initializeContext(), otherwise the defined colour palette will not be applied.
 }
 \examples{
 \dontrun{
 # To view default 25-colour palette
-ctx$config$defaultPalette 
+ctx$config$defaultPalette
 
 # Set colours
 setColourPalette(ctx, palette=c("red","lightblue","#93c4d2"))

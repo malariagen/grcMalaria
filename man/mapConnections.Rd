@@ -24,52 +24,50 @@ mapConnections(
 \item{sampleSet}{The name of the sample set being used, which must have been previously created by selectSampleSet().}
 
 \item{measures}{default is "ALL", other options are "meanDistance", or "similarity".
-"meanDistance" produces a map with pairwise comparisons between administrative divisions (e.g. sites) in which the thickness of the connection line corresponds to
-the proportion of sample pairs with a mean genetic distance of at least the meanDistanceLevels
+ "meanDistance" produces a map with pairwise comparisons between administrative divisions (e.g. sites) in which the thickness of the connection line corresponds to
+ the proportion of sample pairs with a mean genetic distance of at least the meanDistanceLevels
 "similarity" produces a map with pairwise comparisons between administrative divisions (e.g. sites) in which the thickness of the connection line corresponds to
 the proportion of sample pairs with at least the percentage of similarity given in minIdentity.}
 
 \item{minIdentity}{value between 0 and 1, default is 1}
 
-\item{meanDistanceLevels}{meanDistanceLevels value between 0 and 1, default is 0.5}
+\item{meanDistanceLevels}{meanDistanceLevels value between 0 and 1, default is 0.5. Several thresholds can be specified at once e.g. c(1, 0.9, 0.8)}
 
-\item{aggregate}{The administrative level at which we perform pairwise comparisons}
+\item{aggregate}{The administrative level at which we aggregate. Separate maps are created for each administrative level.}
 
 \item{minAggregateCount}{The minimum count of aggregated samples. To avoid estimating on very small samples, one can set a minimum count of samples, below which the marker is not shown.}
 
-\item{markerSize}{Allows adjustment of the size of markers on the map.}
+\item{markerSize}{Allows adjustment of the size of markers on the map. If only one value is passed, all markers will be of that size; if two values are passed, they will be used as the min and max size of the marker, whose size will reflect the number of samples.}
 
-\item{showNames}{If TRUE, labels are shown with the name of the aggregation unit (Province or District).}
+\item{showNames}{If TRUE, labels are shown with the name of the aggregation unit (Province or District)}
 
 \item{nameFontSize}{Set the font size of the geographical name labels outside the markers on the map, if showNames=TRUE, default=5}
 
-\item{...}{any of plot parameters, including: width, height, units, dpi, legendPosition. 
+\item{...}{Aesthetics: any of the following plot parameters,
 width: the width of the plot (numeric), default=15
 height: the height of the plot (numeric), default=15
 units: the units in which the width and height are expressed. Supported values: "in" (default), "cm", "mm", "px"
 dpi: the resolution of the plot output, expressed as dots per inch, default=300
 format: the file format in which the plot will be saved. Supported values: "png" (default), "pdf"
-legendPosition: specifies where the legend should be plotted. Supported values: "inset" (default), "separate"}
+legendPosition: specifies where the legend should be plotted. Supported values: "inset" (default), "separate"
+legendWidth: specifies how wide a fixed width legend space should be, default="NULL"
+legendDirection: specifies location of legend. Supported values: "vertical" (default), "horizontal"
+legendFontSize: specifies font size of the legend (numeric), default=4
+axisTitleSize: specifies axis label font size (numeric), default=1}
 }
 \description{
-Creates a map of connectedness of haplotypes between different administrative divisions (i.e. sites) in the selected sampleSet.
+This creates maps of connections of haplotypes between different administrative divisions.
 The administrative divisions are compared in a pairwise fashion, within this comparison output is produced that
 gives either i) the proportion of sample pairs that have at least the assigned percentage of similarity (default: 1), or
 ii) the proportion of sample pairs with a mean genetic distance of at least the meanDistanceLevels (default: 0.5).
 Subsequently, maps are produced that show connections between the administrative divisions,
 in which the thickness of the connection line corresponds to the proportion of either i), or ii).
 Both similarity and mean genetic distance are calculated based on the 'genetic barcode', which consists of 101 SNPs determined for each sample.
-These SNPs are distributed across all nuclear chromosomes.
-SNP positions were chosen based on their ability to differentiate populations and their power to recapitulate genetic distance.
 If multiple levels are specified at minIdentity, and meanDistanceLevels, then multiple maps will be produced.
-The connectedness is aggregated at the desired administrative level: Province (level 1), or District (level 2).
-To avoid estimating on very small samples, one can set a minimum count of samples, below which the marker is not shown.
-Additionally data files are created. Created .tab files can be opened with for example Excel.
-Maps and data are located in .../output/out/sampleSetName/map-connect/.
 }
 \examples{
 \dontrun{
-# Map connectedness of haplotypes between districts for a similarity of 1.0, and 0.95, 
+# Map connectedness of haplotypes between districts for a similarity of 1.0, and 0.95,
 # and a mean genetic distance of 0.5, 0.6, and 0.7
 mapConnections (ctx, sampleSet="Laos",
                 measures="ALL", aggregate="District", minIdentity=c(1.0,0.95),

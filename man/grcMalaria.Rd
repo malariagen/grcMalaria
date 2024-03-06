@@ -3,15 +3,15 @@
 \docType{package}
 \name{grcMalaria}
 \alias{grcMalaria}
-\title{grcMalaria: Processing and analyzing SpotMalaria Genetic Report Cards}
+\title{grcMalaria: Genetic Epidemiology Analysis using SpotMalaria Genetic Report Cards}
 \description{
 \if{html}{\figure{logo.jpg}{options: align='right' alt='logo' width='120'}}
-Various functions for producing analysis results such as maps and reports from the Genetic Report Cards datasets
-delivered by SpotMalaria projects, such as GenRe-Mekong.
-Typical outputs include drug resistance prevalence maps, population genetic analyses such as PCA (principal component analysis) and NJ (neighbor joining) trees,
-and analyses of genetic barcodes such as barcode sharing networks, etc.
-The data frame returned contains a data table whose values and structure may have been manipulated after being read from the file,
-and may have been updated to the latest version fo the format.
+A user-friendly, open-source R package, designed to make genetic epidemiology analysis tasks accessible.
+This package facilitates the translation of genetic information derived from malaria parasites from SpotMalaria Genetic Report Cards (GRC),
+into intuitive geographical maps of prevalence, diversity, relatedness.
+This software library is also capable of identifying circulating strains, characterizing drug resistance profiles, and mapping spread.
+The R documentation was updated to align with V2.0.0
+Refer to the user-guide (link below) for the latest instructions on how to use this package.
 }
 \section{Author}{
 
@@ -21,8 +21,6 @@ Olivo Miotto \email{olivo@tropmedres.ac}
 \seealso{
 Useful links:
 \itemize{
- \item user guide {\url{https://cutt.ly/grcMalaria-R-UserGuide}}
- \item source code {\url{https://github.com/malariagen/grcMalaria}}
- \item reporting bugs {\url{https://github.com/malariagen/grcMalaria/issues}}
+ \item user guide {\url{https://genremekong.org/tools/grcmalaria-r-package-user-guide}}
 }
 }

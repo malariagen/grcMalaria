@@ -2,7 +2,7 @@
 % Please edit documentation in R/public.R
 \name{mapMutationPrevalence}
 \alias{mapMutationPrevalence}
-\title{Map the prevalence of genetic mutations of drug resistance}
+\title{Map the prevalence of genetic mutations related to drug resistance}
 \usage{
 mapMutationPrevalence(
   ctx,
@@ -23,65 +23,81 @@ mapMutationPrevalence(
 
 \item{sampleSet}{The name of the sample set being used; must have been previously created by selectSampleSet().}
 
-\item{timePeriods}{A separately given list of time period objects for partitioning samples into time-interval plots. Each list specifies a time period, with three parameters: name, type and, start. 
-Parameter type can currently only be year. Parameter start must be a date in the format ?dd-MMM-yyyy?, and parameter name must be provided. The string passed in the name parameter is added to the end of the file name of the produced files.
-Currently, the public GRC data only contains years, so only the year in the provided ?start? date is used.}
+\item{timePeriods}{Time-sequence maps can be implemented using a parameter called timePeriods parameter. When this is passed to a function, it will partition samples into time-interval plots. Time intervals parameters are available in 5 analyses: mapSampleCounts(), mapDrugResistancePrevalence(), mapMutationPrevalence(), mapAlleleProportions() and mapDiversity().
+Why use time-intervals parameter:
+It will produce maps with consistent geographical boundaries
+Users can slice up the dataset in any specified time period}
 
 \item{mutations}{The genetic mutation types for which prevalence will be calculated; "ALL" creates maps for all 42 available genetic mutation types.
 Available mutation types include: "crt_C72S",    "crt_M74I",    "crt_N75E",    "crt_N75D",    "crt_K76T",    "crt_T93S",    "crt_H97Y",    "crt_H97L",    "crt_I218F",    "crt_A220S",
 "crt_Q271E",    "crt_N326S",    "crt_N326D",    "crt_T333S",    "crt_I356T",    "crt_I356L",    "crt_R371I",    "dhfr_N51I",    "dhfr_C59R",    "dhfr_C59H",    "dhfr_S108N",
 "dhfr_S108T",    "dhfr_I164L",    "dhps_S436A",    "dhps_S436F",    "dhps_A437G",    "dhps_K540E",    "dhps_K540N",    "dhps_A581G",    "dhps_A613T",    "dhps_A613S",    "mdr1_N86Y",
-mdr1_Y184F",    "mdr1_S1034I",    "mdr1_F1226Y",    "mdr1_D1246Y",    "arps10_V127M",    "arps10_D128H",    "arps10_D128Y",    "fd_D193Y",    "mdr2_T484I",    "exo_E415G".
+"mdr1_Y184F",    "mdr1_S1034I",    "mdr1_F1226Y",    "mdr1_D1246Y",    "arps10_V127M",    "arps10_D128H",    "arps10_D128Y",    "fd_D193Y",    "mdr2_T484I",    "exo_E415G".
 To specify a mutation put the mutation type in between quotation marks e.g. "crt_N75E", or  c("arps10_D128Y","fd_D193Y","crt_I218F") to select several genetic mutation types.}
 
-\item{aggregate}{The administrative level at which we aggregate.}
+\item{aggregate}{The administrative level at which we aggregate. Separate maps are created for each administrative level.}
 
 \item{minAggregateCount}{The minimum count of aggregated samples. To avoid estimating on very small samples, one can set a minimum count of samples, below which the marker is not shown.}
 
-\item{markerSize}{Allows adjustment of the size of markers on the map.}
+\item{markerSize}{Allows adjustment of the size of markers on the map. If only one value is passed, all markers will be of that size; if two values are passed, they will be used as the min and max size of the marker, whose size will reflect the number of samples.}
 
-\item{markerFontSize}{Set the font size of the value labels inside the markers on the map, default=6}
+\item{markerFontSize}{Allows adjustment of the font size shown on the markers (numeric), default=6.}
 
 \item{showNames}{If TRUE, labels are shown with the name of the aggregation unit (Province or District).}
 
-\item{nameFontSize}{Set the font size of the geographical name labels outside the markers on the map, if showNames=TRUE, default=5}
+\item{nameFontSize}{Allows adjustment of the Province or District label name font size (numeric), default=5.}
 
-\item{...}{any of plot parameters, including: width, height, units, dpi, legendPosition. 
+\item{...}{Aesthetics: any of the following plot parameters,
 width: the width of the plot (numeric), default=15
 height: the height of the plot (numeric), default=15
 units: the units in which the width and height are expressed. Supported values: "in" (default), "cm", "mm", "px"
 dpi: the resolution of the plot output, expressed as dots per inch, default=300
 format: the file format in which the plot will be saved. Supported values: "png" (default), "pdf"
-legendPosition: specifies where the legend should be plotted. Supported values: "inset" (default), "separate"}
+legendPosition: specifies where the legend should be plotted. Supported values: "inset" (default), "separate"
+legendWidth: specifies how wide a fixed width legend space should be, default="NULL"
+legendDirection: specifies location of legend. Supported values: "vertical" (default), "horizontal"
+legendFontSize: specifies font size of the legend (numeric), default=4
+axisTitleSize: specifies axis label font size (numeric), default=1}
 }
 \description{
-Creates maps showing the prevalence of genetic mutations types known to be associated with antimalarial drug resistance.
-If multiple mutation types are specified, then a map will be created for each mutation type.
-The prevalence of genetic mutation types are aggregated at the desired administrative level: Province (level 1), or District (level 2). Separate maps are created for each mutation-administrative-combination.
-For each aggregation unit, we place a marker on the map, coloured according to the prevalence of the genetic mutation type, with a label indicating the prevalence.
-To avoid estimating on very small samples, one can set a minimum count of samples, below which the marker is not shown.
-Additionally data files are created. Created .tab files can be opened with for example Excel.
-Maps and data are located in .../output/out/sampleSetName/map-mutation/.
+This creates maps of frequency of variants known to be associated with drug resistance.
+Mutation frequency is the ratio of known mutant variants divided by total variants in the population.
 }
 \examples{
 \dontrun{
-# Provide lists of time periods of interest, in this case calendar years
+## To implement time-sequence maps ##
+# 1. Specify time periods
+# name: the name parameter is required and is added to the end of the file name of the produced 
+# files.
+# There are two types of time interval: type="year" uses start date and by default show until 
+# the end of the defined year; type="period" allows user to specify any time period using both 
+# the start and end date.
+# start and end - start and end date. The parameter start must be a date in the 
+# format dd-MMM-yyyy.
+# NOTE: Public GRC data files contains only year of collection, therefore only the year in the 
+# provided “start” date is used to produce time-sequence maps.
 periods <- list(
-               list(name="2018", type="year", start="1-Jan-2018"),
-               list(name="2019", type="year", start="1-Jan-2019"),
-               list(name="2020", type="year", start="1-Jan-2020")
-           )
+               list(name="2021", type="year", start="1-Jan-2021"),
+               list(name="2020", type="year", start="1-Jan-2020"),
+               list(name="2017-19", type="period", start="1-Jan-2017", end="31-Dec-2019")
+            )
 
-# Produce prevalence maps for all available genetic mutation types, for sampleSet "Laos", 
-# at District level, and for calendar years 2018-2020.
-mapMutationPrevalence (ctx, sampleSet="Laos", timePeriods=periods,
-                       mutations="ALL", aggregate="District",
-                       minAggregateCount=10, showNames=TRUE, markerSize=16)
+# 2. Apply timePeriods parameter to mapMutationPrevalence
+mapMutationPrevalence(ctx, sampleSet="Laos", timePeriods = periods,
+                      mutations="ALL", aggregate="District",
+                      minAggregateCount=10, showNames=TRUE, markerSize=16,
+                      width=15, height=15)
+
+# How to read the output:
+# Number on the marker shows frequency of specified variant. The scale ranges between 0 and 1
+#where 0 means no samples carry the specified allele and 1 means 100\% of the samples carry the
+#specified allele.
+# Mutation frequency = selected variant / total variants in the population.
 }
 }
 \seealso{
 Useful links:
 \itemize{
- \item user guide for information on functionality of specific genetic mutation types {\url{https://cutt.ly/grcMalaria-R-UserGuide}}
+ \item user guide for information on functionality of specific genetic mutation types {\url{https://genremekong.org/tools/grcmalaria-r-package-user-guide}}
 }
 }
