@@ -3,8 +3,8 @@
 ###############################################################################
 #
 connectMap.getConnectednessMeasures <- function() {
-    allMeasures <- c("similarity","meanDistance")
-    allMeasures
+    allMeasureNames <- c("similarity","meanDistance")
+    allMeasureNames
 }
 
 ###############################################################################
@@ -15,7 +15,7 @@ connectMap.executeMap <- function(map) {
 
     mapMaster   <- map$master
     mapType     <- mapMaster$type
-    measure     <- map$measure
+    measureName <- map$measureName
     interval    <- map$interval
     #
     datasetName <- map$datasetName
@@ -54,21 +54,21 @@ connectMap.executeMap <- function(map) {
     #
     #
     #
-    mValues <- aggUnitPairData[,measure]					#; print(measure); 
+    mValues <- aggUnitPairData[,measureName]					#; print(measureName); 
     selAggUnitPairData <- aggUnitPairData					#; print(nrow(selAggUnitPairData))
     #
     # If we're basing connectedness on mean distance, get the threshold below which we must remove the pairs
     # and select the aggregation unit pairs to be plotted
     #
     minValue <- 0
-    if (startsWith(measure, "meanDistance")) {
-        minValue <- connectMap.getMeasureLevel (measure, "meanDistance-ge")	#; print(minValue)
+    if (startsWith(measureName, "meanDistance")) {
+        minValue <- connectMap.getMeasureLevel (measureName, "meanDistance-ge")	#; print(minValue)
         selAggUnitPairData <- aggUnitPairData[which(mValues > minValue),]	#; print(nrow(selAggUnitPairData))
     }
     #
     # Sort the pairs so that higher values get plotted last
     #
-    mValues <- selAggUnitPairData[,measure]
+    mValues <- selAggUnitPairData[,measureName]
     selAggUnitPairData <- selAggUnitPairData[order(mValues),]
     #
     # Do the actual plot, starting with the background map
@@ -79,7 +79,7 @@ connectMap.executeMap <- function(map) {
     #
     mapPlot <- mapPlot +
         ggplot2::geom_curve(ggplot2::aes(x=Lon1, y=Lat1, xend=Lon2, yend=Lat2, 
-                                         linewidth=!!rlang::sym(measure), colour=!!rlang::sym(measure)),
+                                         linewidth=!!rlang::sym(measureName), colour=!!rlang::sym(measureName)),
                             data=selAggUnitPairData, 
                             curvature=0.2, alpha=0.75) +
         ggplot2::scale_linewidth_continuous(guide="none", range=c(params$connectCurveWidthMin, params$connectCurveWidthMax)) +          # scale for edge widths
@@ -104,25 +104,25 @@ connectMap.executeMap <- function(map) {
     mapPlot
 }
 
-connectMap.resolveMeasures <- function(params) {
-    measures <- param.getParam ("analysis.measures", params)		#; print(measures)
-    if ("ALL" %in% measures) {
-        measures <- connectMap.getConnectednessMeasures()
+connectMap.resolveMeasureNames <- function(params) {
+    measureNames <- param.getParam ("analysis.measures", params)		#; print(measureNames)
+    if ("ALL" %in% measureNames) {
+        measureNames <- connectMap.getConnectednessMeasures()
     }
     #
     # Create one "expanded" measure for each similarity threshold (e.g. "similarity-ge0.80")
     #
     expanded <- c()
-    for (mIdx in 1:length(measures)) {
-        measure <- measures[mIdx]
-        if (measure == "similarity") {
+    for (mIdx in 1:length(measureNames)) {
+        measureName <- measureNames[mIdx]
+        if (measureName == "similarity") {
             levels <- as.numeric(param.getParam("map.connect.identity.min", params))
             prefix <- "similarity-ge"
-        } else if (measure == "meanDistance") {
+        } else if (measureName == "meanDistance") {
             levels <- as.numeric(param.getParam("map.connect.meanDistance.min", params))
             prefix <- "meanDistance-ge"
         } else {
-            stop(paste("Invalid measure of connectedness:",measure))
+            stop(paste("Invalid measure of connectedness:",measureName))
         }
         for (lIdx in 1 : length(levels)) {
             measureStr <- paste(prefix, format(levels[lIdx], digits=2, nsmall=2), sep="")
@@ -132,7 +132,7 @@ connectMap.resolveMeasures <- function(params) {
     expanded
 }
 
-connectMap.estimateMeasures <- function (ctx, datasetName, sampleSetName, aggLevel, aggUnitData, mapType, measures, params, dataFolder)	{
+connectMap.estimateMeasures <- function (ctx, datasetName, sampleSetName, aggLevel, aggUnitData, mapType, measureNames, params, dataFolder)	{
     dataset <- ctx[[datasetName]]
     sampleMeta   <- dataset$meta
     barcodeData  <- dataset$barcodes
@@ -165,7 +165,7 @@ connectMap.estimateMeasures <- function (ctx, datasetName, sampleSetName, aggLev
             pairDist <- distData[samples1,samples2]					#; print(dim(pairDist))
             #
             # Get the admin division values from the first sample of this unit (assuming the values are the same for all)
-            mValues <- connectMap.estimateDistMeasures (pairDist, measures)		#; print (mValues)
+            mValues <- connectMap.estimateDistMeasures (pairDist, measureNames)		#; print (mValues)
             cValues <- c(gid1, gid2, name1, name2, lat1, lon1, lat2, lon2, mValues)
             measureData <- rbind(measureData, cValues)
         }
@@ -173,7 +173,7 @@ connectMap.estimateMeasures <- function (ctx, datasetName, sampleSetName, aggLev
     aggUnitPairData <- data.frame(measureData)						#; print (dim(aggUnitPairData))
     nc <- ncol(aggUnitPairData)
     aggUnitPairData[,5:nc] <- sapply(aggUnitPairData[,5:nc], as.numeric)		#; print(ncol(aggUnitPairData))
-    colnames(aggUnitPairData) <- c("Unit1", "Unit2", "UnitName1", "UnitName2", "Lat1", "Lon1", "Lat2", "Lon2", measures)
+    colnames(aggUnitPairData) <- c("Unit1", "Unit2", "UnitName1", "UnitName2", "Lat1", "Lon1", "Lat2", "Lon2", measureNames)
     
     # Write out the aggregation unit data to file
     aggDataFilename  <- paste(dataFolder, "/AggregatedPairData-", sampleSetName, "-", aggLevel, ".tab", sep="")
@@ -182,30 +182,30 @@ connectMap.estimateMeasures <- function (ctx, datasetName, sampleSetName, aggLev
     aggUnitPairData
 }
 #
-connectMap.estimateDistMeasures <- function (pairDistData, measures) {
+connectMap.estimateDistMeasures <- function (pairDistData, measureNames) {
     result <- c()
     dist <- unlist(pairDistData)
-    for (mIdx in 1:length(measures)) {
-        measure <- measures[mIdx]
-        if (startsWith(measure, "similarity")) {
-            level <- connectMap.getMeasureLevel (measure, "similarity-ge")	#; print(level)
+    for (mIdx in 1:length(measureNames)) {
+        measureName <- measureNames[mIdx]
+        if (startsWith(measureName, "similarity")) {
+            level <- connectMap.getMeasureLevel (measureName, "similarity-ge")	#; print(level)
             maxDist = 1.0 - level						#; print(maxDist)
             value <- length(which(dist <= maxDist)) / length(dist)
-        } else if (startsWith(measure, "meanDistance")) {
+        } else if (startsWith(measureName, "meanDistance")) {
             value <- 1 - mean(dist)
         } else {
-            stop(paste("Invalid distance connectedness measure:", measure))
+            stop(paste("Invalid distance connectedness measure:", measureName))
         }
         result <- c(result, value)
     }
     result
 }
 #
-connectMap.getMeasureLevel <- function(measure, prefix) {
-    if (!startsWith(measure, prefix)) {
+connectMap.getMeasureLevel <- function(measureName, prefix) {
+    if (!startsWith(measureName, prefix)) {
         return (NA)				#; print("Incorrect prefix")
     }
-    level <- substring(measure,nchar(prefix)+1)	#; print(level)
+    level <- substring(measureName,nchar(prefix)+1)	#; print(level)
     as.numeric(level)
 }
 

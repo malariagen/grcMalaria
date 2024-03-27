@@ -24,8 +24,7 @@ impute.createImputedDataset <- function (ctx) {
         sampleNames <- rownames(meta)
         barcodeData <- filteredDs$barcodes
         barcodeData <- barcodeData[sampleNames,]
-        barcodeMeta <- barcode.getMetadata(ctx, barcodeData)
-        impBarcodeData <- impute.imputeBarcodes (ctx, barcodeData, barcodeMeta)
+        impBarcodeData <- impute.imputeBarcodes (ctx, barcodeData)
         barcode.setDatasetBarcodes (ctx, "imputed", impBarcodeData, store=TRUE)
         print(paste("Computed imputed barcodes - Samples:", nrow(barcodeData), "x SNPs:", ncol(barcodeData)))
     }
@@ -46,8 +45,10 @@ impute.filterSampleData <- function (ctx) {
     imputedMeta 
 }
 #
-impute.imputeBarcodes <- function (ctx, barcodeData, barcodeMeta) {
+impute.imputeBarcodes <- function (ctx, barcodeData) {
     inSampleNames <- rownames(barcodeData)
+    #
+    barcodeMeta <- barcode.getMetadata(ctx, barcodeData)
     refs  <- barcodeMeta$Ref; nrefs <- barcodeMeta$Nonref
     #
     ms <- distance.findMostSimilarSamples (ctx, "filtered")

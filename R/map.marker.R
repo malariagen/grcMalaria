@@ -12,7 +12,7 @@ markerMap.getDiversityMeasures <- function() {
 markerMap.executeMap <- function(map) {
     mapMaster   <- map$master
     mapType     <- mapMaster$type
-    measure     <- map$measure				#; print(measure)
+    measureName <- map$measureName
     interval    <- map$interval				#; print(interval)
     #
     datasetName <- map$datasetName
@@ -67,10 +67,15 @@ markerMap.executeMap <- function(map) {
     #
     selAggUnitData <- aggUnitData				#; print(nrow(selAggUnitData))
     if (mapType != "location") {
-        vals <- aggUnitData[,measure]				#; print(vals)
+        #if (mapType == "sampleCount") {
+        #    measureCol <- "SampleCount"
+        #} else {
+        #    measureCol <- setup.getFeatureColumn  (config, measureName)	#; print(measureName); print(measureCol)
+        #}
+        vals <- aggUnitData[,measureName]			#; print(vals)
         selAggUnitData <- aggUnitData[which(!is.na(vals)),]	#; print(nrow(selAggUnitData))
         if (nrow(selAggUnitData)==0) {
-	    print(paste("Insufficient data for a map of", measure, "for interval", interval$name))
+	    print(paste("Insufficient data for a map of", measureName, "for interval", interval$name))
 	    return()
 	}
     }
@@ -93,7 +98,7 @@ markerMap.executeMap <- function(map) {
     # Get the values to be displyed in the markers (except for the location markers)
     #
     if (mapType != "location") {
-        mValues <- selAggUnitData[,measure]
+        mValues <- selAggUnitData[,measureName]
         valueLabels <- as.character(round(mValues, digits=2))
     }									#; print(valueLabels)
     #
@@ -109,7 +114,7 @@ markerMap.executeMap <- function(map) {
         mMax <- max(mValues); scaleMax <- round(mMax,digits=1); scaleMax <- ifelse(scaleMax<mMax, scaleMax+0.1, scaleMax)
         mMin <- min(mValues); scaleMin <- round(mMin,digits=1); scaleMin <- ifelse(scaleMin>mMin, scaleMin-0.1, scaleMin)  #; print(paste(scaleMin, scaleMax))
         mapPlot <- mapPlot +
-            ggplot2::geom_point(ggplot2::aes(x=Longitude, y=Latitude, fill=!!rlang::sym(measure)),
+            ggplot2::geom_point(ggplot2::aes(x=Longitude, y=Latitude, fill=!!rlang::sym(measureName)),
                                 data=selAggUnitData,
                                 size=pointSizes, shape=21, stroke=params$markerBorderWidth) +
             ggplot2::scale_fill_gradientn(limits=c(scaleMin,scaleMax), colours=markerColours, values=c(0,1))
@@ -133,7 +138,7 @@ markerMap.executeMap <- function(map) {
                                        )))
     } else if (mapType=="drug") {
         mapPlot <- mapPlot +
-            ggplot2::geom_point(ggplot2::aes(x=Longitude, y=Latitude, fill=!!rlang::sym(measure)), 
+            ggplot2::geom_point(ggplot2::aes(x=Longitude, y=Latitude, fill=!!rlang::sym(measureName)), 
 	                        data=selAggUnitData, 
 	                        size=pointSizes, shape=21, stroke=params$markerBorderWidth) +
             ggplot2::scale_fill_gradientn(limits=c(0,1), colours=c("green3","orange2","red3","red3"), values=c(0, 0.2, 0.75, 1))
@@ -148,7 +153,7 @@ markerMap.executeMap <- function(map) {
         }
         scaleMin <- 0; scaleMax <- 1
         mapPlot <- mapPlot +
-            ggplot2::geom_point(ggplot2::aes(x=Longitude, y=Latitude, fill=!!rlang::sym(measure)), 
+            ggplot2::geom_point(ggplot2::aes(x=Longitude, y=Latitude, fill=!!rlang::sym(measureName)), 
 	                        data=selAggUnitData, size=pointSizes, shape=21, stroke=params$markerBorderWidth) +
             ggplot2::scale_fill_gradientn(limits=c(scaleMin,scaleMax), colours=markerColours, values=c(0,1))
     }
@@ -203,29 +208,29 @@ markerMap.getAggUnitMarkerSizes <- function(aggUnitData, params) {
 # Estimation of marker measures (drug resistance and diversity)
 ################################################################################
 #
-markerMap.resolveMeasures <- function(ctx, mapType, params) {
-    measures <- param.getParam ("analysis.measures", params)
+markerMap.resolveMeasureNames <- function(ctx, mapType, params) {
+    measureNames <- param.getParam ("analysis.measures", params)		#; print (measureNames)
     #
     # Get the admin division values from the first sample of this unit (assuming the values are the same for all)
     #
-    config <- ctx$config
+    config <- ctx$config							#; print(names(config))
     if (mapType=="diversity") {
-        if ("ALL" %in% measures) {
-            measures <- markerMap.getDiversityMeasures()
+        if ("ALL" %in% measureNames) {
+            measureNames <- markerMap.getDiversityMeasures()
         }
     } else if (mapType=="drug") {
-        if ("ALL" %in% measures) {
-            measures <- config$drugs
+        if ("ALL" %in% measureNames) {
+            measureNames <- setup.getFeatureNames(config$drugs)
         }
     } else if (mapType=="mutation") {
-        if ("ALL" %in% measures) {
-            measures <- config$drugResistanceMutations
+        if ("ALL" %in% measureNames) {
+            measureNames <- setup.getFeatureNames(config$drugResistanceMutations)	#; print (measureNames)
         }
     }
-    measures
+    measureNames
 }
 #
-markerMap.estimateMeasures <- function(ctx, datasetName, aggLevel, aggUnitData, sampleSetName, mapType, measures, params, dataFolder) {	#;print(measures)
+markerMap.estimateMeasures <- function(ctx, datasetName, aggLevel, aggUnitData, sampleSetName, mapType, measureNames, params, dataFolder) {	#;print(measureNames)
 
     dataset <- ctx[[datasetName]]
     sampleMeta   <- dataset$meta
@@ -237,7 +242,7 @@ markerMap.estimateMeasures <- function(ctx, datasetName, aggLevel, aggUnitData, 
     aggUnitGids <- rownames(aggUnitData)				#; print(aggUnitGids)
     
     # Get the data for all aggregation units
-    measureData <- matrix(nrow=0, ncol=length(measures), dimnames=list(c(),measures))
+    measureData <- matrix(nrow=0, ncol=length(measureNames), dimnames=list(c(), measureNames))
     for (aIdx in 1:length(aggUnitGids)) {
 
         # Get the sample data to be aggregated for this unit
@@ -247,20 +252,19 @@ markerMap.estimateMeasures <- function(ctx, datasetName, aggLevel, aggUnitData, 
         
         # Get the admin division values from the first sample of this unit (assuming the values are the same for all)
         if (mapType=="diversity") {
-            cValues <- markerMap.estimateDiversityMeasures (ctx, datasetName, aggSamples, 
-                                                            barcodeData, measures)
+            cValues <- markerMap.estimateDiversityMeasures (ctx, datasetName, aggSamples, barcodeData, measureNames)
         } else if (mapType=="drug") {
-            cValues <- meta.getResistancePrevalence (ctx, aggSamplesMeta, measures, params)
+            cValues <- meta.getResistancePrevalence (ctx, aggSamplesMeta, measureNames, params)
         } else if (mapType=="mutation") {
-            cValues <- meta.getMutationPrevalence (ctx, aggSamplesMeta, measures, params)
+            cValues <- meta.getMutationPrevalence (ctx, aggSamplesMeta, measureNames, params)
         }                                                           	#; print(cValues)
         measureData <- rbind(measureData, cValues)                 	#; print(measureData)
     }
     measureData <- as.data.frame(measureData)				#;  print(measureData)
     aggUnitData <- cbind(aggUnitData, measureData)			#;  print(dim(aggUnitData))
-    for (mIdx in 1:length(measures)) {
-         measure <- measures[mIdx]
-         aggUnitData[,measure] <- as.numeric(aggUnitData[,measure])
+    for (mIdx in 1:length(measureNames)) {
+         measureName <- measureNames[mIdx]				#;  print(measureName)
+         aggUnitData[,measureName] <- as.numeric(aggUnitData[,measureName])
     }
 
     # Write out the aggregation unit data to file
@@ -273,27 +277,27 @@ markerMap.estimateMeasures <- function(ctx, datasetName, aggLevel, aggUnitData, 
 # Diversity measure estimates from genetic barcodes.
 # Note that this is executed over imputed barcodes, and therefore there is not missingness or het genotypes in the barcodes.
 #
-markerMap.estimateDiversityMeasures <- function (ctx, datasetName, sampleNames, barcodeData, measures) {
+markerMap.estimateDiversityMeasures <- function (ctx, datasetName, sampleNames, barcodeData, measureNames) {
     barcodeData <- barcodeData[sampleNames,]
     result <- c()
-    for (mIdx in 1:length(measures)) {
-        measure <- measures[mIdx]
-        if (measure == "maxHaploFreq") {
+    for (mIdx in 1:length(measureNames)) {
+        measureName <- measureNames[mIdx]
+        if (measureName == "maxHaploFreq") {
             haplos <- apply(barcodeData,1,paste,collapse="")
             value <- max(table(haplos)) / length(haplos)
-        } else if (measure == "haploHet") {
+        } else if (measureName == "haploHet") {
             haplos <- apply(barcodeData,1,paste,collapse="")
             value <- pegas::heterozygosity(haplos)
-        } else if (measure == "meanSnpHet") {
+        } else if (measureName == "meanSnpHet") {
             hets <- apply(barcodeData, 2, pegas::heterozygosity)
             value <- mean(hets)
-        } else if (measure == "medianDistance") {
+        } else if (measureName == "medianDistance") {
             distData <- distance.retrieveDistanceMatrix (ctx, datasetName)
             mat <- as.matrix(distData[sampleNames,sampleNames])
             mat[lower.tri(mat,diag=TRUE)] <- NA
 	    value <- stats::median(mat, na.rm=TRUE)
         } else {
-            stop(paste("Invalid diversity measure:", measure))
+            stop(paste("Invalid diversity measure:", measureNames))
         }
         result <- c(result, value)
     }

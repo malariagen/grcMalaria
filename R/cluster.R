@@ -44,7 +44,7 @@ cluster.findClusters <- function (userCtx, sampleSetName, params) {
         dataFileSuffix <- paste("", sampleSetName, clusterSetName, minIdentityLabel, sep="-")
         dataFolder  <- getOutFolder(ctx$config, sampleSetName, 
                                     c("cluster", "data", clusterSetName, minIdentityLabel))
-    
+
         # Write out cluster definitions
         clustersDataFile <- paste0(dataFolder, "/clusters", dataFileSuffix, ".tab")
         utils::write.table(clustersData, file=clustersDataFile, quote=TRUE, sep="\t", row.names=FALSE, col.names=TRUE)
@@ -58,7 +58,7 @@ cluster.findClusters <- function (userCtx, sampleSetName, params) {
         statsData <- cluster.getClusterStats (ctx, clustersData, memberData)
         statsDataFile <- paste0(dataFolder, "/clusterStats", dataFileSuffix)
         writeSampleData(statsData, statsDataFile)
-        
+
         # Keep the cluster info for storing in the context
         clusterSetInfo <- list(clusterSetName=clusterSetName,
                                sampleSetName=sampleSetName,
@@ -68,7 +68,7 @@ cluster.findClusters <- function (userCtx, sampleSetName, params) {
                                stats=statsData)		# dataframe
         clusterSetInfos[[minIdentityLabel]] <- clusterSetInfo
     }
-    
+
     # Reference the cluster data from the context
     sampleSet$clusters[[clusterSetName]] <- clusterSetInfos	#; print(names(sampleSet$clusters))
 }
@@ -132,54 +132,54 @@ cluster.getClusterPalette <- function(ctx, clusterIds) {
 cluster.getClusterStats <- function(ctx, clustersData, clusterMembers) {
     config <- ctx$config
 
-    clNames <- rownames(clustersData)			#; print(head(clustersData))	#; print(clNames)
+    clNames <- rownames(clustersData)			#; print(head(clustersData)); print(clNames)
     
     # Create a table of stats data
-    statsData <- NULL
-    statsCols <- NULL
+    statsData  <- NULL
+    statsNames <- NULL
     for (clIdx in 1 : length(clNames)) {
-        clName <- clNames[clIdx]
+        clName <- clNames[clIdx]			#; print(clName)
         
         # Get the metadata for this cluster
         clSampleNames <- clusterMembers$Sample[which(clusterMembers$Cluster==clName)]
         clSampleMeta <- ctx$unfiltered$meta[clSampleNames,]
         
         # Get the sample count first
-        statsCols <- "Count"
+        statsNames <- "Count"
         statValues <- length(clSampleNames)
 
         # Get the drug resistance prevalences for this cluster
-        resistanceColumns  <- config$cluster.stats.drugs
-        if (!is.null(resistanceColumns)) { 
-            clPrevalence <- meta.getResistancePrevalence (ctx, clSampleMeta, resistanceColumns)
+        drugNames  <- setup.getFeatureNames(config$cluster.stats.drugs)
+        if (!is.null(drugNames)) { 
+            clPrevalence <- meta.getResistancePrevalence (ctx, clSampleMeta, drugNames)
             clPrevalence <- format(as.numeric(clPrevalence), digits=2, nsmall=2)
-            statsCols <- c(statsCols, resistanceColumns)
+            statsNames  <- c(statsNames, drugNames)
             statValues <- c(statValues, clPrevalence)
         }
 
         # Get the counts for this cluster
-        countColumns  <- config$cluster.stats.alleleCounts
-        if (!is.null(countColumns)) { 
-            clCounts <- meta.getValueCounts (clSampleMeta, countColumns)
-            statsCols <- c(statsCols, countColumns)
+        countFeatures  <- setup.getFeatureNames(config$cluster.stats.alleleCounts)
+        if (!is.null(countFeatures)) { 
+            clCounts <- meta.getValueCounts (clSampleMeta, countFeatures)
+            statsNames <- c(statsNames, countFeatures)
             statValues <- c(statValues, clCounts)
         }
 
         # Get the mutation prevalences for this cluster
-        mutationColumns  <- config$cluster.stats.mutations
-        if (!is.null(mutationColumns)) { 
-            clPrevalence <- meta.getMutationPrevalence (ctx, clSampleMeta, mutationColumns)
+        mutationNames  <- setup.getFeatureNames(config$cluster.stats.mutations)
+        if (!is.null(mutationNames)) { 
+            clPrevalence <- meta.getMutationPrevalence (ctx, clSampleMeta, mutationNames)
             clPrevalence <- format(as.numeric(clPrevalence), digits=2, nsmall=2)
-            statsCols <- c(statsCols, mutationColumns)
+            statsNames <- c(statsNames, mutationNames)
             statValues <- c(statValues, clPrevalence)
         }
 
         # Stick the joined row data to the Stats table
-        names(statValues) <- statsCols
+        names(statValues) <- statsNames
         statsData <- rbind(statsData, statValues)
     }
     statsData <- data.frame(statsData)
-    colnames(statsData) <- statsCols
+    colnames(statsData) <- statsNames
     rownames(statsData) <- clNames
     statsData
 }

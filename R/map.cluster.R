@@ -10,7 +10,7 @@ clusterMap.executeMap <- function (map) {
 
     mapMaster   <- map$master
     mapType     <- mapMaster$type
-    measure     <- map$measure
+    measureName <- map$measureName
     interval    <- map$interval
     #
     datasetName <- map$datasetName
@@ -41,7 +41,7 @@ clusterMap.executeMap <- function (map) {
     #
     # Parse the measure to get the cluster name and the minIdentity level
     #
-    mParts <- clusterMap.parseMeasure (measure)					#; print(measure)
+    mParts <- clusterMap.parseMeasureName (measureName)				#; print(measureName)
     minIdentity <- mParts$minIdentity						#; print(minIdentity)
     clusterId <- mParts$clusterId						#; print(clusterId)		
     #
@@ -99,7 +99,7 @@ clusterMap.executeMap <- function (map) {
 #
 ################################################################################
 #
-clusterMap.resolveMeasures <- function(clusterSets) {
+clusterMap.resolveMeasureNames <- function(clusterSets) {
     expanded <- c()
     minIdentityLabels <- names(clusterSets)
     setCount <- length(minIdentityLabels)
@@ -118,12 +118,12 @@ clusterMap.resolveMeasures <- function(clusterSets) {
 #
 ################################################################################
 #
-clusterMap.parseMeasure <- function(measure) {
+clusterMap.parseMeasureName <- function(measureName) {
     prefix <- CLUSTER_MAP_PREFIX
-    if (!startsWith(measure, prefix)) {
+    if (!startsWith(measureName, prefix)) {
         return (NULL)				#; print("Incorrect prefix")
     }
-    suffix <- substring(measure,nchar(prefix)+1)
+    suffix <- substring(measureName,nchar(prefix)+1)
     sParts <- unlist(strsplit(suffix, "/"))
     list(minIdentity=as.numeric(sParts[1]), clusterId=sParts[2])
 }
