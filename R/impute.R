@@ -24,7 +24,7 @@ impute.createImputedDataset <- function (ctx) {
         sampleNames <- rownames(meta)
         barcodeData <- filteredDs$barcodes
         barcodeData <- barcodeData[sampleNames,]
-        impBarcodeData <- impute.imputeBarcodes (ctx, barcodeData)
+        impBarcodeData <- impute.imputeBarcodes (ctx, barcodeData)			#; print(head(impBarcodeData))
         barcode.setDatasetBarcodes (ctx, "imputed", impBarcodeData, store=TRUE)
         print(paste("Computed imputed barcodes - Samples:", nrow(barcodeData), "x SNPs:", ncol(barcodeData)))
     }

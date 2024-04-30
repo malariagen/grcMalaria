@@ -6,7 +6,7 @@ distance.getCachedDistanceMatrixFilename <- function (ctx, datasetName) {
     distDataFile
 }
 
-distance.initializeDistanceMatrix <- function (ctx, datasetName) {
+distance.initializeDistanceMatrix <- function (ctx, datasetName) {		#; print(paste("Initializing distance Matrix: ", datasetName))
     distDataFile <- distance.getCachedDistanceMatrixFilename(ctx, datasetName)
     if (!rdaFileExists(distDataFile)) {
         distData <- distance.createDistanceMatrix(ctx, datasetName)
@@ -14,9 +14,9 @@ distance.initializeDistanceMatrix <- function (ctx, datasetName) {
 }
 
 distance.retrieveDistanceMatrix <- function (ctx, datasetName) {
-    distDataFile <- distance.getCachedDistanceMatrixFilename(ctx, datasetName)
-    if (rdaFileExists(distDataFile)) {
-        distData <- readRdaMatrix(distDataFile)
+    distDataFile <- distance.getCachedDistanceMatrixFilename(ctx, datasetName)	#; print(distDataFile)
+    if (rdaFileExists(distDataFile)) {						#; print("RDA file exists")
+        distData <- readRdaMatrix(distDataFile)					#; print(distData[1:10,1:10])
     } else {
         distData <- distance.createDistanceMatrix(ctx, datasetName)
     }
@@ -29,11 +29,12 @@ distance.retrieveDistanceMatrix <- function (ctx, datasetName) {
     distData
 }
 
-distance.createDistanceMatrix <- function (ctx, datasetName) {
+distance.createDistanceMatrix <- function (ctx, datasetName) {		#; print(paste("Creating distance Matrix: ", datasetName))
     dataset <- ctx$rootCtx[[datasetName]]
-    genoData <- dataset$genos
+    genoData <- dataset$genos						#; print(genoData[1:10,30:40])
     print(paste("Computing pairwise distances for",nrow(genoData),"samples using",ncol(genoData),"SNPs"))
-    distData <- computeDistances (as.matrix(genoData))
+    genoMat <- as.matrix(genoData)					#; print(genoMat[1:10,1:10])
+    distData <- computeDistances (genoMat)				#; print(head(distData))
     distDataFile <- distance.getCachedDistanceMatrixFilename(ctx, datasetName)
     writeRdaMatrix(distData, distDataFile)
     distData

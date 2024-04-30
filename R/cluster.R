@@ -18,10 +18,15 @@ cluster.findClusters <- function (userCtx, sampleSetName, params) {
     method            <- param.getParam ("cluster.method", params)		#; print(method)
     print(paste("Clustering Method:",method))
     
+    dataRootFolder  <- getOutFolder(ctx$config, sampleSetName, c("cluster", "data", clusterSetName))
+    if (file.exists(dataRootFolder)) {
+        unlink(dataRootFolder, recursive=TRUE)
+    }
+
     clusterSetInfos <- list()
     for (idIdx in 1:length(minIdentityLevels)) {
         minIdentity <- minIdentityLevels[idIdx]
-        minIdentityLabel <- getMinIdentityLabel (minIdentity)
+        minIdentityLabel <- getMinIdentityLabel (minIdentity)			; print(minIdentityLabel)
 
         # Determine what clustering approach must be used.
         # TODO - At the moment, only graph-based clustering methods are implemented, but this may be extended later.
@@ -168,7 +173,7 @@ cluster.getClusterStats <- function(ctx, clustersData, clusterMembers) {
         # Get the mutation prevalences for this cluster
         mutationNames  <- setup.getFeatureNames(config$cluster.stats.mutations)
         if (!is.null(mutationNames)) { 
-            clPrevalence <- meta.getMutationPrevalence (ctx, clSampleMeta, mutationNames)
+            clPrevalence <- meta.getMutationPrevalence (ctx, clSampleMeta, mutationNames, params=NULL)
             clPrevalence <- format(as.numeric(clPrevalence), digits=2, nsmall=2)
             statsNames <- c(statsNames, mutationNames)
             statValues <- c(statValues, clPrevalence)
@@ -203,9 +208,9 @@ cluster.findClustersFromGraph <- function (ctx, clusterSetName, method, minIdent
     config <- ctx$config
 
     # Get a table of pairwise distance/identity values for all pairs of samples that meet the threshold
-    distData  <- distance.retrieveDistanceMatrix (ctx, datasetName)		#; print(nrow(distData))
+    distData  <- distance.retrieveDistanceMatrix (ctx, datasetName)		#; print(head(distData))#; print(nrow(distData))
 
-    edgeData <- clusterGraph.getPairwiseIdentityData (distData, minIdentity, params)
+    edgeData <- clusterGraph.getPairwiseIdentityData (distData, minIdentity, params)	#; print(head(edgeData))
     edgeData$weight <- (edgeData$Identity * edgeData$Identity)			#; print(nrow(edgeData))
     
     nodeNames <- unique(c(as.character(edgeData$Sample1),as.character(edgeData$Sample2)))
