@@ -32,11 +32,6 @@ clusterShareMap.executeMap <- function (map) {
     plotTitle <- sampleSet$name
     baseMapInfo <- mapMaster$baseMapInfo
     #
-    # Get the output folders
-    #
-    dataFolder <- mapMaster$dataFolder
-    plotFolder <- mapMaster$plotFolder
-    #
     # Silly trick to make the package checker happy... :-(
     lon <- lat <- label <- x <- y <- alpha <- NULL
     #

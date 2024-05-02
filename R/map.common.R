@@ -278,9 +278,11 @@ map.getMapFilepath <- function (map, params) {
         minIdentityLabel <- getMinIdentityLabel(mParts$minIdentity)			#;print(minIdentityLabel)
         clusterSet <- mapMaster$clusterSets[[minIdentityLabel]]				#;print(names(clusterSet))
         clusterSetName <- clusterSet$clusterSetName					#;print(clusterSetName)
-        plotFolder <- paste(plotFolder, clusterSetName, sep="/")			#;print(plotFolder)
+        #plotFolder <- paste(plotFolder, clusterSetName, sep="/")			#;print(plotFolder)
+        plotFolder <- getSubFolder(plotFolder, clusterSetName)				#;print(plotFolder)
         if (mapType %in% c("clusterPrevalence")) {
-            plotFolder <- paste(plotFolder, minIdentityLabel, sep="/")			#;print(plotFolder)
+            #plotFolder <- paste(plotFolder, minIdentityLabel, sep="/")			#;print(plotFolder)
+            plotFolder <- getSubFolder(plotFolder, minIdentityLabel)			#;print(plotFolder)
         }
     }
     if (mapType %in% c("barcodeFrequency","clusterPrevalence","clusterSharing")) {

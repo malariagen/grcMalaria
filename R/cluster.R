@@ -18,7 +18,7 @@ cluster.findClusters <- function (userCtx, sampleSetName, params) {
     method            <- param.getParam ("cluster.method", params)		#; print(method)
     print(paste("Clustering Method:",method))
     
-    dataRootFolder  <- getOutFolder(ctx$config, sampleSetName, c("cluster", "data", clusterSetName))
+    dataRootFolder  <- getOutFolder(ctx$config, sampleSetName, c("cluster", "data", clusterSetName), create=FALSE)
     if (file.exists(dataRootFolder)) {
         unlink(dataRootFolder, recursive=TRUE)
     }
