@@ -36,18 +36,18 @@ geno.setDatasetGenotypes <- function (ctx, datasetName, genos, store=TRUE) {
 # Missing values are NA and het calls are 0.5
 #
 geno.convertAllelesToGenos <- function(ctx, alleleData) {
-    alleleMeta <- barcode.getMetadata (ctx, alleleData)
+    alleleMeta <- barcode.getMetadata (ctx, alleleData)	#; print(head(alleleMeta))
     #
     # Change to 0-1 genotypes
     #
     sampleCount <- nrow(alleleData)
-    snpCount    <- ncol(alleleData)
+    snpCount    <- ncol(alleleData)			#; print(snpCount)
     genoData <- data.frame(matrix(nrow=sampleCount, ncol=0))
     #
     for (pIdx in 1:snpCount) {
-        ref  <- alleleMeta$Ref[pIdx]
-        nref <- alleleMeta$Nonref[pIdx]
-        posNt <- alleleData[,pIdx]
+        ref  <- alleleMeta$Ref[pIdx]			#; print(ref)
+        nref <- alleleMeta$Alternative[pIdx]		#; print(nref)
+        posNt <- alleleData[,pIdx]			#; print(posNt)
         
         # Don't need this code, alleles were checked when barcodes were decomposed.
         #validAlleles <- c("A","C","G","T","X","N")
@@ -70,7 +70,7 @@ geno.convertAllelesToGenos <- function(ctx, alleleData) {
         genos[which(posNt == ref)]  <- 0.0
         genos[which(posNt == nref)] <- 1.0
         genos[which(posNt == "N")]  <- 0.5
-        genoData <- cbind(genoData, genos)
+        genoData <- cbind(genoData, genos)		#; print(genos)
     }
   
     # Name the rows and columns

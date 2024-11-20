@@ -36,8 +36,6 @@ barcode.setDatasetBarcodes <- function (ctx, datasetName, barcodes, store=TRUE) 
 # Barcode retrieval, validating and filtering
 ################################################################################
 barcode.initializeBarcodes <- function (ctx, datasetName) {
-    GRC_BARCODE_COL <- "GenBarcode"			# TODO  This may need to be configured globally
-
     config <- ctx$config				#; print(config)
     dataset <- ctx[[datasetName]]
     barcodeDataFile <- barcode.getBarcodeDataFile (ctx, datasetName)
@@ -49,8 +47,8 @@ barcode.initializeBarcodes <- function (ctx, datasetName) {
         #
         # Get barcode alleles, and discard samples that have too much missingness
         #
-        barcodeMeta <- config$barcodeMeta		#; print (barcodeMeta)        
-        barcodeData <- barcode.getAllelesFromBarcodes (dataset$meta, GRC_BARCODE_COL, barcodeMeta)
+        barcodeMeta <- config$barcodeMeta		#; print (barcodeMeta)
+        barcodeData <- barcode.getBarcodeAlleles (dataset$meta, barcodeMeta)
         print(paste("Barcode alleles - Samples:", nrow(barcodeData), "x SNPs:", ncol(barcodeData)))
         print("Validating barcodes")
         barcode.validateBarcodeAlleles (barcodeData, barcodeMeta)
@@ -90,21 +88,28 @@ barcode.initializeBarcodes <- function (ctx, datasetName) {
     ctx
 }
 #
-# Convert barcodes into a dataframe of alleles, filtering both samples and barcode SNPs by typability
+# Convert barcodes into a dataframe of alleles
 #
-barcode.getAllelesFromBarcodes <- function(sampleMetadata, barcodeColumnName, barcodeMeta) {	#;print (head(barcodeMeta))
-    barcodes <- toupper(as.character(sampleMetadata[,barcodeColumnName]))
-    names(barcodes) <- rownames(sampleMetadata)
+barcode.getBarcodeAlleles <- function(sampleMetadata, barcodeFeatures) {	#;print (head(barcodeFeatures))
 
-    # Eliminate all samples without barcode
-    validBcodeIdx <- which(!(barcodes %in% c("-","<NA>")))
-    barcodes <- barcodes[validBcodeIdx]		#; print (length(barcodes)); print (barcodes[1:10])
+    colNames <- barcodeFeatures$ColumnName
+    alleleData <- data.frame(SampleId=rownames(sampleMetadata))
+    for (i in 1:length(colNames)) {
+        colName <- colNames[i]
+        genos <- toupper(as.character(sampleMetadata[,colName]))
+        genos[which(genos=="*")] <- "N"
+        genos[which(genos=="-")] <- "X"
+        genos[which(genos=="<NA>")] <- "X"
+        alleleData <- cbind(alleleData, genos)
+    }
+    alleleData <- alleleData[,2:ncol(alleleData)]
+    rownames(alleleData) <- rownames(sampleMetadata);
+    colnames(alleleData) <- colNames;
     
-    # Split the barcodes into constituent alleles (extractBarcodeAlleles() is in a .cpp source)
-    #print (rownames(barcodeMeta))
-    alleleMat <- extractBarcodeAlleles (barcodes, rownames(barcodeMeta))
-    alleleData <- data.frame(alleleMat)
-    rownames(alleleData) <- names(barcodes);
+    missingCount <- rowSums(alleleData=="X")
+    validIdx <- which(missingCount < ncol(alleleData))
+    alleleData <- alleleData[validIdx,]
+
     alleleData
 }
 #
@@ -120,7 +125,8 @@ barcode.validateBarcodeAlleles <- function (barcodeData, barcodeMeta) {
     for (sIdx in 1:snpCount) {
         calls <- barcodeData[,sIdx]				#; print(calls)
         snpMeta <- barcodeMeta[sIdx,]				#; print(snpMeta)
-        snpAlleles <- c(snpMeta$Ref,snpMeta$Nonref,"X","N")	#; print(snpAlleles)
+        snpAlleles <- c(snpMeta$Reference, snpMeta$Alternative,
+        		"X","N")				#; print(snpAlleles)
         badIdx <- which(!(calls %in% snpAlleles))		#; print(badIdx)
         if (length(badIdx) > 0) {
             for (bIdx in badIdx) {

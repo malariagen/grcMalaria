@@ -14,7 +14,7 @@ ui.makeSingleMap <- function (ctx, sampleSet, type,
         stop (paste("Unsupported map type for UI:", type))
     }
     task <- paste0("map/", type)
-    config <- ctx$config
+    config <- ctx$config										#; print (config)
 
     params <- param.makeParameterList (ctx, task, 
                   timePeriods=NULL, aggregate=aggregate, minAggregateCount=minAggregateCount, 
@@ -33,17 +33,22 @@ ui.makeSingleMap <- function (ctx, sampleSet, type,
         params$analysis.measures <- "SampleCount"
         
     } else if (type=="drug") {
-        params$analysis.measures <- param.getArgParameter (mArg, "measure", type="character", validValues=c("ALL",config$drugs))
+        params$analysis.measures <- param.getArgParameter (mArg, "measure", type="character", 
+                                                           validValues=c("ALL", setup.getFeatureNames(config$drugs)))
 
     } else if (type=="mutation") {
-        params$analysis.measures <- param.getArgParameter (mArg, "measure", type="character", validValues=c("ALL",config$drugResistanceMutations))
+        params$analysis.measures <- param.getArgParameter (mArg, "measure", type="character", 
+                                                           validValues=c("ALL", setup.getFeatureNames(config$drugResistanceMutations)))
         
     } else if (type=="alleleProp") {
         params$analysis.measures <- param.getArgParameter (mArg, "measure", type="character", 
-                                            validValues=c("ALL", config$countColumns, config$amplificationColumns, config$drugResistancePositions))
+                                                           validValues=c("ALL", setup.getFeatureNames(config$countColumns), 
+                                                                         setup.getFeatureNames(config$amplificationColumns), 
+                                                                         setup.getFeatureNames(config$drugResistancePositions)))
         
     } else if (type=="diversity") {
-        params$analysis.measures <- param.getArgParameter (mArg, "measure", type="character", validValues=c("ALL",markerMap.getDiversityMeasures()))
+        params$analysis.measures <- param.getArgParameter (mArg, "measure", type="character", 
+                                                           validValues=c("ALL", markerMap.getDiversityMeasures()))
         
     }
 

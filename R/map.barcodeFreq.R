@@ -6,7 +6,7 @@ barcodeFreqMap.executeMap <- function (map) {
 
     mapMaster   <- map$master
     mapType     <- mapMaster$type
-    measure     <- map$measure
+    measureName <- map$measureName
     interval    <- map$interval
     #
     datasetName <- map$datasetName
@@ -38,7 +38,7 @@ barcodeFreqMap.executeMap <- function (map) {
     #
     # Parse the measure to get the visualization type and the minIdentity level
     #
-    visType <- barcodeFreqMap.getVisualizationTypeFromMeasure (measure)		#; print(visType)
+    visType <- barcodeFreqMap.getVisualizationTypeFromMeasure (measureName)	#; print(visType)
     #
     # Now compute the aggregation units, the values to be plotted, and make the map
     # Get the aggregated data for the aggregation units
@@ -82,7 +82,7 @@ barcodeFreqMap.executeMap <- function (map) {
 #
 # We use visualization types to specify different graphic renditions from the same analyses: "pie" or "bar" markers
 #
-barcodeFreqMap.resolveMeasures <- function(clusterSets, params) {		#; print(names(params))
+barcodeFreqMap.resolveMeasureNames <- function(clusterSets, params) {		#; print(names(params))
     visTypes <- param.getParam ("map.cluster.visualizations", params)		#; print(visTypes) # "pie" or "bar"
     measureLabels <- paste("barcodeFrequency", visTypes, sep="/")		#; print(measureLabels)
     measureLabels
@@ -90,8 +90,8 @@ barcodeFreqMap.resolveMeasures <- function(clusterSets, params) {		#; print(name
 #
 ################################################################################
 #
-barcodeFreqMap.getVisualizationTypeFromMeasure <- function(measure) {		#; print(measure)
-    sParts <- unlist(strsplit(measure, "/"))
+barcodeFreqMap.getVisualizationTypeFromMeasure <- function(measureName) {		#; print(measure)
+    sParts <- unlist(strsplit(measureName, "/"))
     visType=sParts[2]
     visType
 }

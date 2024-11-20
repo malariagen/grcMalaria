@@ -18,7 +18,6 @@
 #'  \item user guide {\url{https://genremekong.org/tools/grcmalaria-r-package-user-guide}}
 #' }
 #'
-#' @docType package
 #' @name grcMalaria
 NULL
 
@@ -53,9 +52,9 @@ NULL
 #'}
 #'
 #
-loadGrc <- function (file, sheet="GRC", species="Pf", version="1.4") {
-  grcData <- grcData.load (file, sheet, species, version)
-  grcData
+loadGrc <- function (file, sheet=NULL, species=NULL, version=NULL) {
+    grcData <- grcData.load (file, sheet, species, version)
+    grcData
 }
 
 #############################################################

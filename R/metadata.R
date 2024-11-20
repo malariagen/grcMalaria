@@ -81,7 +81,8 @@ meta.getResistancePrevalence <- function (ctx, sampleMeta, drugNames, params=NUL
     result <- c()
     for (mIdx in 1:length(drugNames)) {
         drugName <- drugNames[mIdx]			#; print(drugName)
-        phenos <- sampleMeta[,drugName]			#; print(phenos)
+        drugCol <- setup.getFeatureColumn (ctx$config, drugName)	#; print(drugCol)
+        phenos <- sampleMeta[,drugCol]			#; print(phenos)
         rCount <- length(which(phenos=="Resistant"))	#; print(rCount)
         sCount <- length(which(phenos=="Sensitive"))	#; print(sCount)
         totalCount <- rCount + sCount
@@ -98,87 +99,62 @@ meta.getResistancePrevalence <- function (ctx, sampleMeta, drugNames, params=NUL
 }
 #
 ###############################################################################
-# Metadata Statistics - Amino alleles
+# Metadata Statistics - V2
 ################################################################################
 #
+# Mutation Prevalence
 #
-#
-meta.getPositionOfMutation <- function (mutation) {
-    positionName <- substring(mutation, 1, nchar(mutation)-1)
-    positionName
-}
-#
-meta.getAlleleOfMutation <- function (mutation) {
-    allele <- substring(mutation, nchar(mutation), nchar(mutation))
-    allele
-}
-#
-meta.getPositionData <- function (config, positionName) {
-    posData <- list()
-    mParts <- unlist(strsplit(positionName, "_"))
-    posData$gene <- mParts[1]
-    posData$ref  <- substring(mParts[2], 1, 1)
-    posData$pos  <- as.integer(substring(mParts[2], 2))
-    #
-    # FUTURE
-    #columnName <- paste("M", positionName, sep="_")
-    #
-    # RIGHT NOW, BODGE: "crt_C72" must give column name "PfCRT:72"
-    #
-    posData$columnName <- paste0(config$species, toupper(posData$gene), ":", posData$pos)
-    posData
-}
-#
-###############################################################################
-# Metadata Statistics - Prevalence
-################################################################################
-#
-meta.getMutationPrevalence <- function (ctx, sampleMeta, mutationNames, params) {
-    positionNames <- c()
-    alleles <- c()
-    for (mIdx in 1:length(mutationNames)) {
-        mut <- mutationNames[mIdx]
-        pos <- meta.getPositionOfMutation (mut)
-        all <- meta.getAlleleOfMutation (mut)
-        positionNames <- c(positionNames, pos)
-        alleles <- c(alleles, all)
-    }											#; print(positionNames); print(alleles)
-    prevData <- meta.getAllelePrevalence (ctx, sampleMeta, positionNames, alleles)	#; print(prevData)
-    prevData
-}
-#
-meta.getAllelePrevalence <- function (ctx, sampleMeta, positionNames, alleles, params=NULL) {
-    if (is.null(positionNames) || (length(positionNames) == 0)) {
-        return (c());
-    }
+meta.getMutationPrevalence <- function (ctx, sampleMeta, mutationNames, params) {	#; print(mutationNames)
+
     aggregateCountMin <- 1
     if (!is.null(params)) {
         aggregateCountMin <- param.getParam ("map.aggregateCountMin", params)
     }  							#; print(aggregateCountMin)
-    result <- c()
-    for (mIdx in 1:length(positionNames)) {
-        positionName <- positionNames[mIdx]		#; print(positionName)
-        allele <- alleles[mIdx]				#; print(allele)
-
-        posData <- meta.getPositionData (ctx$config, positionName)
-        columnName <- posData$columnName	 	#; print(columnName)
-        
-        # Remove hets and missing
-        genos <- sampleMeta[,columnName]		#; print(genos)
-        genos <- genos[which(!(genos %in% c("*","-")))]	#; print(genos)
-        genos <- genos[which(nchar(genos)==1)]	    	#; print(genos)
-
-        totalCount <- length(genos)
-        preval <- NA
-        if (totalCount >= aggregateCountMin) {
-            alleleCount <- length(which(genos==allele))	#; print(alleleCount)
-            preval <- alleleCount / totalCount
+    prevalenceData <- c()
+    for (mIdx in 1:length(mutationNames)) {
+        mutName <- mutationNames[mIdx]				#; print(mutName)
+        mutData <- meta.getPositionData (ctx$config, mutName)
+        if (is.null(mutData)) {
+            stop(paste("Invalid mutation specified:",mutName))
         }
-        result <- c(result, preval)			#; print(preval)
+        columnName <- mutData$columnName			#; print(columnName)
+        allele  <- mutData$alt
+        #
+        # Get genotypes and Remove hets and missing
+        genos <- sampleMeta[,columnName]			#; print(genos)
+        genos <- genos[which(!(genos %in% c("*","-","X","N")))]	#; print(genos)
+        genos <- genos[which(nchar(genos)==1)]	    		#; print(genos)
+        #
+        # Calculate the fraction of the desirted allele
+        #
+        totalCount <- length(genos)
+        prevalence <- NA
+        if (totalCount >= aggregateCountMin) {
+            alleleCount <- length(which(genos==allele))		#; print(alleleCount)
+            prevalence <- alleleCount / totalCount
+        }
+        prevalenceData <- c(prevalenceData, prevalence)		#; print(prevalence)
     }
-    result <- as.numeric(result)
-    names(result) <- paste(positionNames, alleles, sep="")
-    result
+    prevalenceData <- as.numeric(prevalenceData)
+    names(prevalenceData) <- paste(mutationNames)
+    prevalenceData
+}
+#
+# Statistics - Amino alleles
+#
+meta.getPositionData <- function (config, posName) {		#; print(posName)
+    feat <- config$features					#; print(rownames(feat))
+    if (!(posName %in% rownames(feat))) {
+        return (NULL)
+    }
+    posData <- list()
+    posData <- list(
+        featureName=feat[posName,"FeatureName"],
+        columnName=feat[posName,"ColumnName"],
+        ref=feat[posName,"Reference"],
+        alt=feat[posName,"Alternative"]
+    )
+    posData
 }
 #
 ###############################################################################

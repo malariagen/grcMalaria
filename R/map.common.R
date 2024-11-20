@@ -28,7 +28,7 @@ map.execute <- function(userCtx, sampleSetName, mapType, params) {		#;print(mapT
         #
         mapPlot <- map.generateMapPlot (mapSpec, params)
         if (is.null(mapPlot)) {
-            msg <- paste("Skipping map:", mapSpec$master$type, mapSpec$measure)
+            msg <- paste("Skipping map:", mapSpec$master$type, mapSpec$measureName)
             if (!is.null(mapSpec$interval)) {
                  msg <- paste(msg, mapSpec$interval$name)
             }
@@ -57,6 +57,21 @@ map.execute <- function(userCtx, sampleSetName, mapType, params) {		#;print(mapT
     }
 }
 #
+# 20241120 - The following piece of code was introduced in order to avoid warnings from cowplot library when invoking
+# legendPlot <- cowplot::get_legend(mapPlot)
+#
+map.getLegend <- function (mapPlot) {
+    legends <- cowplot::get_plot_component(mapPlot, "guide-box", return_all=TRUE)
+    nonzero <- vapply(legends, \(x) !inherits(x, "zeroGrob"), TRUE)
+    idx <- which(nonzero)
+    if (length(idx) > 0) {
+        legendPlot <- legends[[idx[1]]]
+    } else {
+        legendPlot <- legends[[1]]
+    }
+    legendPlot
+}
+#
 map.processLegend <- function(mapPlot, mapSpec, params) {			#; print(mapSpec$master$type)
     legendInfo <- NULL
     if (mapSpec$master$type %in% c("drug", "mutation", "alleleProp", "diversity", "sampleCount", "location")) {
@@ -71,7 +86,10 @@ map.processLegend <- function(mapPlot, mapSpec, params) {			#; print(mapSpec$mas
             #
             # Separate the legend from the map, and set the map without the legend to be the plot to be wirtten to file
             #
-            legendPlot <- cowplot::get_legend(mapPlot)				#; gtable::gtable_show_layout(legendPlot)
+            mapPlot <- mapPlot + ggplot2::theme(legend.position="right")
+            #
+            legendPlot <- map.getLegend(mapPlot)
+            #
             mapPlot <- mapPlot + ggplot2::theme(legend.position="none")
             #
             # Find out the size of the legend (note, we write it out so we have a device for the size estimation)
@@ -127,7 +145,7 @@ map.createMapSpecs <- function(userCtx, sampleSetName, mapType, params) {		#;pri
                 aggLevel <- as.integer(aggLevels[aIdx])				#; print(paste("aggLevel:",aggLevel))
                 aggUnitData <- map.getAggregationUnitData (mapCtx, datasetName, aggLevel, sampleSetName, 
 		                   mapType, params, mapMaster$dataFolder)	#; print(aggUnitData)
-                measures    <- mapMaster$measures				#; print(paste(length(measures),"measures:",measures))
+                measureNames    <- mapMaster$measureNames			#; print(paste(length(measureNames),"measureNames:",measureNames))
                 #
                 aggUnitPairData <- NULL
                 if (map.isMarkerMap(mapType)) {
@@ -136,17 +154,16 @@ map.createMapSpecs <- function(userCtx, sampleSetName, mapType, params) {		#;pri
                     #
                     if (!(mapType %in% c("sampleCount","location"))) {
 		        aggUnitData <- markerMap.estimateMeasures (mapCtx, datasetName, aggLevel, aggUnitData, sampleSetName, 
-		                                                   mapType, measures, params, mapMaster$dataFolder)	#; print(aggUnitData)
+		                                                   mapType, measureNames, params, mapMaster$dataFolder)	#; print(aggUnitData)
 		    }
                 } 
                 if (mapType=="connect") {
 		    aggUnitPairData <- connectMap.estimateMeasures (mapCtx, datasetName, sampleSetName, aggLevel, aggUnitData, 
-		    	                                            mapType, measures, params, mapMaster$dataFolder)	#; print(aggUnitPairData)
+		    	                                            mapType, measureNames, params, mapMaster$dataFolder)	#; print(aggUnitPairData)
 		}
                 #
-                #measures <- measures[1]
-                for (mIdx in 1:length(measures)) {
-                    measure <- measures[mIdx]			#; print(measure)
+                for (mIdx in 1:length(measureNames)) {
+                    measureName <- measureNames[mIdx]			#; print(measure)
                     #
                     mapSpec <- list()
                     mapSpec$master      <- mapMaster
@@ -154,7 +171,7 @@ map.createMapSpecs <- function(userCtx, sampleSetName, mapType, params) {		#;pri
                     mapSpec$datasetName <- datasetName
                     mapSpec$aggregation <- aggLevel
                     mapSpec$interval    <- interval
-                    mapSpec$measure     <- measure
+                    mapSpec$measureName <- measureName
                     mapSpec$aggUnitData <- aggUnitData
                     mapSpec$aggUnitPairData <- aggUnitPairData
                     mapSpec$plotFile    <- map.getMapFilepath(mapSpec, params)
@@ -214,16 +231,16 @@ map.createMapMaster <- function (userCtx, sampleSetName, mapType, params) {		#; 
     # For a given measure, all plots for this sample set use the same palette, otherwise the viewer will be confused when looking at multiple maps.
     #
     if (mapType %in% c("drug", "mutation", "diversity")) {
-        measures <- markerMap.resolveMeasures (userCtx, mapType, params)
+        measureNames <- markerMap.resolveMeasureNames (userCtx, mapType, params)	#; print(measureNames)
 
     } else if (mapType=="alleleProp") {
-        measures <- pieMap.resolveMeasures (userCtx, sampleSetName, params)
+        measureNames <- pieMap.resolveMeasureNames (userCtx, sampleSetName, params)
         
     } else if (mapType=="connect") {
-        measures <- connectMap.resolveMeasures(params)
+        measureNames <- connectMap.resolveMeasureNames(params)
 
     } else if (mapType %in% c("location", "sampleCount")) {
-        measures <- param.getParam ("analysis.measures", params)
+        measureNames <- param.getParam ("analysis.measures", params)
         
     } else if (mapType %in% c("clusterPrevalence","clusterSharing")) {
         # Add one measure for each similarity threshold (e.g. "clusterPrevalence-ge0.80" or "clusterSharing-ge0.80")
@@ -231,16 +248,16 @@ map.createMapMaster <- function (userCtx, sampleSetName, mapType, params) {		#; 
         mapMaster$clusterSets <- cluster.getClustersSetFromContext (userCtx, sampleSetName, clusterSetName)
         mapMaster$clusterSetPalettes <- clusterMap.getClusterSetsPalettes (userCtx, mapMaster$clusterSets)
         if (mapType=="clusterPrevalence") {
-            measures <- clusterMap.resolveMeasures (mapMaster$clusterSets)
+            measureNames <- clusterMap.resolveMeasureNames (mapMaster$clusterSets)
         } else if (mapType=="clusterSharing") {
-            measures <- clusterShareMap.resolveMeasures (mapMaster$clusterSets, params)
+            measureNames <- clusterShareMap.resolveMeasureNames (mapMaster$clusterSets, params)
         }
 
     } else if (mapType=="barcodeFrequency") {
-        measures <- barcodeFreqMap.resolveMeasures (mapMaster$clusterSets, params)		#; print(names(params))
+        measureNames <- barcodeFreqMap.resolveMeasureNames (mapMaster$clusterSets, params)		#; print(names(params))
 
     }
-    mapMaster$measures <- measures					#; print(paste(length(measures),"measures:",measures))
+    mapMaster$measureNames <- measureNames					#; print(paste(length(measureNames),"measureNames:",measureNames))
     #
     # If no time interval is specified, assign a default one (all samples)
     #
@@ -268,20 +285,22 @@ map.getMapFilepath <- function (map, params) {
     #
     # Compose a plot filename
     #
-    mapLabel <- map$measure
+    mapLabel <- map$measureName
     plotFolder <- mapMaster$plotFolder
     if (mapType %in% c("clusterPrevalence","clusterSharing")) {
         if (mapType == "clusterPrevalence") {
-            mParts <- clusterMap.parseMeasure (map$measure)				#;print(map$measure)
+            mParts <- clusterMap.parseMeasureName (map$measureName)			#;print(map$measureName)
         } else if (mapType == "clusterSharing") {
-            mParts <- clusterShareMap.parseMeasure (map$measure)			#;print(map$measure)
+            mParts <- clusterShareMap.parseMeasureName (map$measureName)		#;print(map$measureName)
         }
         minIdentityLabel <- getMinIdentityLabel(mParts$minIdentity)			#;print(minIdentityLabel)
         clusterSet <- mapMaster$clusterSets[[minIdentityLabel]]				#;print(names(clusterSet))
         clusterSetName <- clusterSet$clusterSetName					#;print(clusterSetName)
-        plotFolder <- paste(plotFolder, clusterSetName, sep="/")			#;print(plotFolder)
+        #plotFolder <- paste(plotFolder, clusterSetName, sep="/")			#;print(plotFolder)
+        plotFolder <- getSubFolder(plotFolder, clusterSetName)				#;print(plotFolder)
         if (mapType %in% c("clusterPrevalence")) {
-            plotFolder <- paste(plotFolder, minIdentityLabel, sep="/")			#;print(plotFolder)
+            #plotFolder <- paste(plotFolder, minIdentityLabel, sep="/")			#;print(plotFolder)
+            plotFolder <- getSubFolder(plotFolder, minIdentityLabel)			#;print(plotFolder)
         }
     }
     if (mapType %in% c("barcodeFrequency","clusterPrevalence","clusterSharing")) {
@@ -298,7 +317,7 @@ map.getMapFilepath <- function (map, params) {
         plotFilename  <- paste(plotFilename, map$interval$name, sep="-")
     }
     
-    fileExt <- param.getParam ("plot.file.format", params)				#; print(fileExt)
+    fileExt <- param.getParam ("plot.file.format", params)				#;print(fileExt)
     plotFilename <- paste0(plotFilename,".", fileExt)
     plotFile <- paste(plotFolder, plotFilename, sep="/")				#;print(plotFile)
     plotFile

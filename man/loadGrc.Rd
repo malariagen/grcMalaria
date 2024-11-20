@@ -4,7 +4,7 @@
 \alias{loadGrc}
 \title{Load a Genetic Report Card data file}
 \usage{
-loadGrc(file, sheet = "GRC", species = "Pf", version = "1.4")
+loadGrc(file, sheet = NULL, species = NULL, version = NULL)
 }
 \arguments{
 \item{file}{The path to the GRC data Microsoft Excel file (use forward slashes in the path)}

@@ -18,7 +18,7 @@ param.getParam <- function (paramName, params) {
 ###################################################################
 #
 param.getArgParameter <- function (args, argName, type="character", defaultValue=NULL, multiValue=FALSE, validValues=NULL, scaleFactor=NULL) {
-    value <- args[[argName]]				#; print(argName)
+    value <- args[[argName]]				#; print("******************") ; print(argName)
     if (is.null(value)) {
         value <- defaultValue
     }							
@@ -199,34 +199,42 @@ param.addMapParameters <- function (ctx, p, args, taskMethod, ...) {
         p$map.markerColourAggLevel <- map.getAggregationLevelsFromLabels (colourByLabel)
 
     } else if (taskMethod == "drug") {
-        p$analysis.measures <- param.getArgParameter (args, "drugs", type="character", multiValue=TRUE, defaultValue="ALL", validValues=c("ALL",config$drugs))
-
+        p$analysis.measures <- param.getArgParameter (args, "drugs", type="character", multiValue=TRUE, defaultValue="ALL", 
+                                                      validValues=c("ALL",setup.getFeatureNames(config$drugs)))
+                                                      
     } else if (taskMethod == "mutation") {
-        p$analysis.measures <- param.getArgParameter (args, "mutations", type="character", multiValue=TRUE, defaultValue="ALL", validValues=c("ALL",config$drugResistanceMutations))
+        p$analysis.measures <- param.getArgParameter (args, "mutations", type="character", multiValue=TRUE, defaultValue="ALL", 
+                                                      validValues=c("ALL",setup.getFeatureNames(config$drugResistanceMutations)))
         p$map.markerColours <- param.getArgParameter (args, "markerColours", multiValue=TRUE, defaultValue="red3")
 
     } else if (taskMethod == "alleleProp") {
         p$analysis.measures <- param.getArgParameter (args, "mutations", type="character", multiValue=TRUE, defaultValue="ALL", 
-                         validValues=c("ALL", config$countColumns, config$amplificationColumns, config$drugResistancePositions))
+                                                      validValues=c("ALL", setup.getFeatureNames(config$countColumns), 
+                                                                     setup.getFeatureNames(config$amplificationColumns), 
+                                                                     setup.getFeatureNames(config$drugResistancePositions)))
         p$map.alleleColours <- param.getArgParameter (args, "alleleColours", multiValue=TRUE, defaultValue=NULL)
 
     } else if (taskMethod == "diversity") {
-        p$analysis.measures <- param.getArgParameter (args, "measures", type="character", multiValue=TRUE, defaultValue="ALL", validValues=c("ALL",markerMap.getDiversityMeasures()))
+        p$analysis.measures <- param.getArgParameter (args, "measures", type="character", multiValue=TRUE, defaultValue="ALL", 
+                                                      validValues=c("ALL",markerMap.getDiversityMeasures()))
         p$map.markerColours <- param.getArgParameter (args, "markerColours", multiValue=TRUE, defaultValue="red3")
         
     } else if (taskMethod == "connect") {
-        p$analysis.measures <- param.getArgParameter (args, "measures", type="character", multiValue=TRUE, defaultValue="ALL", validValues=c("ALL",connectMap.getConnectednessMeasures()))
+        p$analysis.measures <- param.getArgParameter (args, "measures", type="character", multiValue=TRUE, defaultValue="ALL", 
+                                                      validValues=c("ALL",connectMap.getConnectednessMeasures()))
         p$map.connect.identity.min     <- param.getArgParameter (args, "minIdentity", type="numeric", multiValue=TRUE, defaultValue=1.0)
         p$map.connect.meanDistance.min <- param.getArgParameter (args, "meanDistanceLevels", type="numeric", multiValue=TRUE, defaultValue=0.5)
 
     } else if (taskMethod == "barcodeFrequency") {
-        p$map.cluster.visualizations <- param.getArgParameter (args, "type", type="character", multiValue=TRUE, defaultValue=c("bar","pie"), validValues=c("bar","pie"))
+        p$map.cluster.visualizations <- param.getArgParameter (args, "type", type="character", multiValue=TRUE, defaultValue=c("bar","pie"), 
+                                                               validValues=c("bar","pie"))
         p$map.cluster.markerScale <- param.getArgParameter (args, "markerScale", type="numeric", defaultValue=0.8)
         p$map.cluster.markerSampleCount <- param.getArgParameter (args, "markerSampleCount", defaultValue="mean")
 
     } else if (taskMethod == "clusterSharing") {
         p$cluster.clusterSet.name <- param.getArgParameter (args, "clusterSet", type="character")
-        p$map.cluster.visualizations <- param.getArgParameter (args, "type", type="character", multiValue=TRUE, defaultValue=c("bar","pie"), validValues=c("bar","pie"))
+        p$map.cluster.visualizations <- param.getArgParameter (args, "type", type="character", multiValue=TRUE, defaultValue=c("bar","pie"), 
+                                                               validValues=c("bar","pie"))
         p$map.cluster.markerScale <- param.getArgParameter (args, "markerScale", type="numeric", defaultValue=0.8)
         p$map.cluster.markerSampleCount <- param.getArgParameter (args, "markerSampleCount", defaultValue="mean")
 

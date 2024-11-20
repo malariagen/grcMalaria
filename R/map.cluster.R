@@ -10,7 +10,7 @@ clusterMap.executeMap <- function (map) {
 
     mapMaster   <- map$master
     mapType     <- mapMaster$type
-    measure     <- map$measure
+    measureName <- map$measureName			#; print(measureName)
     interval    <- map$interval
     #
     datasetName <- map$datasetName
@@ -41,7 +41,7 @@ clusterMap.executeMap <- function (map) {
     #
     # Parse the measure to get the cluster name and the minIdentity level
     #
-    mParts <- clusterMap.parseMeasure (measure)					#; print(measure)
+    mParts <- clusterMap.parseMeasureName (measureName)				#; print(measureName)
     minIdentity <- mParts$minIdentity						#; print(minIdentity)
     clusterId <- mParts$clusterId						#; print(clusterId)		
     #
@@ -99,7 +99,7 @@ clusterMap.executeMap <- function (map) {
 #
 ################################################################################
 #
-clusterMap.resolveMeasures <- function(clusterSets) {
+clusterMap.resolveMeasureNames <- function(clusterSets) {
     expanded <- c()
     minIdentityLabels <- names(clusterSets)
     setCount <- length(minIdentityLabels)
@@ -118,12 +118,12 @@ clusterMap.resolveMeasures <- function(clusterSets) {
 #
 ################################################################################
 #
-clusterMap.parseMeasure <- function(measure) {
+clusterMap.parseMeasureName <- function(measureName) {
     prefix <- CLUSTER_MAP_PREFIX
-    if (!startsWith(measure, prefix)) {
+    if (!startsWith(measureName, prefix)) {
         return (NULL)				#; print("Incorrect prefix")
     }
-    suffix <- substring(measure,nchar(prefix)+1)
+    suffix <- substring(measureName,nchar(prefix)+1)
     sParts <- unlist(strsplit(suffix, "/"))
     list(minIdentity=as.numeric(sParts[1]), clusterId=sParts[2])
 }
@@ -151,22 +151,25 @@ clusterMap.getClusterSetsPalettes <- function (ctx, clusterSets) {
 #
 #
 #
-clusterMap.getUnitClusterCountData <- function(clusterData, sampleMeta, aggLevel, aggUnitData, params) {
+clusterMap.getUnitClusterCountData <- function(clusterData, sampleMeta, aggLevel, aggUnitData, params) {	#; print(clusterData)
+    #for (ii in 1:length(clusterData$SampleList)) print(unlist(strsplit(clusterData$SampleList[ii], ",")))
     #
     # Get the subgraph membership file for this identity threshold, which is created by the clusteing code
     # (shared with the "graph" analysis task)
     #
-    memberData <- cluster.getMemberData (clusterData)
-
-    clusterData <- clusterData[order(clusterData$Cluster),]
-    
+    memberData <- cluster.getMemberData (clusterData)						#; print(nrow(memberData))
+    clusterData <- clusterData[order(clusterData$Cluster),]					#; print(nrow(clusterData))
     clusterIds <- as.character(clusterData$Cluster)						#; print(clusterIds)
+    memberData <- memberData[rownames(sampleMeta),]
     memberData <- memberData[which(memberData$Cluster %in% clusterIds),]
-    memberIds      <- memberData$Sample								#; print(memberIds)
+    #
+    # At this point, it is *possible* that some members of the clusters are *not* in the metadaya (e.g. if imputation is/is not used in cluster selection)
+    #
+    memberIds      <- memberData$Sample								#; print(length(memberIds))
     memberClusters <- memberData$Cluster							#; print(memberClusters)
-   
+
     # Assign cluster Ids to the sample metadata
-    sampleNames <- rownames(sampleMeta)
+    sampleNames <- rownames(sampleMeta)								#; print(length(sampleNames))
     sampleCluster <- rep("-", length(sampleNames))
     names(sampleCluster) <- sampleNames
     sampleCluster[memberIds] <- memberClusters

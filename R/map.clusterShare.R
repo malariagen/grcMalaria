@@ -10,7 +10,7 @@ clusterShareMap.executeMap <- function (map) {
 
     mapMaster   <- map$master
     mapType     <- mapMaster$type
-    measure     <- map$measure
+    measureName <- map$measureName
     interval    <- map$interval
     #
     datasetName <- map$datasetName
@@ -32,17 +32,12 @@ clusterShareMap.executeMap <- function (map) {
     plotTitle <- sampleSet$name
     baseMapInfo <- mapMaster$baseMapInfo
     #
-    # Get the output folders
-    #
-    dataFolder <- mapMaster$dataFolder
-    plotFolder <- mapMaster$plotFolder
-    #
     # Silly trick to make the package checker happy... :-(
     lon <- lat <- label <- x <- y <- alpha <- NULL
     #
     # Parse the measure to get the visualization type and the minIdentity level
     #
-    mParts <- clusterShareMap.parseMeasure (measure)			#; print(measure)
+    mParts <- clusterShareMap.parseMeasureName (measureName)		#; print(measureName)
     minIdentity <- mParts$minIdentity					#; print(minIdentity)
     visType <- mParts$visType						#; print(visType)		
     #
@@ -133,7 +128,7 @@ clusterShareMap.getStandardMarkerSampleCount <- function(aggUnitData, params) {
 #
 # We use visualization types to specify different graphic renditions from the same analyses: "pie" or "bar" markers
 #
-clusterShareMap.resolveMeasures <- function(clusterSets, params) {
+clusterShareMap.resolveMeasureNames <- function(clusterSets, params) {
     expanded <- c()
     visTypes <- param.getParam ("map.cluster.visualizations", params)			#; print(visTypes) # "pie" or "bar"
     minIdentityLabels <- names(clusterSets)
@@ -150,12 +145,12 @@ clusterShareMap.resolveMeasures <- function(clusterSets, params) {
 #
 ################################################################################
 #
-clusterShareMap.parseMeasure <- function(measure) {
+clusterShareMap.parseMeasureName <- function(measureName) {
     prefix <- CLUSTER_SHARE_MAP_PREFIX
-    if (!startsWith(measure, prefix)) {
+    if (!startsWith(measureName, prefix)) {
         return (NULL)				#; print("Incorrect prefix")
     }
-    suffix <- substring(measure,nchar(prefix)+1)
+    suffix <- substring(measureName,nchar(prefix)+1)
     sParts <- unlist(strsplit(suffix, "/"))
     list(minIdentity=as.numeric(sParts[1]), visType=sParts[2])
 }
