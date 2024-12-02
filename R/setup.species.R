@@ -20,7 +20,11 @@ setup.getSpeciesConfig <- function (species, version, grcFeatures) {
     #
     # Drug Resistant Positions
     #
+<<<<<<< HEAD
     posFeat <- grcFeatures[which(grcFeatures$Class == "Amino Variant"),]
+=======
+    posFeat <- grcFeatures[which(grcFeatures$Class == "Amino Variant"),]	#; print(posFeat)
+>>>>>>> 2.0
     config$drugResistancePositions <- posFeat
     #
     # We create the Drug Resistant Mutations features based on the alternative alleles of the Drug Resistant Positions
@@ -40,7 +44,11 @@ setup.getSpeciesConfig <- function (species, version, grcFeatures) {
     mutFeat <- data.frame(FeatureName=fNames, ColumnName=fCols, Class=rep("Amino Mutation",length(fNames)), 
                           DataType=rep("AminoAcidMutation",length(fNames)), Reference=fRefs, Alternative=fAlts)
     rownames(mutFeat) <- fNames
+<<<<<<< HEAD
     config$drugResistanceMutations <- mutFeat
+=======
+    config$drugResistanceMutations <- mutFeat					#; print(mutFeat)
+>>>>>>> 2.0
     #
     #
     #
@@ -48,7 +56,11 @@ setup.getSpeciesConfig <- function (species, version, grcFeatures) {
     #
     #
     #
+<<<<<<< HEAD
     config$amplificationColumns <- grcFeatures[which(grcFeatures$Class == "Amplification"),]
+=======
+    config$amplificationColumns <- grcFeatures[which(grcFeatures$DataType == "Amplification"),]
+>>>>>>> 2.0
     #
     #
     #

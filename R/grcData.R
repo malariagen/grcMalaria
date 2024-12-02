@@ -57,7 +57,6 @@ grcData.load <- function (grcDataFile, grcDataSheet, species, version) {
             stop(paste("Invalid species:",species))
         }
     }
-        
     #
     # Read the GRC Sample Data
     # Make sure all the feature columns are present
@@ -134,6 +133,7 @@ grcData.checkColumns <- function (data, columnNames, sheetName, trim=FALSE) {
     }
     data
 }
+#
 #
 ################################################################################
 # Merge two GRC datasets

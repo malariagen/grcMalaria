@@ -57,6 +57,21 @@ map.execute <- function(userCtx, sampleSetName, mapType, params) {		#;print(mapT
     }
 }
 #
+# 20241120 - The following piece of code was introduced in order to avoid warnings from cowplot library when invoking
+# legendPlot <- cowplot::get_legend(mapPlot)
+#
+map.getLegend <- function (mapPlot) {
+    legends <- cowplot::get_plot_component(mapPlot, "guide-box", return_all=TRUE)
+    nonzero <- vapply(legends, \(x) !inherits(x, "zeroGrob"), TRUE)
+    idx <- which(nonzero)
+    if (length(idx) > 0) {
+        legendPlot <- legends[[idx[1]]]
+    } else {
+        legendPlot <- legends[[1]]
+    }
+    legendPlot
+}
+#
 map.processLegend <- function(mapPlot, mapSpec, params) {			#; print(mapSpec$master$type)
     legendInfo <- NULL
     if (mapSpec$master$type %in% c("drug", "mutation", "alleleProp", "diversity", "sampleCount", "location")) {
@@ -71,7 +86,10 @@ map.processLegend <- function(mapPlot, mapSpec, params) {			#; print(mapSpec$mas
             #
             # Separate the legend from the map, and set the map without the legend to be the plot to be wirtten to file
             #
-            legendPlot <- cowplot::get_legend(mapPlot)				#; gtable::gtable_show_layout(legendPlot)
+            mapPlot <- mapPlot + ggplot2::theme(legend.position="right")
+            #
+            legendPlot <- map.getLegend(mapPlot)
+            #
             mapPlot <- mapPlot + ggplot2::theme(legend.position="none")
             #
             # Find out the size of the legend (note, we write it out so we have a device for the size estimation)

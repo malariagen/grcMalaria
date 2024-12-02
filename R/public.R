@@ -18,7 +18,6 @@
 #'  \item user guide {\url{https://genremekong.org/tools/grcmalaria-r-package-user-guide}}
 #' }
 #'
-#' @docType package
 #' @name grcMalaria
 NULL
 
