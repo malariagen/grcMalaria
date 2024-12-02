@@ -2,10 +2,10 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 computeDistances <- function(genos) {
-    .Call('_grcMalaria_computeDistances', PACKAGE = 'grcMalaria', genos)
+    .Call(`_grcMalaria_computeDistances`, genos)
 }
 
 extractBarcodeAlleles <- function(barcodes, snpNames) {
-    .Call('_grcMalaria_extractBarcodeAlleles', PACKAGE = 'grcMalaria', barcodes, snpNames)
+    .Call(`_grcMalaria_extractBarcodeAlleles`, barcodes, snpNames)
 }
 

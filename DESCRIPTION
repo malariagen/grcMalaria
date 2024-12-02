@@ -1,7 +1,7 @@
 Package: grcMalaria
 Type: Package
 Title: Package for processing and analyzing SpotMalaria Genetic Report Cards
-Version: 2.1.1
+Version: 2.1.2
 Date: 2024-12-02
 Author: Olivo Miotto
 Maintainer: Olivo Miotto <olivo@tropmedres.ac>
@@ -11,7 +11,7 @@ License: MIT + file LICENSE
 LazyData: true
 Imports: 
     grcMalariaGeodata (>= 0.4.0),
-    rlang,
+    Rcpp (>= 1.0.5), rlang,
     utils, stats, graphics, grDevices, stringi, digest, lubridate,
     readxl,
     ape, pegas, pcaMethods,
