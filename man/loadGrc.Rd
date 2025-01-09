@@ -9,9 +9,9 @@ loadGrc(file, species = NULL, version = NULL, sheet = NULL)
 \arguments{
 \item{file}{The path to the GRC data Microsoft Excel file (use forward slashes in the path)}
 
-\item{species}{The species being analysed. Currently, the platform can only analysed "Pf" (i.e. Plasmodium falciparum)}
+\item{species}{The species being analysed (only valid for GRC versions 1.x, can be "Pf" or "Pv").}
 
-\item{version}{The version number of the GRC data file format.}
+\item{version}{The version number of the GRC data file format (only valid for GRC versions 1.x)}
 
 \item{sheet}{Name of worksheet in the Excel file that contains the GRC data (only valid for GRC versions 1.x; from V2.0 onwards, the data sheet can only be named "Data")}
 }
@@ -26,16 +26,19 @@ A GRC data file consists of groups of variables, including metadata fields with 
 private metadata (pink, not included in public data), predicted drug resistance (orange),
 sample characteristics including species determination, and complexity of infection (light blue),
 drug resistance amino acid haplotypes (green), amino acid variant for individual drug resistance variants (blue),
-quantitative polymerase chain reaction (qPCR) results for gene copy number variation (CNV) for plasmepsim2/3 (pm23),
+quantitative polymerase chain reaction (qPCR) results for gene copy number variation (CNV) for plasmepsin2/3 (pm23),
 and multidrug resistance protein 1 (Pfmdr1) (purple), and lastly genotypes used for genetic barcodes (red).
+}
+\details{
+Note that, from V2.0 onwards, GRC files contain a Properties sheet, which describes the contents of the other sheets.
+Therefore, parameters species, version and sheet are ignored for V2.0 or greater. Those paramenters are required for GRC V1.x.
 }
 \examples{
 \dontrun{
 # Load data file
 # Change the path to where your file is located before running the code
 Data <- loadGrc("D:/myFiles/name_file.xlsx",
-               sheet = "GRC",
-               species = "Pf", version = "1.4")
+               sheet = "GRC", species = "Pf", version = "1.4")
 }
 
 }

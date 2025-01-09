@@ -8,21 +8,10 @@ grcData.load <- function (grcDataFile, species, version, grcDataSheet) {
     if (!file.exists(grcDataFile)) {
         stop(paste("GRC data file", grcDataFile, "does not exist."))
     }
-    if (is.null(version)) {
-        stop(paste("You must specify a version number of the GRC data file."))
-    }
-    verParts <- unlist(strsplit(version,"\\."))
-    majorVersion <- verParts[1]
-    minorVersion <- verParts[2]
-    #
-    # The way in which this version checking is written is a bit odd, for historical reasons.
-    # In V1, different species had different GRC format versions. Starting with V2, we have a GRC format version, used by all species.
-    # Currently we still want to support V1.4 of Pf and 1.0 of Pv. This may change later.
-    #
-    grc <- NULL
-    if (majorVersion >= 2) {
+    
+    if (hasExcelSheet (grcDataFile, "Properties")) {
         #
-        # Read the GRC file properties
+        # Read the GRC file properties, since this spreadsheet has one
         #
         if (!is.null(grcDataSheet)) {
             rlang::warn("Ignoring argument \"sheet\" that is only valid for versions 1.x.")
@@ -39,8 +28,25 @@ grcData.load <- function (grcDataFile, species, version, grcDataSheet) {
         grcFeatures <- grcData.checkColumns (grcFeatures, c("FeatureName","ColumnName","Class","DataType","WT","Alternative"), "Features", trim=TRUE)
         rownames(grcFeatures) <- grcFeatures$FeatureName
         grcDataSheet <- "Data"
-        
+
     } else {
+        #
+        # No GRC file properties, so assume it's a V1.x GRC, the version has to be specified
+        #
+        if (is.null(version)) {
+            stop(paste("You must specify a version number of the GRC data file."))
+        }
+        verParts <- unlist(strsplit(version,"\\."))
+        majorVersion <- verParts[1]
+        minorVersion <- verParts[2]
+        if (majorVersion != 1) {
+            stop(paste("GRC file without a Properties sheet can only be V1.x"))
+        }
+        #
+        # The way in which this version checking is written is a bit odd, for historical reasons.
+        # In V1, different species had different GRC format versions. Starting with V2, we have a GRC format version, used by all species.
+        # Currently we still want to support V1.4 of Pf and 1.0 of Pv. This may change later.
+        #
         if (is.null(species)) {
             stop("Species was not specified for the GRC data file")
         }
@@ -67,6 +73,7 @@ grcData.load <- function (grcDataFile, species, version, grcDataSheet) {
         provider <- "GenRe-Mekong"
         providerVersion <- version
     }
+    grc <- NULL
     #
     # Read the GRC Sample Data
     # Make sure all the feature columns are present

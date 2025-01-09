@@ -90,6 +90,12 @@ readExcelData <- function (xFile, xSheet) {
     xData
 }
 #
+hasExcelSheet <- function (xFile, xSheet) {
+    sNames <- readxl::excel_sheets(xFile)
+    has <- (xSheet %in% sNames)
+    has
+}
+#
 # #####################################################################################
 #  Data I/O Utilities - read/write/filter samples tables data
 # #####################################################################################
