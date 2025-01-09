@@ -19,7 +19,7 @@
 #' }
 #'
 #' @name grcMalaria
-NULL
+"_PACKAGE"
 
 #############################################################
 #
@@ -36,9 +36,9 @@ NULL
 #' and multidrug resistance protein 1 (Pfmdr1) (purple), and lastly genotypes used for genetic barcodes (red).
 #'
 #' @param file The path to the GRC data Microsoft Excel file (use forward slashes in the path)
-#' @param sheet Name of datasheet or tab name within the Excel file containing the GRC data
 #' @param species The species being analysed. Currently, the platform can only analysed "Pf" (i.e. Plasmodium falciparum)
-#' @param version The version number of the GRC data file format. Current version is 1.4.
+#' @param version The version number of the GRC data file format.
+#' @param sheet Name of worksheet in the Excel file that contains the GRC data (only valid for GRC versions 1.x; from V2.0 onwards, the data sheet can only be named "Data")
 #'
 #' @return A list containing a data frame with the data ready to be analyzed, plus some configuration metadata
 #' @export
@@ -52,9 +52,9 @@ NULL
 #'}
 #'
 #
-loadGrc <- function (file, sheet=NULL, species=NULL, version=NULL) {
-    grcData <- grcData.load (file, sheet, species, version)
-    grcData
+loadGrc <- function (file, species=NULL, version=NULL, sheet=NULL) {
+    grc <- grcData.load (file, species, version, sheet)
+    grc
 }
 
 #############################################################
@@ -75,10 +75,10 @@ loadGrc <- function (file, sheet=NULL, species=NULL, version=NULL) {
 #' @export
 #'
 #' @examples \dontrun{
-#' ## Load spreadsheet 1 ##
+#' ## Load dataset1 ##
 #' Sheet1 <- loadGrc("D:/.../sheet1.xlsx",
 #'                  sheet="GRC", species="Pf", version="1.4")
-#' ## Load spreadsheet 2 ##
+#' ## Load dataset2 ##
 #' Sheet2 <- loadGrc("D:/.../sheet2.xlsx",
 #'                  sheet="GRC", species="Pf", version="1.4")
 #' ## Merge datasets ##
@@ -86,8 +86,37 @@ loadGrc <- function (file, sheet=NULL, species=NULL, version=NULL) {
 #'}
 #
 mergeGrc <- function (srcGrc, newGrc, overwrite=FALSE, extendColumns=FALSE) {
-  grcData <- grcData.merge (srcGrc, newGrc, overwrite, extendColumns)
-  grcData
+  grc <- grcData.merge (srcGrc, newGrc, overwrite, extendColumns)
+  grc
+}
+
+#############################################################
+#
+#' Get a list of items that con be measured and mapped
+#'
+#' The sample features you can analyze depends on the format of each specific GRC. This function can be used
+#' to discover what features can be analyzed for the GRC you have loaded. For example, you can ask for a 
+#' list of "mutation" features, which will return a list of names of mutations that are
+#' supported by the GRC. Then you can supply one or more of these names to the "mutations" parameter of
+#' function mapMutationPrevalence(), to botain prevalence maps.
+#'
+#' @param grc The GRC to provides the data to be analyzed (loaded by loadGrc())
+#' @param category String: The category of features to be listed. Can be one of ["drug", "locus", "mutation", "amplification"]
+#'
+#' @return A vector of strings, consisting of the names of the  features of the specified category that are supported by this GRC.
+#' @export
+#'
+#' @examples \dontrun{
+#' ## Load dataset ##
+#' grc <- loadGrc("D:/.../sheet1.xlsx", species="Pf", version="2.0")
+#' mutNames <- getGrcFeatureNames (grc, "mutation")
+#' ... 
+#' mapMutationPrevalence(ctx, sampleSet="set1", mutations=mutNames[1:3], aggregate="District")
+#'}
+#
+getGrcFeatureNames <- function (grc, category) {
+  featureNames <- grcData.getFeatureNames (grc, category)
+  featureNames
 }
 
 #############################################################
@@ -108,7 +137,7 @@ mergeGrc <- function (srcGrc, newGrc, overwrite=FALSE, extendColumns=FALSE) {
 #' (iii) ‘genotype’: contains filtered and imputed genotypes
 #' (iv) ‘meta’: contains unfiltered, filtered, and imputed sample metadata
 #'
-#' @param grcData The data obtained from reading the GRC data with loadGrc().
+#' @param grc The data obtained from reading the GRC data with loadGrc().
 #' @param dir You will want to change the path and folder name to where you want the output file to be stored on your computer.
 #' @param outDir The subfolder of dir where the analysis outputs (tables and maps) will be written. Default: subfolder "out"
 #' @param minSnpTypability The minimum proportion of non-missing samples for a barcode position to be retained in analysis. The default is 0.8. This means SNPs where the allele is missing in more than 20 percent of samples are removed.
@@ -126,7 +155,7 @@ mergeGrc <- function (srcGrc, newGrc, overwrite=FALSE, extendColumns=FALSE) {
 #'                               minSnpTypability=0.8, minSampleTypability=0.75)
 #'}
 #
-initializeContext <- function (grcData, dir=".", outDir="out",
+initializeContext <- function (grc, dir=".", outDir="out",
                                minSnpTypability=0.8,
                                minSampleTypability=0.75,
                                maxImputedProportion=0.2,
@@ -134,8 +163,8 @@ initializeContext <- function (grcData, dir=".", outDir="out",
   options(scipen=10)
   options(stringsAsFactors=FALSE)
 
-  config <- setup.getConfig (grcData, dir, outDir, minSnpTypability, minSampleTypability, maxImputedProportion)
-  ctx <- context.createRootContext (grcData$data, config, clearCacheData)
+  config <- setup.getConfig (grc, dir, outDir, minSnpTypability, minSampleTypability, maxImputedProportion)
+  ctx <- context.createRootContext (grc$data, config, clearCacheData)
   ctx
 }
 

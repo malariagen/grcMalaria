@@ -26,10 +26,10 @@ or the source data rows can be overwritten.
 }
 \examples{
 \dontrun{
-## Load spreadsheet 1 ##
+## Load dataset1 ##
 Sheet1 <- loadGrc("D:/.../sheet1.xlsx",
                  sheet="GRC", species="Pf", version="1.4")
-## Load spreadsheet 2 ##
+## Load dataset2 ##
 Sheet2 <- loadGrc("D:/.../sheet2.xlsx",
                  sheet="GRC", species="Pf", version="1.4")
 ## Merge datasets ##

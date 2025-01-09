@@ -4,16 +4,16 @@
 \alias{loadGrc}
 \title{Load a Genetic Report Card data file}
 \usage{
-loadGrc(file, sheet = NULL, species = NULL, version = NULL)
+loadGrc(file, species = NULL, version = NULL, sheet = NULL)
 }
 \arguments{
 \item{file}{The path to the GRC data Microsoft Excel file (use forward slashes in the path)}
 
-\item{sheet}{Name of datasheet or tab name within the Excel file containing the GRC data}
-
 \item{species}{The species being analysed. Currently, the platform can only analysed "Pf" (i.e. Plasmodium falciparum)}
 
-\item{version}{The version number of the GRC data file format. Current version is 1.4.}
+\item{version}{The version number of the GRC data file format.}
+
+\item{sheet}{Name of worksheet in the Excel file that contains the GRC data (only valid for GRC versions 1.x; from V2.0 onwards, the data sheet can only be named "Data")}
 }
 \value{
 A list containing a data frame with the data ready to be analyzed, plus some configuration metadata

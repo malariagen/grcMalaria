@@ -9,9 +9,6 @@ options(warn=1)
 # Build configuration
 # #####################################################################################
 setup.getConfig <- function (grc, dir, outDir, minSnpTypability, minSampleTypability, maxImputedProportion) {
-    data <- grc$data
-    speciesConfig <- grc$speciesConfig
-
     print(paste("Root folder:", dir))
     config <- list (
         version=grc$version,
@@ -24,9 +21,10 @@ setup.getConfig <- function (grc, dir, outDir, minSnpTypability, minSampleTypabi
         defaultPalette=setup.getDefaultPalette(),
         defaultTextPalette=graphics.makeTextPalette(setup.getDefaultPalette())
     )
-
+    #
     # Merge the config with the species config
-    config <- c(config, speciesConfig)
+    #
+    config <- c(config, grc$config)
     config
 }
 

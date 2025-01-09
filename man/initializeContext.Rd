@@ -5,7 +5,7 @@
 \title{Initialize a Genetics Report Card (GRC) Dataset}
 \usage{
 initializeContext(
-  grcData,
+  grc,
   dir = ".",
   outDir = "out",
   minSnpTypability = 0.8,
@@ -15,7 +15,7 @@ initializeContext(
 )
 }
 \arguments{
-\item{grcData}{The data obtained from reading the GRC data with loadGrc().}
+\item{grc}{The data obtained from reading the GRC data with loadGrc().}
 
 \item{dir}{You will want to change the path and folder name to where you want the output file to be stored on your computer.}
 

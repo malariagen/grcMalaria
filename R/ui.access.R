@@ -39,7 +39,7 @@ ui.makeSingleMap <- function (ctx, sampleSet, type,
     } else if (type=="mutation") {
         params$analysis.measures <- param.getArgParameter (mArg, "measure", type="character", 
                                                            validValues=c("ALL", setup.getFeatureNames(config$drugResistanceMutations)))
-
+        
     } else if (type=="alleleProp") {
         params$analysis.measures <- param.getArgParameter (mArg, "measure", type="character", 
                                                            validValues=c("ALL", setup.getFeatureNames(config$countColumns), 

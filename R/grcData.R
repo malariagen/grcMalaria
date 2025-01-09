@@ -4,7 +4,7 @@
 #
 # Read sample metadata file
 #
-grcData.load <- function (grcDataFile, grcDataSheet, species, version) {
+grcData.load <- function (grcDataFile, species, version, grcDataSheet) {
     if (!file.exists(grcDataFile)) {
         stop(paste("GRC data file", grcDataFile, "does not exist."))
     }
@@ -24,14 +24,19 @@ grcData.load <- function (grcDataFile, grcDataSheet, species, version) {
         #
         # Read the GRC file properties
         #
-        grcProps <- getGrcProperties (grcDataFile)
+        if (!is.null(grcDataSheet)) {
+            rlang::warn("Ignoring argument \"sheet\" that is only valid for versions 1.x.")
+        }
+        grcProps <- grcData.getGrcProperties (grcDataFile)
         species <- grcProps$species
         version <- grcProps$version
+        provider <- grcProps$provider
+        providerVersion <- grcProps$providerVersion
         #
         # Read the GRC file features
         #
         grcFeatures <- readExcelData(grcDataFile, "Features")
-        grcFeatures <- grcData.checkColumns (grcFeatures, c("FeatureName","ColumnName","Class","DataType","Reference","Alternative"), "Features", trim=TRUE)
+        grcFeatures <- grcData.checkColumns (grcFeatures, c("FeatureName","ColumnName","Class","DataType","WT","Alternative"), "Features", trim=TRUE)
         rownames(grcFeatures) <- grcFeatures$FeatureName
         grcDataSheet <- "Data"
         
@@ -44,18 +49,23 @@ grcData.load <- function (grcDataFile, grcDataSheet, species, version) {
                 stop(paste("Invalid species/version combination:",species, "/", version))
             }
             # The GRC file features are hardcoded
-            grcFeatures <- setup.species.getFeatures.Pf.v1()
+            grcFeatures <- grcData.v1.Pf.getFeatures()
             
         } else if (species == "Pv") {
             if (version != "1.0") {
                 stop(paste("Invalid species/version combination:",species, "/", version))
             }
             # The GRC file features are hardcoded
-            grcFeatures <- setup.species.getFeatures.Pv.v1()
+            grcFeatures <- grcData.v1.Pv.getFeatures()
             
         } else {
             stop(paste("Invalid species:",species))
         }
+        #
+        # Assume only GenRe created V1.x GRCs.
+        #
+        provider <- "GenRe-Mekong"
+        providerVersion <- version
     }
     #
     # Read the GRC Sample Data
@@ -63,27 +73,27 @@ grcData.load <- function (grcDataFile, grcDataSheet, species, version) {
     #
     grcSampleData <- readExcelData(grcDataFile, grcDataSheet)
     grcSampleData <- grcData.checkColumns (grcSampleData, c("SampleId",grcSampleData$ColumnName), grcDataSheet)
-    rownames(grcSampleData) <- grcSampleData$SampleId
+    rownames(grcSampleData) <- grcSampleData$SampleId	
     #
     # Process the features to create a configuation that works for this GRC
     #
-    speciesConfig <- setup.getSpeciesConfig (species, version, grcFeatures)
-
-    grc <- list(data=grcSampleData, speciesConfig=speciesConfig, version=version)
+    grcConfig <- grcData.buildGrcConfig (species, version, grcFeatures)
+    #
+    grc <- list(data=grcSampleData, config=grcConfig, version=version, provider=provider, providerVersion=providerVersion)
     grc
 }
 #
 #
 #
-getGrcProperties <- function (grcDataFile) {
+grcData.getGrcProperties <- function (grcDataFile) {
     propsData <- readExcelData(grcDataFile, "Properties")
     propsData <- grcData.checkColumns (propsData, c("Name","Value"), "Properties", trim=TRUE)
     props        <- propsData$Value
     names(props) <- propsData$Name
     #
-    fileFormat <- getGrcPropertyValue ("Format", props, "GRC")
-    majorVersion <- getGrcPropertyValue ("MajorVersion", props)
-    minorVersion <- getGrcPropertyValue ("MinorVersion", props)
+    fileFormat <- grcData.getGrcPropertyValue ("Format", props, "GRC")
+    majorVersion <- grcData.getGrcPropertyValue ("MajorVersion", props)
+    minorVersion <- grcData.getGrcPropertyValue ("MinorVersion", props)
     version <- paste(majorVersion, minorVersion, sep=".")
     if (as.integer(majorVersion) > 2) {
         stop(paste0("Unsupported GRC version: ", version))
@@ -91,29 +101,18 @@ getGrcProperties <- function (grcDataFile) {
     if (as.integer(minorVersion) > 0) {
         stop(paste0("Unsupported GRC version: ", version))
     }
+    provider <- grcData.getGrcPropertyValue ("Provider", props)
+    providerVersion <- grcData.getGrcPropertyValue ("ProviderVersion", props)
     #
     supportedSpecies <- c(
         "Plasmodium falciparum"="Pf", 
         "Plasmodium vivax"="Pv"
     )
-    speciesStr <- getGrcPropertyValue ("Species", props, names(supportedSpecies))
+    speciesStr <- grcData.getGrcPropertyValue ("Species", props, names(supportedSpecies))
     species <- supportedSpecies[speciesStr]
     #
-    grcProps <- list(species=species, version=version)
+    grcProps <- list(species=species, version=version, provider=provider, providerVersion=providerVersion)
     grcProps
-}
-#
-getGrcPropertyValue <- function (propName, props, expected=NULL) {
-    if (!(propName %in% names(props))) {
-        stop(paste("Missing GRC file property:", propName))
-    }
-    value <- props[propName]
-    if (!is.null(expected)) {
-        if (!(value %in% expected)) {
-            stop(paste0("Invalid value spectified GRC file property '",propName,"': ", value))
-        }
-    }
-    value
 }
 #
 grcData.checkColumns <- function (data, columnNames, sheetName, trim=FALSE) {
@@ -134,6 +133,67 @@ grcData.checkColumns <- function (data, columnNames, sheetName, trim=FALSE) {
     data
 }
 #
+grcData.getGrcPropertyValue <- function (propName, props, expected=NULL) {
+    if (!(propName %in% names(props))) {
+        stop(paste("Missing GRC file property:", propName))
+    }
+    value <- props[propName]
+    if (!is.null(expected)) {
+        if (!(value %in% expected)) {
+            stop(paste0("Invalid value spectified GRC file property '",propName,"': ", value))
+        }
+    }
+    value
+}
+#
+# #####################################################################################
+# GRC-specific setup configurations
+# #####################################################################################
+grcData.buildGrcConfig <- function (species, version, grcFeatures) {
+    #
+    config <- list (
+        species = species,
+        version = version
+    )
+    #
+    #
+    #
+    config$drugs <- grcFeatures[which(grcFeatures$Class == "ResistancePrediction"),]
+    #
+    # Drug Resistant Positions
+    #
+    posFeat <- grcFeatures[which(grcFeatures$Class == "PhenotypeAssociatedLocus"),]	#; print(posFeat)
+    config$drugResistancePositions <- posFeat
+    #
+    # We create the Drug Resistant Mutations features based on the alternative alleles of the Drug Resistant Positions
+    #
+    mutFeat <- grcFeatures[which(grcFeatures$Class == "PhenotypeAssociatedMutation"),]	#; print(mutFeat)
+    config$drugResistanceMutations <- mutFeat						#; print(mutFeat)
+    #
+    #
+    #
+    countColumns <- grcFeatures[which(grcFeatures$Class %in% c("MutationList","PhenotypeAssociatedLocus")),]
+    config$countColumns <- countColumns[which(countColumns$DataType != "Amplification"),]
+    #
+    #
+    #
+    config$amplificationColumns <- grcFeatures[which(grcFeatures$DataType == "Amplification"),]
+    #
+    #
+    #
+    config$barcodeMeta <- grcFeatures[which(grcFeatures$Class == "BarcodingLocus"),]
+    #
+    # 
+    #
+    config$cluster.stats.drugs        <- config$drugs
+    config$cluster.stats.mutations    <- config$drugResistanceMutations
+    config$cluster.stats.alleleCounts <- config$countColumns
+    #
+    # Attach the newly created features to the GRC features before sticking them in the config
+    #
+    config$features <- rbind (grcFeatures, mutFeat)
+    config
+}
 #
 ################################################################################
 # Merge two GRC datasets
@@ -142,6 +202,12 @@ grcData.checkColumns <- function (data, columnNames, sheetName, trim=FALSE) {
 # Merge two GRC datasets
 #
 grcData.merge <- function (inGrc, newGrc, overwrite=FALSE, extendColumns=FALSE) {
+    if ((inGrc$config$species != newGrc$config$species)) {
+        stop("You can only merge GRCs for the same species")
+    }
+    if ((inGrc$provider != newGrc$provider) || (inGrc$providerVersion != newGrc$providerVersion)) {
+        stop("Currently you can only merge GRCs from the same provider and with the same version number")
+    }
     inData  <- inGrc$data
     newData <- newGrc$data
 
@@ -191,7 +257,32 @@ grcData.merge <- function (inGrc, newGrc, overwrite=FALSE, extendColumns=FALSE) 
     # Finally, merge the rows
     #
     mergedData <- rbind(inData, newData)
-    mergedGrc <- list(data=mergedData, speciesConfig=inGrc$speciesConfig, version=inGrc$version)
+    mergedGrc <- list(data=mergedData, config=inGrc$config, version=inGrc$version)
     mergedGrc
 }
-
+#
+################################################################################
+# GRC feature names listings
+################################################################################
+#
+# 
+#
+grcData.getFeatureNames <- function (grc, featureType) {
+    featureNames <- NULL
+    config <- grc$config
+    
+    if (featureType == "drug") {
+        featureNames <- config$drugs$FeatureName
+        
+    } else if (featureType == "locus") {
+        featureNames <- config$drugResistancePositions$FeatureName
+    
+    } else if (featureType == "mutation") {
+        featureNames <- config$drugResistanceMutations$FeatureName
+    
+    } else if (featureType == "amplification") {
+        featureNames <- config$amplificationColumns$FeatureName
+    
+    }
+    featureNames
+}

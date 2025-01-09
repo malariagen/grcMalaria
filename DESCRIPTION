@@ -1,8 +1,8 @@
 Package: grcMalaria
 Type: Package
 Title: Package for processing and analyzing SpotMalaria Genetic Report Cards
-Version: 2.1.2
-Date: 2024-12-02
+Version: 2.1.3
+Date: 2025-01-09
 Author: Olivo Miotto
 Maintainer: Olivo Miotto <olivo@tropmedres.ac>
 Description: Various functions for producing analysis results such as maps an reports from the Genetic Report Cards datasets delivered by SpotMalaria rpojects, such as GenRe-Mekong.
