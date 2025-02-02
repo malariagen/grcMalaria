@@ -10,33 +10,174 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// computeDistances
-NumericMatrix computeDistances(NumericMatrix genos);
-RcppExport SEXP _grcMalaria_computeDistances(SEXP genosSEXP) {
+// getColumnAlleles
+std::vector<std::string> getColumnAlleles(unsigned int cIdx, List colGenotypes);
+RcppExport SEXP _grcMalaria_getColumnAlleles(SEXP cIdxSEXP, SEXP colGenotypesSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericMatrix >::type genos(genosSEXP);
-    rcpp_result_gen = Rcpp::wrap(computeDistances(genos));
+    Rcpp::traits::input_parameter< unsigned int >::type cIdx(cIdxSEXP);
+    Rcpp::traits::input_parameter< List >::type colGenotypes(colGenotypesSEXP);
+    rcpp_result_gen = Rcpp::wrap(getColumnAlleles(cIdx, colGenotypes));
     return rcpp_result_gen;
 END_RCPP
 }
-// extractBarcodeAlleles
-StringMatrix extractBarcodeAlleles(StringVector barcodes, StringVector snpNames);
-RcppExport SEXP _grcMalaria_extractBarcodeAlleles(SEXP barcodesSEXP, SEXP snpNamesSEXP) {
+// getAllelePropTable
+std::vector<std::vector<double>> getAllelePropTable(List colGenotypes, std::vector<std::string> colAlleles);
+RcppExport SEXP _grcMalaria_getAllelePropTable(SEXP colGenotypesSEXP, SEXP colAllelesSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< StringVector >::type barcodes(barcodesSEXP);
-    Rcpp::traits::input_parameter< StringVector >::type snpNames(snpNamesSEXP);
-    rcpp_result_gen = Rcpp::wrap(extractBarcodeAlleles(barcodes, snpNames));
+    Rcpp::traits::input_parameter< List >::type colGenotypes(colGenotypesSEXP);
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type colAlleles(colAllelesSEXP);
+    rcpp_result_gen = Rcpp::wrap(getAllelePropTable(colGenotypes, colAlleles));
+    return rcpp_result_gen;
+END_RCPP
+}
+// getHomAlleleIndexes
+std::vector<int> getHomAlleleIndexes(List colGenotypes, std::vector<std::string> colAlleles);
+RcppExport SEXP _grcMalaria_getHomAlleleIndexes(SEXP colGenotypesSEXP, SEXP colAllelesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type colGenotypes(colGenotypesSEXP);
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type colAlleles(colAllelesSEXP);
+    rcpp_result_gen = Rcpp::wrap(getHomAlleleIndexes(colGenotypes, colAlleles));
+    return rcpp_result_gen;
+END_RCPP
+}
+// dist_calculateDistanceMatrix
+NumericMatrix dist_calculateDistanceMatrix(List genotypeData);
+RcppExport SEXP _grcMalaria_dist_calculateDistanceMatrix(SEXP genotypeDataSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type genotypeData(genotypeDataSEXP);
+    rcpp_result_gen = Rcpp::wrap(dist_calculateDistanceMatrix(genotypeData));
+    return rcpp_result_gen;
+END_RCPP
+}
+// geno_splitString
+StringVector geno_splitString(String input, char delimiter);
+RcppExport SEXP _grcMalaria_geno_splitString(SEXP inputSEXP, SEXP delimiterSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< String >::type input(inputSEXP);
+    Rcpp::traits::input_parameter< char >::type delimiter(delimiterSEXP);
+    rcpp_result_gen = Rcpp::wrap(geno_splitString(input, delimiter));
+    return rcpp_result_gen;
+END_RCPP
+}
+// geno_containsChar
+bool geno_containsChar(std::string input, char sub);
+RcppExport SEXP _grcMalaria_geno_containsChar(SEXP inputSEXP, SEXP subSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::string >::type input(inputSEXP);
+    Rcpp::traits::input_parameter< char >::type sub(subSEXP);
+    rcpp_result_gen = Rcpp::wrap(geno_containsChar(input, sub));
+    return rcpp_result_gen;
+END_RCPP
+}
+// geno_isMissingGenotype
+bool geno_isMissingGenotype(String genoStr);
+RcppExport SEXP _grcMalaria_geno_isMissingGenotype(SEXP genoStrSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< String >::type genoStr(genoStrSEXP);
+    rcpp_result_gen = Rcpp::wrap(geno_isMissingGenotype(genoStr));
+    return rcpp_result_gen;
+END_RCPP
+}
+// geno_parseAllele
+List geno_parseAllele(String alleleStr);
+RcppExport SEXP _grcMalaria_geno_parseAllele(SEXP alleleStrSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< String >::type alleleStr(alleleStrSEXP);
+    rcpp_result_gen = Rcpp::wrap(geno_parseAllele(alleleStr));
+    return rcpp_result_gen;
+END_RCPP
+}
+// geno_parseGenotypeString
+List geno_parseGenotypeString(String genotypeStr);
+RcppExport SEXP _grcMalaria_geno_parseGenotypeString(SEXP genotypeStrSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< String >::type genotypeStr(genotypeStrSEXP);
+    rcpp_result_gen = Rcpp::wrap(geno_parseGenotypeString(genotypeStr));
+    return rcpp_result_gen;
+END_RCPP
+}
+// geno_parseColumnGenotypes
+List geno_parseColumnGenotypes(StringVector genoStrs, StringVector samples);
+RcppExport SEXP _grcMalaria_geno_parseColumnGenotypes(SEXP genoStrsSEXP, SEXP samplesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< StringVector >::type genoStrs(genoStrsSEXP);
+    Rcpp::traits::input_parameter< StringVector >::type samples(samplesSEXP);
+    rcpp_result_gen = Rcpp::wrap(geno_parseColumnGenotypes(genoStrs, samples));
+    return rcpp_result_gen;
+END_RCPP
+}
+// geno_estimateSampleProperties
+List geno_estimateSampleProperties(StringVector samples, StringVector genoCols, List columnGenoData);
+RcppExport SEXP _grcMalaria_geno_estimateSampleProperties(SEXP samplesSEXP, SEXP genoColsSEXP, SEXP columnGenoDataSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< StringVector >::type samples(samplesSEXP);
+    Rcpp::traits::input_parameter< StringVector >::type genoCols(genoColsSEXP);
+    Rcpp::traits::input_parameter< List >::type columnGenoData(columnGenoDataSEXP);
+    rcpp_result_gen = Rcpp::wrap(geno_estimateSampleProperties(samples, genoCols, columnGenoData));
+    return rcpp_result_gen;
+END_RCPP
+}
+// geno_estimateColumnProperties
+List geno_estimateColumnProperties(StringVector genoCols, List columnGenoData);
+RcppExport SEXP _grcMalaria_geno_estimateColumnProperties(SEXP genoColsSEXP, SEXP columnGenoDataSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< StringVector >::type genoCols(genoColsSEXP);
+    Rcpp::traits::input_parameter< List >::type columnGenoData(columnGenoDataSEXP);
+    rcpp_result_gen = Rcpp::wrap(geno_estimateColumnProperties(genoCols, columnGenoData));
+    return rcpp_result_gen;
+END_RCPP
+}
+// geno_processGenotypes
+List geno_processGenotypes(DataFrame grcData, StringVector genoCols);
+RcppExport SEXP _grcMalaria_geno_processGenotypes(SEXP grcDataSEXP, SEXP genoColsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< DataFrame >::type grcData(grcDataSEXP);
+    Rcpp::traits::input_parameter< StringVector >::type genoCols(genoColsSEXP);
+    rcpp_result_gen = Rcpp::wrap(geno_processGenotypes(grcData, genoCols));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_grcMalaria_computeDistances", (DL_FUNC) &_grcMalaria_computeDistances, 1},
-    {"_grcMalaria_extractBarcodeAlleles", (DL_FUNC) &_grcMalaria_extractBarcodeAlleles, 2},
+    {"_grcMalaria_getColumnAlleles", (DL_FUNC) &_grcMalaria_getColumnAlleles, 2},
+    {"_grcMalaria_getAllelePropTable", (DL_FUNC) &_grcMalaria_getAllelePropTable, 2},
+    {"_grcMalaria_getHomAlleleIndexes", (DL_FUNC) &_grcMalaria_getHomAlleleIndexes, 2},
+    {"_grcMalaria_dist_calculateDistanceMatrix", (DL_FUNC) &_grcMalaria_dist_calculateDistanceMatrix, 1},
+    {"_grcMalaria_geno_splitString", (DL_FUNC) &_grcMalaria_geno_splitString, 2},
+    {"_grcMalaria_geno_containsChar", (DL_FUNC) &_grcMalaria_geno_containsChar, 2},
+    {"_grcMalaria_geno_isMissingGenotype", (DL_FUNC) &_grcMalaria_geno_isMissingGenotype, 1},
+    {"_grcMalaria_geno_parseAllele", (DL_FUNC) &_grcMalaria_geno_parseAllele, 1},
+    {"_grcMalaria_geno_parseGenotypeString", (DL_FUNC) &_grcMalaria_geno_parseGenotypeString, 1},
+    {"_grcMalaria_geno_parseColumnGenotypes", (DL_FUNC) &_grcMalaria_geno_parseColumnGenotypes, 2},
+    {"_grcMalaria_geno_estimateSampleProperties", (DL_FUNC) &_grcMalaria_geno_estimateSampleProperties, 3},
+    {"_grcMalaria_geno_estimateColumnProperties", (DL_FUNC) &_grcMalaria_geno_estimateColumnProperties, 2},
+    {"_grcMalaria_geno_processGenotypes", (DL_FUNC) &_grcMalaria_geno_processGenotypes, 2},
     {NULL, NULL, 0}
 };
 

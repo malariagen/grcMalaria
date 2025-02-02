@@ -22,13 +22,9 @@ connectMap.executeMap <- function(map) {
     sampleSet   <- mapMaster$sampleSet
     userCtx     <- mapMaster$userCtx
     params      <- mapMaster$params
-    config      <- userCtx$config
+    config      <- context.getConfig(userCtx)
     #
-    # Get the context, trimmed by time interval
-    #
-    ctx        <- map$mapCtx				#; print(str(ctx))
-    dataset    <- ctx[[datasetName]]
-    sampleMeta <- dataset$meta
+    sampleMeta <- context.getMeta (map$mapCtx, datasetName) 
     if (nrow(sampleMeta)==0) {
         print(paste("No samples found - skipping interval", interval$name))
         return()
@@ -133,10 +129,8 @@ connectMap.resolveMeasureNames <- function(params) {
 }
 
 connectMap.estimateMeasures <- function (ctx, datasetName, sampleSetName, aggLevel, aggUnitData, mapType, measureNames, params, dataFolder)	{
-    dataset <- ctx[[datasetName]]
-    sampleMeta   <- dataset$meta
-    barcodeData  <- dataset$barcodes
-    distData     <- distance.retrieveDistanceMatrix (ctx, datasetName)
+    sampleMeta <- context.getMeta (ctx, datasetName) 
+    distData <- context.getDistanceMatrix (ctx, sampleSetName, useImputation=TRUE)
 
     # Create aggregation index for each sample (the id of the aggregation unit where the sample originates)
     sampleGids <- as.character(map.getAggregationUnitIds (aggLevel, sampleMeta))

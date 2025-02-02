@@ -122,7 +122,7 @@ param.addPlotGeomParameters <- function (p, args, ...) {
 #
 #
 param.addMapParameters <- function (ctx, p, args, taskMethod, ...) {
-    config <- ctx$config
+    config <- context.getConfig(ctx)
     scale <- p$plot.scaleFactor
     #
     # Aggregation levels- apply to all map types
@@ -200,18 +200,18 @@ param.addMapParameters <- function (ctx, p, args, taskMethod, ...) {
 
     } else if (taskMethod == "drug") {
         p$analysis.measures <- param.getArgParameter (args, "drugs", type="character", multiValue=TRUE, defaultValue="ALL", 
-                                                      validValues=c("ALL",setup.getFeatureNames(config$drugs)))
+                                                      validValues=c("ALL",setup.getFeatureNames(config$drugPredictionFeatures)))
                                                       
     } else if (taskMethod == "mutation") {
         p$analysis.measures <- param.getArgParameter (args, "mutations", type="character", multiValue=TRUE, defaultValue="ALL", 
-                                                      validValues=c("ALL",setup.getFeatureNames(config$drugResistanceMutations)))
+                                                      validValues=c("ALL",setup.getFeatureNames(config$drugMutationFeatures)))
         p$map.markerColours <- param.getArgParameter (args, "markerColours", multiValue=TRUE, defaultValue="red3")
 
     } else if (taskMethod == "alleleProp") {
         p$analysis.measures <- param.getArgParameter (args, "mutations", type="character", multiValue=TRUE, defaultValue="ALL", 
-                                                      validValues=c("ALL", setup.getFeatureNames(config$countColumns), 
-                                                                     setup.getFeatureNames(config$amplificationColumns), 
-                                                                     setup.getFeatureNames(config$drugResistancePositions)))
+                                                      validValues=c("ALL", setup.getFeatureNames(config$countableFeatures), 
+                                                                     setup.getFeatureNames(config$amplificationFeatures), 
+                                                                     setup.getFeatureNames(config$drugLocusFeatures)))
         p$map.alleleColours <- param.getArgParameter (args, "alleleColours", multiValue=TRUE, defaultValue=NULL)
 
     } else if (taskMethod == "diversity") {

@@ -17,13 +17,9 @@ clusterMap.executeMap <- function (map) {
     sampleSet   <- mapMaster$sampleSet
     userCtx     <- mapMaster$userCtx
     params      <- mapMaster$params
-    config      <- userCtx$config
+    config      <- context.getConfig(userCtx)
     #
-    # Get the context, trimmed by time interval
-    #
-    ctx        <- map$mapCtx				#; print(str(ctx))
-    dataset    <- ctx[[datasetName]]
-    sampleMeta <- dataset$meta
+    sampleMeta <- context.getMeta (map$mapCtx, datasetName) 
     if (nrow(sampleMeta)==0) {
         print(paste("No samples found - skipping interval", interval$name))
         return()
@@ -53,12 +49,10 @@ clusterMap.executeMap <- function (map) {
     #    
     # Get the cluster data
     #
-    clusterSetLabel  <- getMinIdentityLabel (minIdentity)
-    clusterSet       <- mapMaster$clusterSets[[clusterSetLabel]]
-    clusterSetName   <- clusterSet$clusterSetName
-    clusterData      <- clusterSet$clusters
+    clusterSetLabel  <- getMinIdentityLabel (minIdentity)			#; print(clusterSetLabel)
+    clusterSet       <- mapMaster$clusterSets[[clusterSetLabel]]		#; print(str(clusterSet))
     #
-    clusterShareData <- clusterMap.getUnitClusterCountData (clusterData, sampleMeta, aggLevel, aggUnitData, params)    #TODO - rename to aggClusterCountData
+    clusterShareData <- clusterMap.getAggUnitClusterCountData (clusterSet, sampleMeta, aggLevel, aggUnitData, params)
 											#; print(clusterShareData)
     clusterPalette <- mapMaster$clusterSetPalettes[[clusterSetLabel]]
     clusterInfoText <- cluster.getClusterStatsText(clusterSet$stats, clusterId)		#; print(clusterInfoText)
@@ -151,32 +145,29 @@ clusterMap.getClusterSetsPalettes <- function (ctx, clusterSets) {
 #
 #
 #
-clusterMap.getUnitClusterCountData <- function(clusterData, sampleMeta, aggLevel, aggUnitData, params) {	#; print(clusterData)
-    #for (ii in 1:length(clusterData$SampleList)) print(unlist(strsplit(clusterData$SampleList[ii], ",")))
+clusterMap.getAggUnitClusterCountData <- function(clusterSet, sampleMeta, aggLevel, aggUnitData, params) {
+    clusterData <- clusterSet$clusters							#; print(head(clusterData))
+    memberData  <- clusterSet$members							#; print(nrow(memberData)); print(head(memberData))
     #
-    # Get the subgraph membership file for this identity threshold, which is created by the clusteing code
-    # (shared with the "graph" analysis task)
-    #
-    memberData <- cluster.getMemberData (clusterData)						#; print(nrow(memberData))
-    clusterData <- clusterData[order(clusterData$Cluster),]					#; print(nrow(clusterData))
-    clusterIds <- as.character(clusterData$Cluster)						#; print(clusterIds)
+    clusterData <- clusterData[order(clusterData$Cluster),]				#; print(nrow(clusterData))
+    clusterIds <- as.character(clusterData$Cluster)					#; print(clusterIds)
     memberData <- memberData[rownames(sampleMeta),]
     memberData <- memberData[which(memberData$Cluster %in% clusterIds),]
     #
     # At this point, it is *possible* that some members of the clusters are *not* in the metadaya (e.g. if imputation is/is not used in cluster selection)
     #
-    memberIds      <- memberData$Sample								#; print(length(memberIds))
-    memberClusters <- memberData$Cluster							#; print(memberClusters)
+    memberIds      <- memberData$Sample							#; print(length(memberIds))
+    memberClusters <- memberData$Cluster						#; print(memberClusters)
 
     # Assign cluster Ids to the sample metadata
-    sampleNames <- rownames(sampleMeta)								#; print(length(sampleNames))
+    sampleNames <- rownames(sampleMeta)							#; print(length(sampleNames))
     sampleCluster <- rep("-", length(sampleNames))
     names(sampleCluster) <- sampleNames
     sampleCluster[memberIds] <- memberClusters
     sampleMeta$Cluster <- sampleCluster
     
     # Get all aggregation unit ids
-    aggUnitGids <- rownames(aggUnitData)							#; print(aggUnitGids); print(nrow(sampleMeta))
+    aggUnitGids <- rownames(aggUnitData)						#; print(aggUnitGids); print(nrow(sampleMeta))
     
     # Create aggregation index for each sample (the id of the aggregation unit where the sample originates)
     aggIndex <- map.getAggregationUnitIds (aggLevel, sampleMeta)
@@ -186,7 +177,7 @@ clusterMap.getUnitClusterCountData <- function(clusterData, sampleMeta, aggLevel
     for (aIdx in 1:length(aggUnitGids)) {
         # Get the sample data to be aggregated for this unit
         aggUnitGid <- aggUnitGids[aIdx]
-        unitMeta <- sampleMeta[which(aggIndex == aggUnitGid),]					#; print(nrow(unitMeta))
+        unitMeta <- sampleMeta[which(aggIndex == aggUnitGid),]				#; print(nrow(unitMeta))
         clUnitMeta <- unitMeta[which(unitMeta$Cluster != "-"),]
         unitGroupCounts <- table(clUnitMeta$Cluster)
         unitGroupCounts <- unitGroupCounts[order(-unitGroupCounts)]
@@ -203,56 +194,19 @@ clusterMap.getUnitClusterCountData <- function(clusterData, sampleMeta, aggLevel
     countData$Cluster <- factor(countData$Cluster)
     countData$Latitude <- as.numeric(countData$Latitude)
     countData$Longitude <- as.numeric(countData$Longitude)
-    countData$SampleCount <- as.numeric(countData$SampleCount)
-    countData
-}
-#
-# For each aggregation unit, we get a count of each unique cluster, ordered in descending count
-#
-clusterMap.buildCountData <- function(aggLevel, aggUnitData, dataset, params) {
-    sampleMeta   <- dataset$meta
-    barcodeData  <- dataset$barcodes
-
-    # Get all aggregation unit ids
-    aggUnitGids <- rownames(aggUnitData)						#; print(aggUnitGids)
-    
-    # Create aggregation index for each sample (the id of the aggregation unit where the sample originates)
-    aggIndex <- map.getAggregationUnitIds (aggLevel, sampleMeta)
-    clusters <- apply(barcodeData,1,paste,collapse="")
-
-    # Get the data for all aggregation units
-    countData <- NULL
-    for (aIdx in 1:length(aggUnitGids)) {
-        # Get the sample data to be aggregated for this unit
-        aggUnitGid <- aggUnitGids[aIdx]
-        unitCusters <- clusters[which(aggIndex == aggUnitGid)]				#; print(nrow(aggHaplos))
-        unitClusterCounts <- as.integer(table(unitCusters))
-        unitClusterCounts <- unitClusterCounts[order(-unitClusterCounts)]
-        unitHaploNum <- length (unitClusterCounts)
-
-        unitData <- aggUnitData[aIdx,]
-        df <- data.frame(matrix(unitData,ncol=ncol(aggUnitData),nrow=unitHaploNum,byrow=TRUE))
-        colnames(df) <- colnames(aggUnitData)
-        df$Haplo <- paste("Haplo",c(1:unitHaploNum),sep="_")
-        df$ClusterCount <- unitClusterCounts
-        countData <- rbind(countData, df)
-    }
-    countData$Haplo <- factor(countData$Haplo)
-    countData$Latitude <- as.numeric(countData$Latitude)
-    countData$Longitude <- as.numeric(countData$Longitude)
-    countData$SampleCount <- as.numeric(countData$SampleCount)
-    countData
+    countData$SampleCount <- as.numeric(countData$SampleCount)				#; print(countData)
+    countData						
 }
 #
 ###############################################################################
 # Maps of connections between Haplotype Sharing sites plotting 
 ################################################################################
 #
-clusterMap.addConnections <- function (mapPlot, baseMapInfo, clusterId, clusterShareData, clusterPalette, params) {
+clusterMap.addConnections <- function (mapPlot, baseMapInfo, clusterId, clusterShareData, clusterPalette, params) { #; print(clusterId) #; print(clusterShareData)
     #
     # Work out the values to display for every marker (the fractional prevalence)
     #
-    mValues <- as.numeric(clusterShareData$ClusterProp)			#; print(clusterId) #; print(clusterShareData)
+    mValues <- as.numeric(clusterShareData$ClusterProp)			#; print(str(clusterShareData))
     valueLabels <- round(mValues, digits=2)
     
     # Work out size, colour and colour gradient for the markers

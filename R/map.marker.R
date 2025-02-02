@@ -19,13 +19,9 @@ markerMap.executeMap <- function(map) {
     sampleSet   <- mapMaster$sampleSet
     userCtx     <- mapMaster$userCtx
     params      <- mapMaster$params
-    config      <- userCtx$config
+    config      <- context.getConfig(userCtx)
     #
-    # Get the context, trimmed by time interval
-    #
-    ctx        <- map$mapCtx				#; print(str(ctx))
-    dataset    <- ctx[[datasetName]]
-    sampleMeta <- dataset$meta
+    sampleMeta <- context.getMeta (map$mapCtx, datasetName) 
     if (nrow(sampleMeta)==0) {
         print(paste("No samples found - skipping interval", interval$name))
         return()
@@ -67,11 +63,6 @@ markerMap.executeMap <- function(map) {
     #
     selAggUnitData <- aggUnitData				#; print(nrow(selAggUnitData))
     if (mapType != "location") {
-        #if (mapType == "sampleCount") {
-        #    measureCol <- "SampleCount"
-        #} else {
-        #    measureCol <- setup.getFeatureColumn  (config, measureName)	#; print(measureName); print(measureCol)
-        #}
         vals <- aggUnitData[,measureName]			#; print(vals)
         selAggUnitData <- aggUnitData[which(!is.na(vals)),]	#; print(nrow(selAggUnitData))
         if (nrow(selAggUnitData)==0) {
@@ -213,27 +204,26 @@ markerMap.resolveMeasureNames <- function(ctx, mapType, params) {
     #
     # Get the admin division values from the first sample of this unit (assuming the values are the same for all)
     #
-    config <- ctx$config							#; print(names(config))
+    config <- context.getConfig(ctx)						#; print(names(config))
     if (mapType=="diversity") {
         if ("ALL" %in% measureNames) {
             measureNames <- markerMap.getDiversityMeasures()
         }
     } else if (mapType=="drug") {
         if ("ALL" %in% measureNames) {
-            measureNames <- setup.getFeatureNames(config$drugs)
+            measureNames <- setup.getFeatureNames(config$drugPredictionFeatures)
         }
     } else if (mapType=="mutation") {
         if ("ALL" %in% measureNames) {
-            measureNames <- setup.getFeatureNames(config$drugResistanceMutations)	#; print (measureNames)
+            measureNames <- setup.getFeatureNames(config$drugMutationFeatures)	#; print (measureNames)
         }
     }
     measureNames
 }
 #
 markerMap.estimateMeasures <- function(ctx, datasetName, aggLevel, aggUnitData, sampleSetName, mapType, measureNames, params, dataFolder) {	#;print(measureNames)
-
+    sampleMeta <- context.getMeta (ctx, datasetName)
     dataset <- ctx[[datasetName]]
-    sampleMeta   <- dataset$meta
     barcodeData  <- dataset$barcodes
     # Create aggregation index for each sample (the id of the aggregation unit where the sample originates)
     aggIndex <- map.getAggregationUnitIds (aggLevel, sampleMeta)
@@ -278,24 +268,34 @@ markerMap.estimateMeasures <- function(ctx, datasetName, aggLevel, aggUnitData, 
 # Note that this is executed over imputed barcodes, and therefore there is not missingness or het genotypes in the barcodes.
 #
 markerMap.estimateDiversityMeasures <- function (ctx, datasetName, sampleNames, barcodeData, measureNames) {
-    barcodeData <- barcodeData[sampleNames,]
+    barcodes <- ctx$rootCtx$imputed$barcodes
+    barcodes <- barcodes[sampleNames]
+    sampleNames <- names(barcodes)
+    sampleCount <- length(sampleNames)
+    
     result <- c()
     for (mIdx in 1:length(measureNames)) {
         measureName <- measureNames[mIdx]
         if (measureName == "maxHaploFreq") {
-            haplos <- apply(barcodeData,1,paste,collapse="")
-            value <- max(table(haplos)) / length(haplos)
+            haploCounts <- table(barcodes)
+            maxHaploCounts <- max(haploCounts)
+            value <- maxHaploCounts/sampleCount
+        
         } else if (measureName == "haploHet") {
-            haplos <- apply(barcodeData,1,paste,collapse="")
-            value <- pegas::heterozygosity(haplos)
+            value <- pegas::heterozygosity(barcodes)
+            
         } else if (measureName == "meanSnpHet") {
-            hets <- apply(barcodeData, 2, pegas::heterozygosity)
+            barcodeGenoTable <- ctx$rootCtx$imputed$barcodeGenoTable
+            barcodeGenoTable <- barcodeGenoTable[sampleNames,]
+            hets <- apply(barcodeGenoTable, 2, pegas::heterozygosity)
             value <- mean(hets)
+            
         } else if (measureName == "medianDistance") {
-            distData <- distance.retrieveDistanceMatrix (ctx, datasetName)
+            distData <- ctx$rootCtx$imputed$distData
             mat <- as.matrix(distData[sampleNames,sampleNames])
             mat[lower.tri(mat,diag=TRUE)] <- NA
 	    value <- stats::median(mat, na.rm=TRUE)
+	    
         } else {
             stop(paste("Invalid diversity measure:", measureNames))
         }

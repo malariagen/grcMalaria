@@ -2,15 +2,14 @@
 # Network Analysis Tasks
 ###############################################################################
 clusterGraph.execute <- function (userCtx, sampleSetName, params) {
-    sampleSet <- userCtx$sampleSets[[sampleSetName]]
-    ctx     <- sampleSet$ctx
-    datasetName <- "imputed"
-    dataset <- ctx[[datasetName]]
-    meta     <- dataset$meta
-    distance <- distance.retrieveDistanceMatrix (ctx, datasetName)
+    config    <- context.getConfig(userCtx)
+    sampleSet <- context.getSampleSet (userCtx, sampleSetName)
+    ctx       <- sampleSet$ctx
+    meta      <- context.getMeta (ctx, datasetName="imputed")
+    distance  <- context.getDistanceMatrix (ctx, sampleSetName, useImputation=TRUE)	#; print(head(distData))#; print(nrow(distData))
     
     # Set up output folders
-    dataFolder <- getOutFolder(ctx$config, sampleSetName, c("graph", "data"))
+    dataFolder <- getOutFolder(config, sampleSetName, c("graph", "data"))
 
     # Get the cluster data
     clusterSetName  <- param.getParam ("cluster.clusterSet.name", params)	#; print(clusterSetName)
@@ -70,7 +69,7 @@ clusterGraph.saveGraphData <- function (graphInfo, dataFolder) {
 #
 #
 clusterGraph.makeClusterPlot <- function (ctx, graphInfo, params) {
-    config         <- ctx$config
+    config         <- context.getConfig(ctx)
     gr             <- graphInfo$graph
     nodeData       <- graphInfo$nodeData
     clusterSetInfo <- graphInfo$clusterSetInfo
@@ -109,7 +108,7 @@ clusterGraph.makeClusterPlot <- function (ctx, graphInfo, params) {
     # Draw the plot and save to file
     filenameSuffix <- paste(sampleSetName, clusterSetName, minIdentityLabel, sep="-")
     clGraphFilename <- paste("graph", filenameSuffix, "clusters", sep="-")
-    plotFolder <- getOutFolder(ctx$config, sampleSetName, c("graph", "plots"))
+    plotFolder <- getOutFolder(config, sampleSetName, c("graph", "plots"))
     clGraphFile <- paste(plotFolder, clGraphFilename, sep="/")
     initializeGraphics (getGraphicsFilename (clGraphFile), params)
     plot(gr, layout=grLayout,

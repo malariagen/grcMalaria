@@ -11,7 +11,6 @@ options(warn=1)
 setup.getConfig <- function (grc, dir, outDir, minSnpTypability, minSampleTypability, maxImputedProportion) {
     print(paste("Root folder:", dir))
     config <- list (
-        version=grc$version,
         folder.root=dir,
         folder.data=getSubFolder (dir, "data"),
         folder.out=getSubFolder (dir, outDir),
@@ -36,8 +35,8 @@ setup.getFeatureNames <- function (features) {
     names
 }
 
-setup.getFeatureColumn <- function (config, featureName) {
-    cNames <- config$features[featureName,"ColumnName"]
+setup.getFeatureColumns <- function (features) {
+    cNames <- features[,"ColumnName"]
     cNames
 }
 

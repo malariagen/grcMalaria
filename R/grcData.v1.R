@@ -14,7 +14,7 @@ grcData.v1.Pf.getFeatures <- function () {
 		"S-P",	"S-P",	"ResistancePrediction",	"ResistanceStatus",	"-",	"-",
 		"S-P-IPTp",	"S-P-IPTp",	"ResistancePrediction",	"ResistanceStatus",	"-",	"-",
 		"Species",	"Species",	"Sample Profile",	"SpeciesList",	"-",	"-",
-		"GenBarcodeMissing",	"GenBarcodeMissingness",	"Sample Profile",	"Fraction",	"-",	"-",
+		"GenBarcodeMissing",	"GenBarcodeMissing",	"Sample Profile",	"Fraction",	"-",	"-",
 		"GenBarcodeHet",	"GenBarcodeHet",	"Sample Profile",	"Fraction",	"-",	"-",
 		"COI",	"COI",	"Sample Profile",	"Integer",	"-",	"-",
 		"kelch13",	"Pfkelch13",	"PhenotypeAssociatedLocus",	"Amino",	"WT",	"-",

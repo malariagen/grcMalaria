@@ -12,13 +12,12 @@ pieMap.executeMap <- function(map) {
     sampleSet   <- mapMaster$sampleSet
     userCtx     <- mapMaster$userCtx
     params      <- mapMaster$params
-    config      <- userCtx$config
+    config      <- context.getConfig(userCtx)
     #
     # Get the context, trimmed by time interval
     #
     ctx        <- map$mapCtx							#; print(str(ctx))
-    dataset    <- ctx[[datasetName]]
-    sampleMeta <- dataset$meta
+    sampleMeta <- context.getMeta (ctx, datasetName) 
     if (nrow(sampleMeta)==0) {
         return(NULL)
     }
@@ -88,8 +87,7 @@ pieMap.executeMap <- function(map) {
 # For each aggregation unit, we get a count of each unique allele, ordered according to the palette order
 #
 pieMap.buildCountData <- function(ctx, datasetName, sampleSetName, aggLevel, aggUnitData, measureName, params) {
-    dataset <- ctx[[datasetName]]
-    sampleMeta <- dataset$meta							#; print(str(sampleMeta))
+    sampleMeta <- context.getMeta (ctx, datasetName) 				#; print(str(sampleMeta))
     #
     # Get all aggregation unit ids
     #
@@ -125,8 +123,12 @@ pieMap.buildCountData <- function(ctx, datasetName, sampleSetName, aggLevel, agg
         #
         # Get the allele counts and add them to the matrix
         #
-        attr <- pieMap.getMeasureAttributes (ctx$config, measureName)					#; print(attr)
-        vCounts <- meta.getColumnValueCounts (aggMeta, attr$columnName, excludeMultiValues=TRUE)	#; print(vCounts)
+        config <- context.getConfig(ctx)
+        feat <- config$countableFeatures
+        columnName <- feat[measureName, "ColumnName"]		#; print(columnName)
+        wtValue    <- feat[measureName, "WT"]			#; print(wtValue)
+        #
+        vCounts <- meta.getColumnValueCounts (ctx, aggMeta, columnName)
         if (length(vCounts) == 0) {
             next
         }
@@ -196,8 +198,8 @@ pieMap.getAggUnitPieSizes <- function(pieMapData, params) {			#; print(pieMapDat
 # (the same palette may be used for multiple time slices, so we keep it in the context for reuse)
 #
 pieMap.getCategoryPalette <- function (ctx, sampleSetName, measureName, params) {
+    sampleSet <- context.getSampleSet (ctx, sampleSetName)
     userCtx <- ctx$rootCtx
-    sampleSet <- userCtx$sampleSets[[sampleSetName]]
     p <- sampleSet$categoryPalettes[[measureName]]
     if (is.null(p)) {
         p <- params$map.alleleColours
@@ -224,15 +226,14 @@ pieMap.getCategoryPalette <- function (ctx, sampleSetName, measureName, params) 
 # For a given measure, all plots for this sample set use the same palette, otherwise the viewer will be confused when looking at multiple maps.
 #
 pieMap.resolveMeasureNames <- function(ctx, sampleSetName, params) {
-    userCtx <- ctx$rootCtx
-    config <- userCtx$config 
+    config <- context.getConfig(ctx)
     measureNames <- param.getParam ("analysis.measures", params)
     #
     #
     #
-    allMeasureNames <- c(setup.getFeatureNames(config$countColumns), 
-                         setup.getFeatureNames(config$amplificationColumns), 
-                         setup.getFeatureNames(config$drugResistancePositions))		#; print(allMeasureNames)
+    allMeasureNames <- c(setup.getFeatureNames(config$countableFeatures), 
+                         setup.getFeatureNames(config$amplificationFeatures), 
+                         setup.getFeatureNames(config$drugLocusFeatures))		#; print(allMeasureNames)
     if ("ALL" %in% measureNames) {
         measureNames <- allMeasureNames
     } else {
@@ -249,33 +250,21 @@ pieMap.resolveMeasureNames <- function(ctx, sampleSetName, params) {
     measureNames
 }
 #
-pieMap.getMeasureAttributes <- function(config, measureName) {
-    if (pieMap.isAminoPosition(config, measureName)) {
-        posData <- meta.getPositionData (config, measureName)
-        columnName <- posData$columnName
-        wtValue <- posData$ref
-    } else {
-        columnName <- measureName
-        wtValue <- "WT"
-    }
-    list(wtValue=wtValue, columnName=columnName)
-}
-#
 pieMap.isAminoPosition <- function (config, measureName) {
-    measureName %in% setup.getFeatureNames(config$drugResistancePositions)
+    measureName %in% setup.getFeatureNames(config$drugLocusFeatures)
 }
 #
-pieMap.getMeasureAllValues <- function(ctx, sampleSetName, measureName, excludeMultiValues=TRUE, wtFirst=TRUE) {
-    userCtx <- ctx$rootCtx
-    sampleSet <- userCtx$sampleSets[[sampleSetName]]
-    dataset <- sampleSet$ctx$unfiltered
-    sampleMeta <- dataset$meta						#; print(nrow(sampleMeta))
+pieMap.getMeasureAllValues <- function(ctx, sampleSetName, measureName, wtFirst=TRUE) {
+    config <- context.getConfig(ctx)					#; print(measureName)
+    sampleSet <- context.getSampleSet (ctx, sampleSetName)
+    sampleMeta <- context.getMeta (sampleSet$ctx, "unfiltered") 	#; print(nrow(sampleMeta))
     #	
-    attr <- pieMap.getMeasureAttributes (userCtx$config, measureName)	#; print(attr)
-    columnName <- attr$columnName
-    wtValue <- attr$wtValue
+    #attr <- pieMap.getMeasureAttributes (config, measureName)	#; print(attr)
+    feat <- config$countableFeatures
+    columnName <- feat[measureName, "ColumnName"]		#; print(columnName)
+    wtValue    <- feat[measureName, "WT"]			#; print(wtValue)
     #
-    valueCounts <- meta.getColumnValueCounts (sampleMeta, columnName, excludeMultiValues)
+    valueCounts <- meta.getColumnValueCounts (ctx, sampleMeta, columnName)
     values <- names(valueCounts)
     #
     # Put WT allele as the first value for pie charts

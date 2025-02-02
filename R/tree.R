@@ -15,21 +15,21 @@ tree.sampleLabels     <- FALSE
 ###############################################################################
 #
 tree.execute <- function(userCtx, sampleSetName, method, params) {
-    sampleSet <- userCtx$sampleSets[[sampleSetName]]
+    sampleSet <- context.getSampleSet (userCtx, sampleSetName)
     ctx <- sampleSet$ctx
     #
     # Get the output folders
     #
-    dataFolder      <- getOutFolder(ctx$config, sampleSetName, c(method, "data"))
-    plotsRootFolder <- getOutFolder(ctx$config, sampleSetName, c(method, "plots"))
+    config <- context.getConfig(ctx)
+    dataFolder      <- getOutFolder(config, sampleSetName, c(method, "data"))
+    plotsRootFolder <- getOutFolder(config, sampleSetName, c(method, "plots"))
     #
     # Get the metadata and distance and genotypes
     #
     useImputed <- param.getParam ("phylo.impute", params)	#; print(useImputed)
     datasetName <- ifelse (useImputed, "imputed", "filtered")
-    dataset <- ctx[[datasetName]]
-    sampleMeta <- dataset$meta
-    distData  <- distance.retrieveDistanceMatrix (ctx, datasetName)
+    sampleMeta <- context.getMeta (ctx, datasetName) 
+    distData  <- context.getDistanceMatrix (ctx, sampleSetName, useImputed)
     #
     # Build a Tree (currently only NJ trees supported)
     #

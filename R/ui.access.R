@@ -14,7 +14,7 @@ ui.makeSingleMap <- function (ctx, sampleSet, type,
         stop (paste("Unsupported map type for UI:", type))
     }
     task <- paste0("map/", type)
-    config <- ctx$config										#; print (config)
+    config <- context.getConfig(ctx)
 
     params <- param.makeParameterList (ctx, task, 
                   timePeriods=NULL, aggregate=aggregate, minAggregateCount=minAggregateCount, 
@@ -34,17 +34,17 @@ ui.makeSingleMap <- function (ctx, sampleSet, type,
         
     } else if (type=="drug") {
         params$analysis.measures <- param.getArgParameter (mArg, "measure", type="character", 
-                                                           validValues=c("ALL", setup.getFeatureNames(config$drugs)))
+                                                           validValues=c("ALL", setup.getFeatureNames(config$drugPredictionFeatures)))
 
     } else if (type=="mutation") {
         params$analysis.measures <- param.getArgParameter (mArg, "measure", type="character", 
-                                                           validValues=c("ALL", setup.getFeatureNames(config$drugResistanceMutations)))
+                                                           validValues=c("ALL", setup.getFeatureNames(config$drugMutationFeatures)))
         
     } else if (type=="alleleProp") {
         params$analysis.measures <- param.getArgParameter (mArg, "measure", type="character", 
-                                                           validValues=c("ALL", setup.getFeatureNames(config$countColumns), 
-                                                                         setup.getFeatureNames(config$amplificationColumns), 
-                                                                         setup.getFeatureNames(config$drugResistancePositions)))
+                                                           validValues=c("ALL", setup.getFeatureNames(config$countableFeatures), 
+                                                                         setup.getFeatureNames(config$amplificationFeatures), 
+                                                                         setup.getFeatureNames(config$drugLocusFeatures)))
         
     } else if (type=="diversity") {
         params$analysis.measures <- param.getArgParameter (mArg, "measure", type="character", 

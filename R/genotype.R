@@ -1,80 +1,136 @@
-###############################################################################
-# Declarations: sample data and metadata
-################################################################################
-geno.getGenoFile <- function (ctx, datasetName) {
-    genoFile  <- getContextCacheFile(ctx, datasetName, "genotypes", "sampleGenotypes")
-    genoFile
-}
-
-geno.initialize <- function (ctx, datasetName, loadFromCache=TRUE, store=TRUE) {
-    config <- ctx$config
-    dataset <- ctx[[datasetName]]
-
-    genoDataFile <- geno.getGenoFile (ctx, datasetName)
-    
-    if (loadFromCache & rdaFileExists(genoDataFile)) {
-        genoData <- readRdaSampleData (genoDataFile)
-        geno.setDatasetGenotypes (ctx, datasetName, genoData, store=FALSE)
-    } else {
-        genoData <- geno.convertAllelesToGenos (ctx, dataset$barcodes)
-        geno.setDatasetGenotypes (ctx, datasetName, genoData, store=store)
-    }
-}
-
-geno.setDatasetGenotypes <- function (ctx, datasetName, genos, store=TRUE) {
-    config <- ctx$config
-    dataset <- ctx[[datasetName]]
-    dataset$genos <- genos
-    if (store) {
-        genoDataFile <- geno.getGenoFile (ctx, datasetName)
-        writeRdaSampleData(genos, genoDataFile)
-    }
-}
-
 #
-# Convert a dataframe of alleles, to a dataframe of genotypes (values between 0 and 1)
-# Missing values are NA and het calls are 0.5
+# This module contains the code that translates genotype strings in the GRC data file into genotype data internally used by the package.
+# The code works on columns of data=; please note that the same column may be used by more than one feature (e.g. a multi-allele variant and a specific mutation)
 #
-geno.convertAllelesToGenos <- function(ctx, alleleData) {
-    alleleMeta <- barcode.getMetadata (ctx, alleleData)	#; print(head(alleleMeta))
-    #
-    # Change to 0-1 genotypes
-    #
-    sampleCount <- nrow(alleleData)
-    snpCount    <- ncol(alleleData)			#; print(snpCount)
-    genoData <- data.frame(matrix(nrow=sampleCount, ncol=0))
-    #
-    for (pIdx in 1:snpCount) {
-        ref  <- alleleMeta$Ref[pIdx]			#; print(ref)
-        nref <- alleleMeta$Alternative[pIdx]		#; print(nref)
-        posNt <- alleleData[,pIdx]			#; print(posNt)
-        
-        # Don't need this code, alleles were checked when barcodes were decomposed.
-        #validAlleles <- c("A","C","G","T","X","N")
-        #badIdx <- which(!(posNt %in% validAlleles))
-        #if (length(badIdx) > 0) {
-        #    for (bIdx in badIdx) {
-        #        badAllele <- posNt[bIdx]
-        #        badSampleIdx <- badIdx[bIdx]
-        #        badSample <- rownames(alleleData)[badSampleIdx]
-        #        cat (paste0("Error: Unexpected allele found at SNP #",pIdx," in sample ",badSample,": found ",badAllele), fill=TRUE)
-        #    }
-        #    stop ("Errors found in barcoding alleles - exiting.")
-        #}
-        
-        #
-        # We assign NA to 2nd/3rd nonref alleles- based on the assumption that there are 
-        # not many samples that carry these, so we can treat the SNP as biallelic.
-        #
-        genos <- rep(NA, sampleCount)
-        genos[which(posNt == ref)]  <- 0.0
-        genos[which(posNt == nref)] <- 1.0
-        genos[which(posNt == "N")]  <- 0.5
-        genoData <- cbind(genoData, genos)		#; print(genos)
+GENO.HOM  <- 1
+GENO.HET  <- 2
+GENO.HET_NO_PROPS <- 3
+GENO.MISS <- 9
+#
+# Process all data in the allele-based columns referenced by features. The names of these columns are listed in config$alleleColumns.
+#
+# Args:   grcData - A data frame containing the GRC data, read from file
+#         genoCols - A vector with the names of the columns to be genotyped
+# Return: GenotypeData: a list containing the following elements:
+#         - <for each barcoding feature>: a VariantGenotypeData list containing the genotype results for that variant.
+#         - samples: the vector of sample IDs
+#         - sampleMissing: a vector of numerics containing the proportion of variants that were missing for each sample
+#         - sampleHet: a vector of numerics containing the proportion of non-missing variant calls that were het for each sample
+#         Each element of the list is indexed by the variant feature name
+#
+genotype.processGenotypes <- function (grcData, genoCols) {
+    missingCols <- which(!(genoCols %in% colnames(grcData)))
+    if (length(missingCols) > 0) {
+        stop(paste0("Missing columns of genotype data: [", paste0(genoCols[missingCols], collapse=","), "]"))
     }
-  
-    # Name the rows and columns
-    colnames(genoData) <- colnames(alleleData) 
-    rownames(genoData) <- rownames(alleleData)
-    genoData
+    genotypeData <- geno_processGenotypes(grcData, genoCols)  # NOW USES RCPP CODE
+    genotypeData
+}
+#
+# ###########################################################################################
+# Genotype Data Filtering
+# ###########################################################################################
+#
+# Build a GenotypeData list that contains a subset of samples of a larger GenotypeData list
+#
+genotype.filterGenotypeDataBySample <- function (genotypeData, selSamples) {
+    #
+    # Check that all the samples to be selected are in the source barcode set
+    #
+    sCount <- length(selSamples)			#; print(paste("DBG filterGenotypeDataBySample new sample count:", sCount))
+    srcSamples <- genotypeData$samples			#; print(paste("DBG filterGenotypeDataBySample prev sample count:", length(srcSamples)))
+    selIdx <- which(selSamples %in% srcSamples)
+    if (length(selIdx) != sCount) {
+        xIdx <- which(!(selSamples %in% srcSamples))
+        print(selSamples[xIdx])
+        stop("One or more selected samples are not in the original sample list")
+    }
+    #
+    columnGenoData <- genotypeData$columnGenoData
+    colNames <- names(columnGenoData)
+    colCount <- length(colNames)			#; print(paste("DBG filterGenotypeDataBySample col count:", colCount))
+    newColumnGenoData <- list()
+    #
+    for (cIdx in 1:colCount) {
+        colName <- colNames[cIdx]			#; print(paste("DBG filterGenotypeDataBySample", cIdx, colName))
+        colGenotypes <- columnGenoData[[colName]]
+        #
+        sampleGenotypes <- colGenotypes$sampleGenotypes
+        newSampleGenotypes <- sampleGenotypes[selSamples]
+        #
+        missingCount <- length(which(newSampleGenotypes==GENO.MISS))
+        homCount     <- length(which(newSampleGenotypes==GENO.HOM))
+        hetCount     <- sCount - (missingCount + homCount)
+        #
+        sampleAlleles <- colGenotypes$sampleAlleles
+        keep <- selSamples[which(selSamples %in% names(sampleAlleles))]
+        newSampleAlleles <- sampleAlleles[keep]
+        #
+        newColGenotypes <- list(samples=selSamples,
+                                sampleGenotypes=newSampleGenotypes,
+                                sampleAlleles=newSampleAlleles,
+                                totalCount=sCount,
+                                missingCount=missingCount,
+                                homCount=homCount,
+                                hetCount=hetCount)
+        newColumnGenoData[[colName]] <- newColGenotypes
+    }
+    #
+    # Estimate sample missingness and heterozyous call proportion
+    #
+    sProp <- geno_estimateSampleProperties (selSamples, colNames, newColumnGenoData)
+    cProp <- geno_estimateColumnProperties (colNames, newColumnGenoData)
+    #
+    newGenotypeData <- list(samples=selSamples, 
+                            columns=colNames,
+                            columnGenoData=newColumnGenoData, 
+                            #
+                            columnCount=sProp$columnCount, 
+                            sampleMissingCounts=sProp$missingCounts, 
+                            sampleHomCounts=sProp$homCounts,
+                            sampleHetCounts=sProp$hetCounts,
+                            #
+                            sampleCount=cProp$sampleCount, 
+                            columnMissingCounts=cProp$missingCounts, 
+                            columnHomCounts=cProp$homCounts, 
+                            columnHetCounts=cProp$hetCounts
+                            )
+    newGenotypeData
+}
+#
+# Build a GenotypeData list that contains a subset of columns of a larger GenotypeData list
+#
+genotype.filterGenotypeDataByColumn <- function (genotypeData, selColumns) {
+    #
+    # Check that all the columns to be selected are in the source barcode set
+    #
+    columnGenoData <- genotypeData$columnGenoData
+    colNames <- names(columnGenoData)
+    selIdx <- which(colNames %in% selColumns)
+    if (length(selIdx) != length(selColumns)) {
+        stop("One or more selected columns are not in the original list")
+    }
+    #
+    newColumnGenoData<- columnGenoData[selColumns]
+    #
+    # Estimate sample missingness and heterozyous call proportion
+    #
+    sProp <- geno_estimateSampleProperties (genotypeData$samples, selColumns, newColumnGenoData)
+    cProp <- geno_estimateColumnProperties (selColumns, newColumnGenoData)
+    #
+    newGenotypeData <- list(samples=genotypeData$samples, 
+                            columns=selColumns,
+                            columnGenoData=newColumnGenoData,
+                            #
+                            columnCount=sProp$columnCount, 
+                            sampleMissingCounts=sProp$missingCounts, 
+                            sampleHomCounts=sProp$homCounts,
+                            sampleHetCounts=sProp$hetCounts,
+                            #
+                            sampleCount=cProp$sampleCount, 
+                            columnMissingCounts=cProp$missingCounts, 
+                            columnHomCounts=cProp$homCounts, 
+                            columnHetCounts=cProp$hetCounts
+                            )
+    newGenotypeData
 }

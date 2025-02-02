@@ -9,17 +9,18 @@ barcodeFreqMap.executeMap <- function (map) {
     measureName <- map$measureName
     interval    <- map$interval
     #
-    datasetName <- map$datasetName
+    #datasetName <- map$datasetName
+    datasetName <- "imputed"		# Cannot be another dataset, barcodes must be imputed.
     sampleSet   <- mapMaster$sampleSet
     userCtx     <- mapMaster$userCtx
     params      <- mapMaster$params
-    config      <- userCtx$config
+    config      <- context.getConfig(userCtx)
     #
     # Get the context and make sure we have samples to map
     #
     ctx        <- map$mapCtx				#; print(str(ctx))
     dataset    <- ctx[[datasetName]]
-    sampleMeta <- dataset$meta
+    sampleMeta <- context.getMeta (ctx, datasetName)
     if (nrow(sampleMeta)==0) {
         print(paste("No samples found - skipping interval", interval$name))
         return()
@@ -54,7 +55,7 @@ barcodeFreqMap.executeMap <- function (map) {
     #
     # Get the sample counts data
     #
-    clusterCountData <- barcodeFreqMap.buildCountData (aggLevel, aggUnitData, dataset, params)	#; print(head(clusterCountData)
+    clusterCountData <- barcodeFreqMap.buildCountData (ctx, aggLevel, aggUnitData, params)	#; print(head(clusterCountData)
     #
     # Do the actual plot, starting with the background map
     #
@@ -189,16 +190,15 @@ barcodeFreqMap.addFreqBars <- function (mapPlot, countData, aggUnitData, stdMark
 #
 # For each aggregation unit, we get a count of each unique cluster, ordered in descending count
 #
-barcodeFreqMap.buildCountData <- function(aggLevel, aggUnitData, dataset, params) {
-    sampleMeta   <- dataset$meta
-    barcodeData  <- dataset$barcodes
+barcodeFreqMap.buildCountData <- function(ctx, aggLevel, aggUnitData, params) {
 
     # Get all aggregation unit ids
     aggUnitGids <- rownames(aggUnitData)						#; print(aggUnitGids)
     
     # Create aggregation index for each sample (the id of the aggregation unit where the sample originates)
+    sampleMeta <- context.getMeta (ctx, "imputed")
     aggIndex <- map.getAggregationUnitIds (aggLevel, sampleMeta)
-    clusters <- apply(barcodeData,1,paste,collapse="")
+    clusters <- ctx$rootCtx$imputed$barcodes
 
     # Get the data for all aggregation units
     countData <- NULL

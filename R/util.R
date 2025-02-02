@@ -47,7 +47,8 @@ getContextCacheFile <- function (ctx, datasetName, subnames, filename) {
 }
 #
 getContextCacheFolder <- function (ctx, subnames, create=TRUE) {
-    sub <- getSubFolder (ctx$config$folder.data, c(ctx$id, subnames), recursive=TRUE, create)
+    config <- context.getConfig(ctx)
+    sub <- getSubFolder (config$folder.data, c(ctx$id, subnames), recursive=TRUE, create)
     sub
 }
 #

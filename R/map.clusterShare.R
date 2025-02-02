@@ -17,13 +17,9 @@ clusterShareMap.executeMap <- function (map) {
     sampleSet   <- mapMaster$sampleSet
     userCtx     <- mapMaster$userCtx
     params      <- mapMaster$params
-    config      <- userCtx$config
+    config      <- context.getConfig(userCtx)
     #
-    # Get the context, trimmed by time interval
-    #
-    ctx        <- map$mapCtx				#; print(str(ctx))
-    dataset    <- ctx[[datasetName]]
-    sampleMeta <- dataset$meta
+    sampleMeta <- context.getMeta (map$mapCtx, datasetName) 
     if (nrow(sampleMeta)==0) {
         print(paste("No samples found - skipping interval", interval$name))
         return()
@@ -55,12 +51,10 @@ clusterShareMap.executeMap <- function (map) {
     #    
     # Get the cluster data
     #
-    clusterSetLabel  <- getMinIdentityLabel (minIdentity)
-    clusterSet       <- mapMaster$clusterSets[[clusterSetLabel]]
-    clusterSetName   <- clusterSet$clusterSetName
-    clusterData      <- clusterSet$clusters
+    clusterSetLabel  <- getMinIdentityLabel (minIdentity)			#; print(clusterSetLabel)
+    clusterSet       <- mapMaster$clusterSets[[clusterSetLabel]]		#; print(str(clusterSet))
     #
-    clusterShareData <- clusterMap.getUnitClusterCountData (clusterData, sampleMeta, aggLevel, aggUnitData, params)    #TODO - rename to aggClusterCountData
+    clusterShareData <- clusterMap.getAggUnitClusterCountData (clusterSet, sampleMeta, aggLevel, aggUnitData, params)
 											#; print(clusterShareData)
     clusterPalette <- mapMaster$clusterSetPalettes[[clusterSetLabel]]
     #

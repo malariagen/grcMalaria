@@ -11,7 +11,7 @@ map.execute <- function(userCtx, sampleSetName, mapType, params) {		#;print(mapT
     # For pie chart maps, we will need to create "category palettes" to ensure consistent colour mappings across time periods
     #
     if (mapType=="alleleProp") {
-        sampleSet <- userCtx$sampleSets[[sampleSetName]] 
+        sampleSet <- context.getSampleSet (userCtx, sampleSetName)
         sampleSet$categoryPalettes <- new.env()
     }
     #
@@ -126,8 +126,8 @@ map.createMapSpecs <- function(userCtx, sampleSetName, mapType, params) {		#;pri
     #
     # Create one map object for each time interval/dataset/aggregation/measure combination, and add it to the maps object
     #
-    datasetNames <- mapMaster$datasetNames
-    for (dnIdx in 1:length(datasetNames)) {					#; print(paste(length(datasetNames),"datasetNames:",datasetNames))
+    datasetNames <- mapMaster$datasetNames					#; print(paste(length(datasetNames),"datasetNames:",datasetNames))
+    for (dnIdx in 1:length(datasetNames)) {
         datasetName <- datasetNames[dnIdx]					#; print(paste("datasetName:",datasetName))
         intervals <- mapMaster$intervals
         for (iIdx in 1:length(intervals)) {					#; print(paste(length(intervals),"intervals:",intervals))
@@ -135,7 +135,7 @@ map.createMapSpecs <- function(userCtx, sampleSetName, mapType, params) {		#;pri
             #
             # Trim the dataset according to time intervel, and skip if there are no samples
             #
-            mapCtx <- context.trimContextByTimeInterval (mapMaster$sampleSet$ctx, interval)
+            mapCtx <- context.trimContextByTimeInterval (mapMaster$sampleSet$ctx, datasetName, interval)
             if (is.null(mapCtx)) {
                 print(paste("No samples found- skipping interval", interval$name))
                 next
@@ -148,7 +148,7 @@ map.createMapSpecs <- function(userCtx, sampleSetName, mapType, params) {		#;pri
                 measureNames    <- mapMaster$measureNames			#; print(paste(length(measureNames),"measureNames:",measureNames))
                 #
                 aggUnitPairData <- NULL
-                if (map.isMarkerMap(mapType)) {
+                if (map.isMarkerMap(mapType)) {					#; print(mapType)
                     #
                     # Get aggregation units and values for their measures, except for for sample counts which are already in the dataframe
                     #
@@ -192,7 +192,7 @@ map.createMapMaster <- function (userCtx, sampleSetName, mapType, params) {		#; 
     #
     # Make a template config to be used for each time slice interval
     #
-    sampleSet  <- userCtx$sampleSets[[sampleSetName]]
+    sampleSet <- context.getSampleSet (userCtx, sampleSetName)
     #
     mapMaster <- new.env()
     mapMaster$type        <- mapType
@@ -219,8 +219,9 @@ map.createMapMaster <- function (userCtx, sampleSetName, mapType, params) {		#; 
     #
     # Get the output folders and file name elements
     #
-    mapMaster$dataFolder <- getOutFolder(userCtx$config, sampleSet$name, c(paste("map", mapType, sep="-"), "data"))
-    mapMaster$plotFolder <- getOutFolder(userCtx$config, sampleSet$name, c(paste("map", mapType, sep="-"), "plots"))	#; print(mapMaster$plotFolder)
+    config <- context.getConfig(userCtx)
+    mapMaster$dataFolder <- getOutFolder(config, sampleSet$name, c(paste("map", mapType, sep="-"), "data"))
+    mapMaster$plotFolder <- getOutFolder(config, sampleSet$name, c(paste("map", mapType, sep="-"), "plots"))	#; print(mapMaster$plotFolder)
     #
     # Get the output image formatting parameters
     #
@@ -430,9 +431,7 @@ map.getAggregationUnitData <- function(plotCtx, datasetName, aggLevel, analysisN
 
     # Trim all data to discard samples that have incomplete geographical data
     validSamples <- map.getAggregableSamples (plotCtx, datasetName, aggLevel)
-    
-    dataset <- plotCtx[[datasetName]]
-    sampleMeta   <- dataset$meta[validSamples,]
+    sampleMeta <- context.getSampleMeta (plotCtx, validSamples) 
 
     adminLevelCols  <- map.getAggregationColumns()
 
@@ -493,8 +492,7 @@ map.getAggregationUnitData <- function(plotCtx, datasetName, aggLevel, analysisN
 }
 #
 map.getAggregableSamples <- function(plotCtx, datasetName, aggLevel) {
-    dataset <- plotCtx[[datasetName]]
-    sampleMeta <- dataset$meta
+    sampleMeta <- context.getMeta (plotCtx, datasetName)
     for (aIdx in 0:aggLevel) {
         cName  <- map.getAggregationColumns(aIdx);
         missingIdx <- which (sampleMeta[,cName] == "-")

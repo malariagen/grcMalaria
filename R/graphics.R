@@ -10,10 +10,11 @@ graphics.defaultOrder <- 0
 ################################################################################
 #
 graphics.loadAttributes <- function (userCtx, attrId, attrField, attrFile, attrSheet) {		#; print(attrId)
+    meta <- context.getMeta (userCtx)
     if (is.null(attrId)) {
         stop("A name was not specified for the attribute list, please provide one.")
-    }												#; print(colnames(userCtx$unfiltered$meta)); print(attrField)
-    if (!(attrField %in% colnames(userCtx$unfiltered$meta))) {
+    }												#; print(colnames(meta)); print(attrField)
+    if (!(attrField %in% colnames(meta))) {
         stop(paste0("The field name specified ('", attrField, "') was not found in the GRC data."))
     }
     if (!file.exists(attrFile)) {
@@ -180,10 +181,10 @@ initializeGraphics <- function(graphicFilename, params) {
 # Colour Palettes
 ###############################################################################
 graphics.getColourPalette <- function (ctx) {
-    userCtx <- ctx$rootCtx
-    palette <- userCtx$userColourPalette			#; print(palette)
+    config <- context.getConfig(ctx)
+    palette <- ctx$rootCtx$userColourPalette			#; print(palette)
     if (is.null(palette)) {
-        palette <- userCtx$config$defaultPalette
+        palette <- config$defaultPalette
     }								#; print(palette)
     palette
 }
@@ -196,8 +197,7 @@ graphics.resetColourPalette <- function (ctx) {
 }
 
 graphics.setColourPalette <- function (ctx, palette) {
-    userCtx <- ctx$rootCtx
-    userCtx$userColourPalette <- palette
+    ctx$rootCtx$userColourPalette <- palette
 }
 
 graphics.makeTextPalette <- function (palette) {

@@ -2,34 +2,31 @@
 # 
 ###################################################################
 #
-sampleSet.selectSampleSet <- function (userCtx, sampleSetName, select) {
-    sampleMeta <- userCtx$unfiltered$meta
+sampleSet.selectSampleSet <- function (ctx, sampleSetName, select) {
 
     # Select the samples to be analyzed
-    sampleMeta <- meta.select(sampleMeta, select)
+    rootCtx <- ctx$rootCtx
+    sampleMeta <- context.getMeta (rootCtx) 
+    selMeta <- meta.select(sampleMeta, select)
+    selSamples <- rownames(selMeta)
 
     # Create a trimmed analysis context containing only data pertaining to the selected samples
-    sampleNames <- rownames(sampleMeta)
-    trimCtx <- context.trimContext (userCtx, sampleNames)
+    trimCtx <- context.trimContext (rootCtx, selSamples)
     trimCtx$sampleSets <- NULL
     
     sampleSet <- new.env()
     sampleSet$name=sampleSetName
     sampleSet$select=select
-    sampleSet$samples=sampleNames
+    sampleSet$samples=selSamples
     sampleSet$ctx=trimCtx
     sampleSet$clusters=new.env()
     sampleSet$baseMaps=new.env()
     
-    userCtx$sampleSets[[sampleSetName]] <- sampleSet
+    rootCtx$sampleSets[[sampleSetName]] <- sampleSet
     
-    metaOutFolder <- getOutFolder(userCtx$config, c(sampleSetName, "metadata"))
-    metaFilename  <- paste(metaOutFolder, "/meta-", sampleSetName, "-unfiltered.tab", sep="")
-    utils::write.table(trimCtx$unfiltered$meta, file=metaFilename, sep="\t", quote=FALSE, row.names=FALSE)
-    metaFilename  <- paste(metaOutFolder, "/meta-", sampleSetName, "-filtered.tab", sep="")
-    utils::write.table(trimCtx$filtered$meta, file=metaFilename, sep="\t", quote=FALSE, row.names=FALSE)
-
-    unfilteredCount <- length(sampleNames)
-    filteredCount <- nrow(trimCtx$filtered$meta)
-    print(paste0("Selected ", unfilteredCount, " samples for dataset '", sampleSetName, "', including ", filteredCount, " quality filtered samples"))
+    unfilteredCount <- length(trimCtx$unfiltered$samples)
+    filteredCount   <- length(trimCtx$filtered$samples)
+    imputedCount    <- length(trimCtx$imputed$samples)
+    print(paste0("Selected ", unfilteredCount, " samples for sampleset '", sampleSetName, "', including ", 
+                              filteredCount, " quality filtered samples and ", imputedCount, " imputed samples"))
 }

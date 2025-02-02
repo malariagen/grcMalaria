@@ -11,9 +11,9 @@ map.colour.river <- "#CDDBDB"
 #
 baseMap.getBaseMap <- function(userCtx, sampleSetName, params) {
     #
-    sampleSet <- userCtx$rootCtx$sampleSets[[sampleSetName]]
+    sampleSet <- context.getSampleSet (userCtx, sampleSetName)
     ctx <- sampleSet$ctx
-    sampleMeta  <- ctx$unfiltered$meta
+    sampleMeta  <- context.getMeta (ctx, datasetName="unfiltered")
     #
     # Check if the base map already exists for this aspect ratio; if so, skip creation
     #

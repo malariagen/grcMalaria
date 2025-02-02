@@ -2,7 +2,7 @@
 # Read a GRC data file from an Excel sheet
 ################################################################################
 #
-# Read sample metadata file
+# Read sample data file
 #
 grcData.load <- function (grcDataFile, species, version, grcDataSheet) {
     if (!file.exists(grcDataFile)) {
@@ -79,7 +79,7 @@ grcData.load <- function (grcDataFile, species, version, grcDataSheet) {
     # Make sure all the feature columns are present
     #
     grcSampleData <- readExcelData(grcDataFile, grcDataSheet)
-    grcSampleData <- grcData.checkColumns (grcSampleData, c("SampleId",grcSampleData$ColumnName), grcDataSheet)
+    grcSampleData <- grcData.checkColumns (grcSampleData, c("SampleId",grcFeatures$ColumnName), grcDataSheet)
     rownames(grcSampleData) <- grcSampleData$SampleId	
     #
     # Process the features to create a configuation that works for this GRC
@@ -163,42 +163,46 @@ grcData.buildGrcConfig <- function (species, version, grcFeatures) {
         version = version
     )
     #
+    # Drug Resistant Predictions
     #
-    #
-    config$drugs <- grcFeatures[which(grcFeatures$Class == "ResistancePrediction"),]
+    config$drugPredictionFeatures <- grcFeatures[which(grcFeatures$Class == "ResistancePrediction"),]
     #
     # Drug Resistant Positions
     #
-    posFeat <- grcFeatures[which(grcFeatures$Class == "PhenotypeAssociatedLocus"),]	#; print(posFeat)
-    config$drugResistancePositions <- posFeat
+    config$drugLocusFeatures <- grcFeatures[which(grcFeatures$Class == "PhenotypeAssociatedLocus"),]	#; print(config$drugLocusFeatures)
     #
-    # We create the Drug Resistant Mutations features based on the alternative alleles of the Drug Resistant Positions
+    # Drug Resistant Mutations
     #
-    mutFeat <- grcFeatures[which(grcFeatures$Class == "PhenotypeAssociatedMutation"),]	#; print(mutFeat)
-    config$drugResistanceMutations <- mutFeat						#; print(mutFeat)
+    config$drugMutationFeatures <- grcFeatures[which(grcFeatures$Class == "PhenotypeAssociatedMutation"),]	#; print(config$drugMutationFeatures)
     #
-    #
+    # Count Columns (i.e. columns used for Pie Charts)
+    # excluding Amplifications
     #
     countColumns <- grcFeatures[which(grcFeatures$Class %in% c("MutationList","PhenotypeAssociatedLocus")),]
-    config$countColumns <- countColumns[which(countColumns$DataType != "Amplification"),]
+    config$countableFeatures <- countColumns[which(countColumns$DataType != "Amplification"),]
     #
+    # Amplifications Columns (also used for Pie Charts)
     #
+    config$amplificationFeatures <- grcFeatures[which(grcFeatures$DataType == "Amplification"),]
     #
-    config$amplificationColumns <- grcFeatures[which(grcFeatures$DataType == "Amplification"),]
+    # Barcoding Columns (also used for Pie Charts)
     #
+    config$barcodingFeatures <- grcFeatures[which(grcFeatures$Class == "BarcodingLocus"),]
     #
+    # Get the names of the allele-based columns to be genotyped, separating the barcoding SNPs
     #
-    config$barcodeMeta <- grcFeatures[which(grcFeatures$Class == "BarcodingLocus"),]
+    config$alleleColumns <- unique(c(config$drugLocusFeatures$ColumnName, 
+                                     config$drugLocusFeatures$ColumnName, 
+                                     config$drugMutationFeatures$ColumnName, 
+                                     config$countableFeatures$ColumnName))
+    config$barcodeColumns <- unique(config$barcodingFeatures$ColumnName)
     #
-    # 
+    # Copy the features used in clustering computations
     #
-    config$cluster.stats.drugs        <- config$drugs
-    config$cluster.stats.mutations    <- config$drugResistanceMutations
-    config$cluster.stats.alleleCounts <- config$countColumns
+    config$cluster.stats.drugPredictionFeatures  <- config$drugPredictionFeatures
+    config$cluster.stats.drugMutationFeatures    <- config$drugMutationFeatures
+    config$cluster.stats.countableFeatures       <- config$countableFeatures
     #
-    # Attach the newly created features to the GRC features before sticking them in the config
-    #
-    config$features <- rbind (grcFeatures, mutFeat)
     config
 }
 #
@@ -264,7 +268,8 @@ grcData.merge <- function (inGrc, newGrc, overwrite=FALSE, extendColumns=FALSE) 
     # Finally, merge the rows
     #
     mergedData <- rbind(inData, newData)
-    mergedGrc <- list(data=mergedData, config=inGrc$config, version=inGrc$version)
+    mergedGrc <- list(data=mergedData, config=inGrc$config, version=inGrc$version, 
+                      provider=inGrc$provider, providerVersion=inGrc$providerVersion)
     mergedGrc
 }
 #
@@ -279,16 +284,16 @@ grcData.getFeatureNames <- function (grc, featureType) {
     config <- grc$config
     
     if (featureType == "drug") {
-        featureNames <- config$drugs$FeatureName
+        featureNames <- config$drugPredictionFeatures$FeatureName
         
     } else if (featureType == "locus") {
-        featureNames <- config$drugResistancePositions$FeatureName
+        featureNames <- config$drugLocusFeatures$FeatureName
     
     } else if (featureType == "mutation") {
-        featureNames <- config$drugResistanceMutations$FeatureName
+        featureNames <- config$drugMutationFeatures$FeatureName
     
     } else if (featureType == "amplification") {
-        featureNames <- config$amplificationColumns$FeatureName
+        featureNames <- config$amplificationFeatures$FeatureName
     
     }
     featureNames

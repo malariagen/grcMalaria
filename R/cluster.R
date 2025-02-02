@@ -5,20 +5,20 @@
 # Main entry point- load stored clusters, or identify them from scratch if they are not stored
 #
 cluster.findClusters <- function (userCtx, sampleSetName, params) {
-    if (!sampleSetName %in% names(userCtx$sampleSets)) {
+    sampleSet <- context.getSampleSet (userCtx, sampleSetName)
+    if (is.null(sampleSet)) {
         stop(paste("Sample set not initialized:", sampleSetName))
     }
-    sampleSet <- userCtx$sampleSets[[sampleSetName]]
     ctx       <- sampleSet$ctx
-    config    <- ctx$config
+    config    <- context.getConfig(ctx) 
 
     clusterSetName    <- param.getParam ("cluster.clusterSet.name", params)	#; print(clusterSetName)
     minIdentityLevels <- param.getParam ("cluster.identity.min", params) 	#; print(minIdentityLevels)
-    imputeBarcodes    <- param.getParam ("cluster.impute", params)		#; print(imputeBarcodes)
+    useImputation     <- param.getParam ("cluster.impute", params)		#; print(useImputation)
     method            <- param.getParam ("cluster.method", params)		#; print(method)
     print(paste("Clustering Method:",method))
     
-    dataRootFolder  <- getOutFolder(ctx$config, sampleSetName, c("cluster", "data", clusterSetName), create=FALSE)
+    dataRootFolder  <- getOutFolder(config, sampleSetName, c("cluster", "data", clusterSetName), create=FALSE)
     if (file.exists(dataRootFolder)) {
         unlink(dataRootFolder, recursive=TRUE)
     }
@@ -26,13 +26,13 @@ cluster.findClusters <- function (userCtx, sampleSetName, params) {
     clusterSetInfos <- list()
     for (idIdx in 1:length(minIdentityLevels)) {
         minIdentity <- minIdentityLevels[idIdx]
-        minIdentityLabel <- getMinIdentityLabel (minIdentity)			; print(minIdentityLabel)
+        minIdentityLabel <- getMinIdentityLabel (minIdentity)			#; print(minIdentityLabel)
 
         # Determine what clustering approach must be used.
         # TODO - At the moment, only graph-based clustering methods are implemented, but this may be extended later.
         clustersData <- NULL
         if (method %in% cluster.graphMethods) {
-            clustersData <- cluster.findClustersFromGraph (ctx, clusterSetName, method, minIdentity, imputeBarcodes, params)
+            clustersData <- cluster.findClustersFromGraph (ctx, sampleSetName, clusterSetName, method, minIdentity, useImputation, params)
         } else {
             stop (paste("Invalid method specified in parameter 'cluster.method':", method))
         }
@@ -47,7 +47,7 @@ cluster.findClusters <- function (userCtx, sampleSetName, params) {
 
         # Write out result files
         dataFileSuffix <- paste("", sampleSetName, clusterSetName, minIdentityLabel, sep="-")
-        dataFolder  <- getOutFolder(ctx$config, sampleSetName, 
+        dataFolder  <- getOutFolder(config, sampleSetName, 
                                     c("cluster", "data", clusterSetName, minIdentityLabel))
 
         # Write out cluster definitions
@@ -81,7 +81,7 @@ cluster.findClusters <- function (userCtx, sampleSetName, params) {
 # Retrieve the cluster data from the context
 #
 cluster.getClustersSetFromContext <- function(userCtx, sampleSetName, clusterSetName) {
-    sampleSet <- userCtx$sampleSets[[sampleSetName]]		#; print(names(userCtx)); print(names(userCtx$sampleSets))
+    sampleSet <- context.getSampleSet (userCtx, sampleSetName)	#; print(names(userCtx)); print(names(userCtx$sampleSets))
     if (is.null(sampleSet)) {
         stop(paste("Sample set not found:", sampleSetName))        
     }								#; print(names(sampleSet));    
@@ -135,7 +135,7 @@ cluster.getClusterPalette <- function(ctx, clusterIds) {
 # Descriptive data about the clusters (e.g. prevalence of mutations, etc.)
 #
 cluster.getClusterStats <- function(ctx, clustersData, clusterMembers) {
-    config <- ctx$config
+    config <- context.getConfig(ctx)
 
     clNames <- rownames(clustersData)			#; print(head(clustersData)); print(clNames)
     
@@ -147,14 +147,14 @@ cluster.getClusterStats <- function(ctx, clustersData, clusterMembers) {
         
         # Get the metadata for this cluster
         clSampleNames <- clusterMembers$Sample[which(clusterMembers$Cluster==clName)]
-        clSampleMeta <- ctx$unfiltered$meta[clSampleNames,]
+        clSampleMeta <- context.getSampleMeta (ctx, clSampleNames)
         
         # Get the sample count first
         statsNames <- "Count"
         statValues <- length(clSampleNames)
 
         # Get the drug resistance prevalences for this cluster
-        drugNames  <- setup.getFeatureNames(config$cluster.stats.drugs)
+        drugNames  <- setup.getFeatureNames(config$cluster.stats.drugPredictionFeatures)
         if (!is.null(drugNames)) { 
             clPrevalence <- meta.getResistancePrevalence (ctx, clSampleMeta, drugNames)
             clPrevalence <- format(as.numeric(clPrevalence), digits=2, nsmall=2)
@@ -163,15 +163,15 @@ cluster.getClusterStats <- function(ctx, clustersData, clusterMembers) {
         }
 
         # Get the counts for this cluster
-        countFeatures  <- setup.getFeatureNames(config$cluster.stats.alleleCounts)
-        if (!is.null(countFeatures)) { 
-            clCounts <- meta.getValueCounts (clSampleMeta, countFeatures)
-            statsNames <- c(statsNames, countFeatures)
+        countableFeatureNames <- setup.getFeatureNames(config$cluster.stats.countableFeatures)
+        if (!is.null(countableFeatureNames)) {
+            clCounts <- meta.getValueCounts (ctx, clSampleMeta, countableFeatureNames)
+            statsNames <- c(statsNames, countableFeatureNames)
             statValues <- c(statValues, clCounts)
         }
 
         # Get the mutation prevalences for this cluster
-        mutationNames  <- setup.getFeatureNames(config$cluster.stats.mutations)
+        mutationNames  <- setup.getFeatureNames(config$cluster.stats.drugMutationFeatures)
         if (!is.null(mutationNames)) { 
             clPrevalence <- meta.getMutationPrevalence (ctx, clSampleMeta, mutationNames, params=NULL)
             clPrevalence <- format(as.numeric(clPrevalence), digits=2, nsmall=2)
@@ -203,12 +203,11 @@ cluster.getClusterStatsText <- function(clusterStats, clustersName) {
 cluster.graphCommunityMethods <- c("louvain")
 cluster.graphMethods          <- c("allNeighbours", cluster.graphCommunityMethods)
 
-cluster.findClustersFromGraph <- function (ctx, clusterSetName, method, minIdentity, imputeBarcodes, params) {
-    datasetName <- ifelse (imputeBarcodes, "imputed", "filtered")
-    config <- ctx$config
-
+cluster.findClustersFromGraph <- function (ctx, sampleSetName, clusterSetName, method, minIdentity, useImputation, params) {
+    config <- context.getConfig(ctx)
+    
     # Get a table of pairwise distance/identity values for all pairs of samples that meet the threshold
-    distData  <- distance.retrieveDistanceMatrix (ctx, datasetName)		#; print(head(distData))#; print(nrow(distData))
+    distData  <- context.getDistanceMatrix (ctx, sampleSetName, useImputation)	#; print(head(distData))#; print(nrow(distData))
 
     edgeData <- clusterGraph.getPairwiseIdentityData (distData, minIdentity, params)	#; print(head(edgeData))
     edgeData$weight <- (edgeData$Identity * edgeData$Identity)			#; print(nrow(edgeData))
