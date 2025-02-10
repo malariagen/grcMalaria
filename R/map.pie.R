@@ -114,7 +114,7 @@ pieMap.buildCountData <- function(ctx, datasetName, sampleSetName, aggLevel, agg
     #
     # Get the allele counts and other data for each aggregation units
     #
-    for (aIdx in 1:aggUnitCount) {
+    for (aIdx in 1:aggUnitCount) {						#; print(aIdx)
         #
         # Get the sample data to be aggregated for this unit
         #
@@ -125,8 +125,8 @@ pieMap.buildCountData <- function(ctx, datasetName, sampleSetName, aggLevel, agg
         #
         config <- context.getConfig(ctx)
         feat <- config$countableFeatures
-        columnName <- feat[measureName, "ColumnName"]		#; print(columnName)
-        wtValue    <- feat[measureName, "WT"]			#; print(wtValue)
+        columnName <- feat[measureName, "ColumnName"]				#; print(columnName)
+        wtValue    <- feat[measureName, "WT"]					#; print(wtValue)
         #
         vCounts <- meta.getColumnValueCounts (ctx, aggMeta, columnName)
         if (length(vCounts) == 0) {
@@ -197,7 +197,7 @@ pieMap.getAggUnitPieSizes <- function(pieMapData, params) {			#; print(pieMapDat
 # Get the palette to be used for this measure in this sampleset
 # (the same palette may be used for multiple time slices, so we keep it in the context for reuse)
 #
-pieMap.getCategoryPalette <- function (ctx, sampleSetName, measureName, params) {
+pieMap.getCategoryPalette <- function (ctx, sampleSetName, measureName, params) {	#; print(paste(sampleSetName, measureName))
     sampleSet <- context.getSampleSet (ctx, sampleSetName)
     userCtx <- ctx$rootCtx
     p <- sampleSet$categoryPalettes[[measureName]]
@@ -259,10 +259,10 @@ pieMap.getMeasureAllValues <- function(ctx, sampleSetName, measureName, wtFirst=
     sampleSet <- context.getSampleSet (ctx, sampleSetName)
     sampleMeta <- context.getMeta (sampleSet$ctx, "unfiltered") 	#; print(nrow(sampleMeta))
     #	
-    #attr <- pieMap.getMeasureAttributes (config, measureName)	#; print(attr)
+    #attr <- pieMap.getMeasureAttributes (config, measureName)		#; print(attr)
     feat <- config$countableFeatures
-    columnName <- feat[measureName, "ColumnName"]		#; print(columnName)
-    wtValue    <- feat[measureName, "WT"]			#; print(wtValue)
+    columnName <- feat[measureName, "ColumnName"]			#; print(columnName)
+    wtValue    <- feat[measureName, "WT"]				#; print(wtValue)
     #
     valueCounts <- meta.getColumnValueCounts (ctx, sampleMeta, columnName)
     values <- names(valueCounts)

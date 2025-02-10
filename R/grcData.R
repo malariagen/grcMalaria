@@ -179,7 +179,8 @@ grcData.buildGrcConfig <- function (species, version, grcFeatures) {
     # excluding Amplifications
     #
     countColumns <- grcFeatures[which(grcFeatures$Class %in% c("MutationList","PhenotypeAssociatedLocus")),]
-    config$countableFeatures <- countColumns[which(countColumns$DataType != "Amplification"),]
+    #config$countableFeatures <- countColumns[which(countColumns$DataType != "Amplification"),]
+    config$countableFeatures <- countColumns
     #
     # Amplifications Columns (also used for Pie Charts)
     #
@@ -194,7 +195,8 @@ grcData.buildGrcConfig <- function (species, version, grcFeatures) {
     config$alleleColumns <- unique(c(config$drugLocusFeatures$ColumnName, 
                                      config$drugLocusFeatures$ColumnName, 
                                      config$drugMutationFeatures$ColumnName, 
-                                     config$countableFeatures$ColumnName))
+                                     config$countableFeatures$ColumnName, 
+                                     config$amplificationFeatures$ColumnName))
     config$barcodeColumns <- unique(config$barcodingFeatures$ColumnName)
     #
     # Copy the features used in clustering computations
