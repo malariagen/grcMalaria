@@ -84,31 +84,23 @@ dataset.createFilteredDataset <- function (ctx) {
     } else {
         print("Filtering barcode genotypes")
         #
-        # We have to determine which samples and barcoding SNPs have sufficiently low missingness 
+        # Remove "hopeless" samples with missingness > 0.5
         #
+        print("Removing samples missing more than half their genotypes")
         barcodeGenoData <- ctx$rootCtx$unfiltered$barcodeGenoData
-        #
-        # Remove samples with too much missingness
-        #
-        print("Filtering barcode genotypes by sample missingness")
-        colCount      <- barcodeGenoData$columnCount
-        missingCounts <- barcodeGenoData$sampleMissingCounts
-        missingProps  <- missingCounts / colCount
-        maxMissingProp <- 1 - config$minSampleTypability
-        samples        <- barcodeGenoData$samples
-        selSamples     <- samples[which(missingProps <= maxMissingProp)]
-        barcodeGenoData <- genotype.filterGenotypeDataBySample (barcodeGenoData, selSamples)
+        barcodeGenoData <- dataset.filterBarcodesBySampleMissingProp (barcodeGenoData, 0.5)
         #
         # Remove SNPs with too much missingness
         #
         print("Filtering barcode genotypes by column missingness")
-        sampleCount   <- barcodeGenoData$sampleCount
-        missingCounts <- barcodeGenoData$columnMissingCounts
-        missingProps  <- missingCounts / sampleCount
         maxMissingProp <- 1 - config$minSnpTypability
-        columnNames    <- names(missingCounts)
-        selColumns  <- columnNames[which(missingProps <= maxMissingProp)]
-        barcodeGenoData <- genotype.filterGenotypeDataByColumn (barcodeGenoData, selColumns)
+        barcodeGenoData <- dataset.filterBarcodesByColumnMissingProp (barcodeGenoData, maxMissingProp)
+        #
+        # Remove samples with too much missingness
+        #
+        print("Filtering barcode genotypes by sample missingness")
+        maxMissingProp <- 1 - config$minSampleTypability
+        barcodeGenoData <- dataset.filterBarcodesBySampleMissingProp (barcodeGenoData, maxMissingProp)
         #
         print(paste("After filtering, barcoding uses", length(barcodeGenoData$columns), "variants for", 
                      length(barcodeGenoData$samples), "samples."))
@@ -132,6 +124,30 @@ dataset.createFilteredDataset <- function (ctx) {
     }
     dataset$distData <- distData;
     ctx
+}
+#
+# Remove samples with too much missingness
+#
+dataset.filterBarcodesBySampleMissingProp <- function (barcodeGenoData, maxMissingProp) {
+        colCount      <- barcodeGenoData$columnCount
+        missingCounts <- barcodeGenoData$sampleMissingCounts
+        missingProps  <- missingCounts / colCount
+        samples        <- barcodeGenoData$samples
+        selSamples     <- samples[which(missingProps <= maxMissingProp)]
+        barcodeGenoData <- genotype.filterGenotypeDataBySample (barcodeGenoData, selSamples)
+        barcodeGenoData
+}
+#
+# Remove SNPs with too much missingness
+#
+dataset.filterBarcodesByColumnMissingProp <- function (barcodeGenoData, maxMissingProp) {
+        sampleCount   <- barcodeGenoData$sampleCount
+        missingCounts <- barcodeGenoData$columnMissingCounts
+        missingProps  <- missingCounts / sampleCount
+        columnNames    <- names(missingCounts)
+        selColumns  <- columnNames[which(missingProps <= maxMissingProp)]
+        barcodeGenoData <- genotype.filterGenotypeDataByColumn (barcodeGenoData, selColumns)
+        barcodeGenoData
 }
 #
 #
