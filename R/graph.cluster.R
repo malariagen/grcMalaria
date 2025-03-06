@@ -287,17 +287,18 @@ clusterGraph.getWeightedEdgeData <- function (nodeDistData, minIdentity, params)
 # Turn the distance matrix into a table of pairwise identity with four columns: "Sample1", "Sample2", "Distance", "Identity"
 #
 clusterGraph.getPairwiseIdentityData <- function (nodeDistData, minIdentity, params) {
-    mat <- as.matrix(nodeDistData)
+    mat <- as.matrix(nodeDistData)                #; print(dim(mat))
     mat[lower.tri(mat,diag=TRUE)] = NA
-    pairData <- as.data.frame(as.table(mat))
-    pairData <- stats::na.omit(pairData) # remove NA
+    pairData <- as.data.frame(as.table(mat))      #; print(nrow(pairData))
+    # remove NA	
+    pairData <- stats::na.omit(pairData)          #; print(nrow(pairData))
     colnames(pairData) <- c("Sample1", "Sample2", "Distance")
     
     # Convert genetic distance to barcode identity
     pairData$Identity <- 1.0 - pairData$Distance
     
     # Keep only pairs above  threshold
-    pairData <- pairData[which(pairData$Identity >= minIdentity),]
+    pairData <- pairData[which(pairData$Identity >= minIdentity),]	#;print(pairData[1:20,]) ; print(nrow(pairData))
     pairData
 }
 

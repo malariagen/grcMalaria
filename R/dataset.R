@@ -203,3 +203,20 @@ dataset.createImputedDataset <- function (ctx) {
     dataset$distData <- distData;
     ctx
 }
+#
+#
+#
+dataset.getSampleBarcodeGenos <- function (ctx, sampleName, useImputed=FALSE) {
+    dataset <- ctx$filtered
+    if (useImputed) dataset <- ctx$imputed
+    colNames <- as.character(names(dataset$barcodeGenoData$columnGenoData))
+    colCount <- length(colNames)
+    genos <- vector(mode="integer",length=colCount)
+    for (cIdx in 1:colCount) {
+        cName <- colNames[cIdx]
+        cGenos <- dataset$barcodeGenoData$columnGenoData[[cName]]$sampleGenotypes
+        genos[cIdx] <- cGenos[sampleName]
+    }
+    names(genos) <- colNames
+    genos
+}

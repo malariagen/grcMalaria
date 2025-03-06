@@ -138,18 +138,25 @@ NumericMatrix dist_calculateDistanceMatrix (List genotypeData) {
         for (unsigned int s1Idx = 0; s1Idx < (sCount-1); s1Idx++) {
             //Rcpp::Rcout << "Sample1: " << s1Idx << "\n";
             unsigned int g1 = sGenotypes[s1Idx];
-            if ((g1 == GENO_MISS) || (g1 == GENO_HET_NO_PROPS)) continue;
+            if (g1 == GENO_MISS) continue;
             //String s1Name = samples[s1Idx];
             //
             for (unsigned int s2Idx = (s1Idx+1); s2Idx < sCount; s2Idx++) {
                 //Rcpp::Rcout << "Sample2: " << s2Idx << "\n";
                 unsigned int g2 = sGenotypes[s2Idx];
-                if ((g2 == GENO_MISS) || (g2 == GENO_HET_NO_PROPS)) continue;
+                if (g2 == GENO_MISS) continue;
                 //String s2Name = samples[s2Idx];
                 //
                 double similarity = 0;
                 //
-                if ((g1==GENO_HOM) && (g2==GENO_HOM)) {
+                if ((g1 == GENO_HET_NO_PROPS) || (g2 == GENO_HET_NO_PROPS)) {
+					// At least one of the sample is heterozygous but we don't know the proportion, assume a distance of 0.5
+					// TODO - We might do this in a more sophisticated way later on: e.g. getAllelePropTable() could assign 0.5
+					// proportion to each of the two most frequent alleles at this position, and treat as regular HET.
+					// But for now this will do, since we still do not have much in terms of allele proportions.
+                    similarity = 0.5;
+
+                } else if ((g1==GENO_HOM) && (g2==GENO_HOM)) {
 					// There is only one allele in each StringVector, so get the first element of each
                     if (homIndexes[s1Idx]==homIndexes[s2Idx]) {
                         similarity = 1;
